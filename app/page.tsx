@@ -64,7 +64,7 @@ export default async function Home() {
 
   const throneCents = throne?.amount_cents ?? 0;
   const top3 = (rankings ?? []).slice(0, 3);
-  const nextFive = (rankings ?? []).slice(3, 8);
+  const rest = (rankings ?? []).slice(3);
 
   // Contador de visitas: incrementa y lee el total en una sola llamada atómica (RPC).
   const { data: totalVisits } = await supabase.rpc('increment_site_visits');
@@ -159,10 +159,10 @@ export default async function Home() {
             </div>
           )}
 
-          {/* Siguientes 5 */}
-          {nextFive.length > 0 && (
+          {/* Resto del ranking, sin límite — no desaparecen los que no tienen pujas */}
+          {rest.length > 0 && (
             <div className="space-y-2">
-              {nextFive.map((r, i) => (
+              {rest.map((r, i) => (
                 <div key={r.group_id} className="flex items-center justify-between bg-neutral-900 rounded-xl p-3">
                   <div className="flex items-center gap-3">
                     <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 4}</span>
