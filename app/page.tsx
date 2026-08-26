@@ -207,15 +207,8 @@ export default async function Home() {
     .select('*')
     .order('total_donated_cents', { ascending: false });
 
-  // TEMPORAL: diagnóstico de por qué producción no trae datos de Supabase.
   if (feedError || groupsError || rankingsError) {
-    console.error('Supabase debug:', {
-      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
-      keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 12),
-      feedError,
-      groupsError,
-      rankingsError,
-    });
+    console.error('Error cargando datos de Supabase:', { feedError, groupsError, rankingsError });
   }
 
   // Solo los grupos que ya recibieron al menos una puja ocupan un puesto en el podio.
@@ -418,7 +411,13 @@ export default async function Home() {
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">Represento a un grupo, ¿puedo reclamar su perfil?</p>
-              <p className="text-sm text-neutral-500">Estamos preparando ese flujo de verificación. Mientras tanto, contáctanos directamente.</p>
+              <p className="text-sm text-neutral-500">
+                Sí —{' '}
+                <a href="/reclamar" className="underline hover:text-pink-400">
+                  envía tu solicitud aquí
+                </a>
+                . La revisamos a mano contra el link de verificación que dejes.
+              </p>
             </div>
           </div>
         </section>

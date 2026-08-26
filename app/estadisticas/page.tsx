@@ -22,6 +22,7 @@ export default async function EstadisticasPage() {
   const supabase = getSupabasePublicClient();
 
   const { data: totalRaised } = await supabase.from('total_raised').select('*').maybeSingle();
+  const { data: charityFund } = await supabase.from('charity_fund').select('*').maybeSingle();
   const { data: siteStats } = await supabase.from('site_stats').select('*').maybeSingle();
   const { count: bidCount } = await supabase
     .from('bids')
@@ -44,6 +45,17 @@ export default async function EstadisticasPage() {
         <StatCard label="Pujas exitosas" value={(bidCount ?? 0).toLocaleString('es-MX')} />
         <StatCard label="Grupos con donaciones" value={groupsWithDonations.toLocaleString('es-MX')} />
         <StatCard label="Visitas desde el lanzamiento" value={(siteStats?.total_visits ?? 0).toLocaleString('es-MX')} />
+      </div>
+
+      <div className="text-sm bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900/60 rounded-lg p-4">
+        <p className="font-semibold">
+          Fondo pendiente para fundaciones caritativas: $
+          {((charityFund?.charity_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+        </p>
+        <p className="text-xs mt-1 opacity-80">
+          Es el 5% de lo recaudado en total, calculado en tiempo real. Esto es un cálculo de referencia, no una
+          transferencia automática — la donación real a la fundación elegida se hace por fuera de este sitio.
+        </p>
       </div>
 
       <section className="space-y-3">

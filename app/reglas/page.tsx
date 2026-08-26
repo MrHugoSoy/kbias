@@ -34,6 +34,11 @@ export default function ReglasPage() {
           Monto máximo por transacción individual: ${(BID_LIMITS.MAX_PER_TX_CENTS / 100).toLocaleString('es-MX')}.
           Puedes hacer varias pujas si quieres superar ese límite.
         </p>
+        <p>
+          Tope acumulado de ${(BID_LIMITS.DAILY_CAP_CENTS / 100).toLocaleString('es-MX')} por día (medido por
+          dirección IP), pensado para frenar gasto compulsivo — sobre todo de menores usando la tarjeta de sus
+          papás.
+        </p>
       </LegalSection>
 
       <LegalSection title="4. Reembolsos">
@@ -50,7 +55,8 @@ export default function ReglasPage() {
         </p>
         <p>
           No está permitido usar nombres ofensivos, ni un link de red social que suplante la identidad de alguien
-          más sin su autorización.
+          más sin su autorización. Un filtro automático bloquea el contenido más obvio antes de aceptar tu puja;
+          para lo que ese filtro no detecte, seguimos revisando y moderando el feed a mano.
         </p>
       </LegalSection>
 

@@ -37,17 +37,21 @@ create table if not exists bids (
   supporter_name text,                   -- nombre público del fan (opcional/anónimo)
   is_anonymous boolean default false,
   social_url text,                       -- link a su red social (opcional, nunca si es anónimo)
+  ip_address text,                       -- IP de quien inició la puja (para el tope diario anti-abuso)
   stripe_payment_intent_id text unique,  -- referencia de Stripe para verificar el pago
   status text not null default 'pending' check (status in ('pending','succeeded','failed')),
   created_at timestamptz default now()
 );
 
--- Por si la tabla ya existía antes de agregar social_url (idempotente).
+-- Por si la tabla ya existía antes de agregar estas columnas (idempotente).
 alter table bids add column if not exists social_url text;
+alter table bids add column if not exists ip_address text;
 
 -- Índice para encontrar rápido la puja más alta vigente
 create index if not exists idx_bids_amount on bids (amount_cents desc) where status = 'succeeded';
 create index if not exists idx_bids_group on bids (group_id);
+-- Acelera la suma del tope diario por IP en /api/bid
+create index if not exists idx_bids_ip_time on bids (ip_address, created_at) where status = 'succeeded';
 
 -- ------------------------------------------------------------
 -- Vista: current_throne — quién tiene el puesto #1 en este momento
@@ -189,6 +193,41 @@ create or replace view total_raised as
 select coalesce(sum(amount_cents), 0) as total_cents
 from bids
 where status = 'succeeded';
+
+-- ------------------------------------------------------------
+-- Vista: charity_fund — cuánto le corresponde a fundaciones
+-- caritativas (5% de total_raised). Esto NO transfiere dinero solo,
+-- es un cálculo de referencia para que sepas cuánto donar cuando
+-- elijas la fundación — la transferencia sigue siendo manual.
+-- ------------------------------------------------------------
+create or replace view charity_fund as
+select
+  total_cents,
+  round(total_cents * 0.05) as charity_cents
+from total_raised;
+
+-- ------------------------------------------------------------
+-- Tabla: claim_requests — solicitudes de artistas/management para
+-- reclamar el perfil oficial de su grupo. Se revisan a mano (no hay
+-- verificación automática de identidad); al aprobar una, actualiza
+-- `groups.claimed_by_fan` manualmente desde el SQL Editor.
+-- ------------------------------------------------------------
+create table if not exists claim_requests (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references groups(id) on delete cascade,
+  contact_name text not null,
+  contact_email text not null,
+  proof_url text,     -- link que demuestre la relación con el grupo (cuenta oficial, etc.)
+  message text,
+  status text not null default 'pending' check (status in ('pending', 'approved', 'rejected')),
+  created_at timestamptz default now()
+);
+
+alter table claim_requests enable row level security;
+
+-- Cualquiera puede enviar una solicitud, pero nadie puede leerlas desde
+-- el cliente — se revisan a mano desde el dashboard de Supabase.
+create policy "claim_requests_public_insert" on claim_requests for insert with check (true);
 
 create or replace function increment_site_visits()
 returns bigint

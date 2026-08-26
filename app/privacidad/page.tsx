@@ -14,9 +14,9 @@ export default function PrivacidadPage() {
       </div>
 
       <div className="text-sm bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900/60 rounded-lg p-4 font-semibold">
-        No guardamos datos personales de nuestros usuarios por nuestra cuenta. Lo único que existe en el sistema es
-        lo que tú decides escribir voluntariamente al pujar — tu nombre y/o tu link de red social, ambos opcionales.
-        No hay cuentas, no pedimos tu correo, y si pujas de forma anónima, ni siquiera eso se guarda.
+        No pedimos cuenta ni correo para pujar. Lo único que tú decides compartir es tu nombre y/o tu link de red
+        social, ambos opcionales — y si pujas de forma anónima, ni siquiera eso se guarda. La única excepción es tu
+        dirección IP, que guardamos por puja exitosa únicamente para aplicar un tope de gasto diario (ver abajo).
       </div>
 
       <LegalSection title="1. Qué recopilamos">
@@ -29,9 +29,16 @@ export default function PrivacidadPage() {
           número completo de tu tarjeta — solo recibimos la confirmación de que el pago se completó y el monto.
         </p>
         <p>
-          <strong>Datos técnicos básicos:</strong> nuestro proveedor de hosting (Vercel) y nuestra base de datos
-          (Supabase) procesan automáticamente datos estándar de cada solicitud (como la dirección IP) para operar y
-          proteger el sitio. No usamos esto para armar un perfil de cada visitante.
+          <strong>Dirección IP por puja exitosa:</strong> a diferencia de las visitas normales al sitio, sí guardamos
+          la IP asociada a cada puja que se completa. Es la única forma de aplicar un tope de gasto diario y frenar
+          gasto compulsivo (por ejemplo, de menores usando la tarjeta de sus papás). No la usamos para ningún otro
+          fin, y no la mostramos en el ranking ni en el feed público.
+        </p>
+        <p>
+          <strong>Datos técnicos básicos de cada visita:</strong> nuestro proveedor de hosting (Vercel) y nuestra
+          base de datos (Supabase) procesan automáticamente datos estándar de cada solicitud (como la dirección IP)
+          para operar y proteger el sitio, sin que nosotros los guardemos en nuestra propia base de datos salvo el
+          caso de pujas exitosas descrito arriba.
         </p>
         <p>
           <strong>Contador de visitas y "en línea":</strong> llevamos un conteo total de cargas de página y un

@@ -27,6 +27,7 @@ export async function POST(req: NextRequest) {
     const supporterName = session.metadata?.supporterName || null;
     const isAnonymous = session.metadata?.isAnonymous === 'true';
     const socialUrl = session.metadata?.socialUrl || null;
+    const ipAddress = session.metadata?.ip || null;
     const amountCents = session.amount_total ?? 0;
 
     if (!groupId) {
@@ -34,16 +35,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Falta groupId' }, { status: 400 });
     }
 
-    // Re-verifica contra el trono actual justo antes de insertar,
-    // por si dos personas pagaron casi al mismo tiempo (race condition).
-    // Igual se guarda el registro (el dinero ya se cobró), pero esto
-    // te permite decidir después si reembolsas una puja que "llegó tarde".
     const { error } = await supabase.from('bids').insert({
       group_id: groupId,
       amount_cents: amountCents,
       supporter_name: isAnonymous ? null : supporterName,
       is_anonymous: isAnonymous,
       social_url: isAnonymous ? null : socialUrl,
+      ip_address: ipAddress,
       stripe_payment_intent_id: session.payment_intent as string,
       status: 'succeeded',
     });

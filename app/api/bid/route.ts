@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { stripe, BID_LIMITS } from '@/lib/stripe';
 import { getSupabaseServiceClient } from '@/lib/supabase';
+import { isOffensive } from '@/lib/moderation';
 
 // POST /api/bid
 // body: { groupId: string, amountCents: number, supporterName?: string, isAnonymous?: boolean }
@@ -35,6 +36,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'El link de red social debe ser una URL válida (http/https)' }, { status: 400 });
   }
 
+  if (!isAnonymous && supporterName && isOffensive(supporterName)) {
+    return NextResponse.json({ error: 'Ese nombre no está permitido. Elige otro o puja de forma anónima.' }, { status: 400 });
+  }
+
   if (amountCents < BID_LIMITS.MIN_CENTS) {
     return NextResponse.json({ error: `El monto mínimo es $${BID_LIMITS.MIN_CENTS / 100}` }, { status: 400 });
   }
@@ -51,6 +56,30 @@ export async function POST(req: NextRequest) {
   const { data: group } = await supabase.from('groups').select('*').eq('id', groupId).single();
   if (!group) {
     return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 });
+  }
+
+  // Tope acumulado por IP en las últimas 24h, para frenar gasto compulsivo
+  // (especialmente de menores usando la tarjeta de sus papás). Es una
+  // defensa best-effort: alguien decidido puede cambiar de red, pero
+  // frena el caso común de "seguir pujando sin pensarlo".
+  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || null;
+  if (ip) {
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { data: recentBids } = await supabase
+      .from('bids')
+      .select('amount_cents')
+      .eq('ip_address', ip)
+      .eq('status', 'succeeded')
+      .gte('created_at', since);
+    const spentToday = (recentBids ?? []).reduce((sum, b) => sum + b.amount_cents, 0);
+    if (spentToday + amountCents > BID_LIMITS.DAILY_CAP_CENTS) {
+      return NextResponse.json(
+        {
+          error: `Llegaste al tope de $${(BID_LIMITS.DAILY_CAP_CENTS / 100).toLocaleString('es-MX')} en pujas por hoy. Intenta de nuevo mañana.`,
+        },
+        { status: 400 }
+      );
+    }
   }
 
   const session = await stripe.checkout.sessions.create({
@@ -74,6 +103,7 @@ export async function POST(req: NextRequest) {
       supporterName: supporterName || '',
       isAnonymous: isAnonymous ? 'true' : 'false',
       socialUrl: !isAnonymous && socialUrl ? socialUrl : '',
+      ip: ip || '',
     },
     success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?success=true`,
     cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?canceled=true`,
