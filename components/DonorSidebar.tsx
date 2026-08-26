@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { VenetianMask } from 'lucide-react';
 
 type FeedItem = {
   id: string;
@@ -83,7 +84,9 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             <div className="flex items-center justify-between gap-2">
               <span className="font-semibold text-neutral-800 dark:text-neutral-200 truncate">
                 {item.is_anonymous ? (
-                  '🎭 Anónimo'
+                  <span className="inline-flex items-center gap-1">
+                    <VenetianMask className="w-3.5 h-3.5" /> Anónimo
+                  </span>
                 ) : item.social_url ? (
                   <a
                     href={item.social_url}

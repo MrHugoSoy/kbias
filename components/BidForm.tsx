@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Gavel, VenetianMask, Zap } from 'lucide-react';
 
 type Group = { id: string; name: string; fandom_name: string | null };
 
@@ -67,7 +68,7 @@ export default function BidForm({
   return (
     <section className="border-2 border-pink-700/60 rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-2">
-        <span className="text-2xl">🔨</span>
+        <Gavel className="w-6 h-6 text-pink-500" />
         <div>
           <h2 className="font-bold">HAZ TU PUJA</h2>
           <p className="text-xs text-neutral-500">Toma el trono para tu grupo favorito</p>
@@ -136,7 +137,7 @@ export default function BidForm({
 
       <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
         <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
-        Pujar de forma anónima 🎭
+        Pujar de forma anónima <VenetianMask className="w-4 h-4" />
       </label>
 
       {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
@@ -157,7 +158,13 @@ export default function BidForm({
           disabled={loading}
           className="flex-1 py-3 rounded-lg bg-pink-600 hover:bg-pink-500 font-bold disabled:opacity-50"
         >
-          {loading ? 'Procesando...' : 'Ir a pagar ⚡'}
+          {loading ? (
+            'Procesando...'
+          ) : (
+            <span className="inline-flex items-center gap-1">
+              Ir a pagar <Zap className="w-4 h-4 fill-current" />
+            </span>
+          )}
         </button>
       </div>
     </section>

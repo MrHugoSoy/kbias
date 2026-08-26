@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { VenetianMask, User } from 'lucide-react';
 
 type FeedItem = {
   id: string;
@@ -95,7 +96,11 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3 px-4 py-3 text-sm">
             <span className="text-xs text-neutral-500 w-16 shrink-0">{timeAgo(item.created_at)}</span>
-            <span>{item.is_anonymous ? '🎭' : '👤'}</span>
+            {item.is_anonymous ? (
+              <VenetianMask className="w-4 h-4 text-neutral-500 shrink-0" />
+            ) : (
+              <User className="w-4 h-4 text-neutral-500 shrink-0" />
+            )}
             <span className="flex-1">
               {!item.is_anonymous && item.social_url ? (
                 <a

@@ -1,3 +1,4 @@
+import { Crown, Mic2, Plus, Zap, ShieldCheck, Trophy, Handshake, HelpCircle, Heart, HeartHandshake, VenetianMask } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import BidButton from '@/components/BidButton';
 import ActivityFeed from '@/components/ActivityFeed';
@@ -16,7 +17,13 @@ type Supporter = {
 
 // Nombre del donador, como link a su red social si la puso (nunca si es anónimo).
 function renderSupporter(entry: Supporter) {
-  if (entry.is_anonymous) return 'un fan anónimo 🎭';
+  if (entry.is_anonymous) {
+    return (
+      <span className="inline-flex items-center gap-1">
+        <VenetianMask className="w-3.5 h-3.5" /> un fan anónimo
+      </span>
+    );
+  }
   if (entry.social_url) {
     return (
       <a
@@ -73,8 +80,19 @@ function RankCard({
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
-      <p className={isCompact ? 'text-[10px] tracking-[0.2em] text-pink-400 font-semibold' : 'text-xs tracking-[0.3em] text-pink-400 font-semibold'}>
-        {isThrone ? '👑 #1 · EL TRONO' : `#${rank}`}
+      <p
+        className={
+          (isCompact ? 'text-[10px] tracking-[0.2em]' : 'text-xs tracking-[0.3em]') +
+          ' text-pink-400 font-semibold flex items-center justify-center gap-1'
+        }
+      >
+        {isThrone ? (
+          <>
+            <Crown className="w-3.5 h-3.5" /> #1 · EL TRONO
+          </>
+        ) : (
+          `#${rank}`
+        )}
       </p>
       <div
         className={
@@ -89,13 +107,17 @@ function RankCard({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={group.image_url} alt={group.group_name} className="w-full h-full object-cover" />
         ) : (
-          <span className={isThrone ? 'text-4xl' : isCompact ? 'text-base' : 'text-2xl'}>🎤</span>
+          <Mic2 className={(isThrone ? 'w-12 h-12' : isCompact ? 'w-5 h-5' : 'w-8 h-8') + ' text-neutral-500 dark:text-neutral-600'} />
         )}
       </div>
       <h2 className={isThrone ? 'text-3xl font-black tracking-tight' : isCompact ? 'text-xs font-bold truncate' : 'text-lg font-bold'}>
         {group.group_name}
       </h2>
-      {group.fandom_name && !isCompact && <p className="text-pink-400 text-sm font-semibold">♥ {group.fandom_name} ♥</p>}
+      {group.fandom_name && !isCompact && (
+        <p className="text-pink-400 text-sm font-semibold flex items-center justify-center gap-1">
+          <Heart className="w-3 h-3 fill-current" /> {group.fandom_name} <Heart className="w-3 h-3 fill-current" />
+        </p>
+      )}
       <p
         className={
           isThrone
@@ -164,7 +186,7 @@ function EmptySlotCard({ rank, size, orderClassName }: { rank: number; size: 'lg
               : 'w-20 h-20 mx-auto rounded-full border-2 border-dashed border-pink-700/60 flex items-center justify-center'
         }
       >
-        <span className={isThrone ? 'text-4xl text-pink-500' : isCompact ? 'text-base text-pink-500' : 'text-2xl text-pink-500'}>+</span>
+        <Plus className={(isThrone ? 'w-10 h-10' : isCompact ? 'w-4 h-4' : 'w-7 h-7') + ' text-pink-500'} />
       </div>
       <p className={isThrone ? 'text-xl font-black text-pink-400' : isCompact ? 'text-[10px] font-bold text-pink-400' : 'text-sm font-bold text-pink-400'}>
         ¡Disponible!
@@ -227,7 +249,7 @@ export default async function Home() {
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">👑</span>
+          <Crown className="w-7 h-7 text-pink-500 fill-pink-500/20" />
           <div>
             <p className="font-extrabold tracking-tight leading-none">EL TRONO</p>
             <p className="text-[10px] text-pink-400 tracking-widest">EL PODER ES DE LOS FANS</p>
@@ -252,7 +274,7 @@ export default async function Home() {
         <section id="ranking" className="space-y-4">
           {top3.length === 0 && (
             <div className="text-center py-6 space-y-2">
-              <p className="text-6xl animate-bounce">👑</p>
+              <Crown className="w-16 h-16 mx-auto text-pink-500 fill-pink-500/20 animate-bounce" />
               <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-pink-500 via-pink-400 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(236,72,153,0.35)]">
                 El trono está vacío
               </h1>
@@ -310,7 +332,7 @@ export default async function Home() {
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
                         ) : (
-                          <span>🎤</span>
+                          <Mic2 className="w-5 h-5 text-neutral-500 dark:text-neutral-600" />
                         )}
                       </div>
                       <div>
@@ -336,7 +358,9 @@ export default async function Home() {
 
         {/* Cómo funciona */}
         <section id="como-funciona" className="space-y-4">
-          <h2 className="text-lg font-bold flex items-center gap-2">⚡ ¿CÓMO FUNCIONA?</h2>
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <Zap className="w-5 h-5 text-pink-500" /> ¿CÓMO FUNCIONA?
+          </h2>
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">01</p>
@@ -367,7 +391,9 @@ export default async function Home() {
           <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
             ${((totalRaised?.total_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           </p>
-          <p className="text-xs text-pink-400 mt-2">🎗️ El 5% de cada puja se dona a fundaciones caritativas</p>
+          <p className="text-xs text-pink-400 mt-2 flex items-center justify-center gap-1">
+            <HeartHandshake className="w-4 h-4" /> El 5% de cada puja se dona a fundaciones caritativas
+          </p>
         </div>
 
         {/* Actividad en vivo — oculta en lg+ porque ahí ya está el sidebar de donadores mostrando lo mismo */}
@@ -377,7 +403,9 @@ export default async function Home() {
 
         {/* FAQ */}
         <section id="faq" className="space-y-3">
-          <h2 className="text-lg font-bold flex items-center gap-2">❓ FAQ</h2>
+          <h2 className="text-lg font-bold flex items-center gap-2">
+            <HelpCircle className="w-5 h-5 text-pink-500" /> FAQ
+          </h2>
           <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 rounded-xl overflow-hidden">
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Esto es una apuesta?</p>
@@ -404,22 +432,22 @@ export default async function Home() {
         {/* Footer de confianza */}
         <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6 border-t border-neutral-200 dark:border-neutral-900">
           <div>
-            <p className="text-xl mb-1">🛡️</p>
+            <ShieldCheck className="w-6 h-6 mx-auto mb-1 text-pink-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">PAGO SEGURO</p>
             <p>Tus transacciones están protegidas y encriptadas.</p>
           </div>
           <div>
-            <p className="text-xl mb-1">⚡</p>
+            <Zap className="w-6 h-6 mx-auto mb-1 text-pink-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">SIN RESETS</p>
             <p>El #1 se mantiene hasta que alguien pague más.</p>
           </div>
           <div>
-            <p className="text-xl mb-1">🏆</p>
+            <Trophy className="w-6 h-6 mx-auto mb-1 text-pink-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">UN SOLO TRONO</p>
             <p>No hay categorías. Solo uno puede reinar.</p>
           </div>
           <div>
-            <p className="text-xl mb-1">🤝</p>
+            <Handshake className="w-6 h-6 mx-auto mb-1 text-pink-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">EL PODER ES DE LOS FANS</p>
             <p>Tú decides quién reina en el mundo del K-pop.</p>
           </div>
