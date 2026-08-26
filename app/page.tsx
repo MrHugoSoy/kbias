@@ -455,7 +455,7 @@ export default async function Home() {
 
         {/* Links legales, estilo outbid.lol */}
         <div className="text-center text-xs text-neutral-600 pb-4">
-          <a href="#" className="hover:text-pink-400">Reglas</a>
+          <a href="/reglas" className="hover:text-pink-400">Reglas</a>
           <span className="mx-2">·</span>
           <a href="#" className="hover:text-pink-400">Términos</a>
           <span className="mx-2">·</span>
