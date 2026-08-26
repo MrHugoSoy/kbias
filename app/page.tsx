@@ -8,9 +8,20 @@ export const revalidate = 0; // siempre datos frescos, el ranking cambia en cual
 export default async function Home() {
   const supabase = getSupabasePublicClient();
 
-  const { data: throne } = await supabase.from('current_throne').select('*').maybeSingle();
-  const { data: feed } = await supabase.from('activity_feed').select('*');
-  const { data: groups } = await supabase.from('groups').select('*').order('name');
+  const { data: throne, error: throneError } = await supabase.from('current_throne').select('*').maybeSingle();
+  const { data: feed, error: feedError } = await supabase.from('activity_feed').select('*');
+  const { data: groups, error: groupsError } = await supabase.from('groups').select('*').order('name');
+
+  // TEMPORAL: diagnóstico de por qué producción no trae datos de Supabase.
+  if (throneError || feedError || groupsError) {
+    console.error('Supabase debug:', {
+      url: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 12),
+      throneError,
+      feedError,
+      groupsError,
+    });
+  }
 
   // Mayor donador (no anónimo) del grupo que tiene el trono ahora mismo.
   const { data: topDonor } = throne
