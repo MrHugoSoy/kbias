@@ -451,11 +451,11 @@ export default async function Home() {
         <div className="text-center text-xs text-neutral-600 pb-4">
           <a href="/reglas" className="hover:text-pink-400">Reglas</a>
           <span className="mx-2">·</span>
-          <a href="#" className="hover:text-pink-400">Términos</a>
+          <a href="/terminos" className="hover:text-pink-400">Términos</a>
           <span className="mx-2">·</span>
-          <a href="#" className="hover:text-pink-400">Privacidad</a>
+          <a href="/privacidad" className="hover:text-pink-400">Privacidad</a>
           <span className="mx-2">·</span>
-          <a href="#" className="hover:text-pink-400">Estadísticas en vivo</a>
+          <a href="/estadisticas" className="hover:text-pink-400">Estadísticas en vivo</a>
         </div>
       </div>
     </main>
