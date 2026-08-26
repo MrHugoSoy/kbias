@@ -105,9 +105,11 @@ export default async function Home() {
                 <div
                   key={r.group_id}
                   className={
-                    i === 0
+                    (i === 0
                       ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-950/30 to-black sm:col-span-1'
-                      : 'relative border border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-neutral-950'
+                      : 'relative border border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-neutral-950') +
+                    ' ' +
+                    (i === 0 ? 'sm:order-2' : i === 1 ? 'sm:order-1' : 'sm:order-3')
                   }
                 >
                   <p className="text-xs tracking-[0.3em] text-pink-400 font-semibold">
