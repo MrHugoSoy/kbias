@@ -6,6 +6,7 @@ import BidForm from '@/components/BidForm';
 import OnlineBar from '@/components/OnlineBar';
 import DonorSidebar from '@/components/DonorSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
+import HistorialLink from '@/components/HistorialLink';
 import { FooterLinks } from '@/components/LegalPage';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
@@ -251,7 +252,7 @@ export default async function Home() {
             <a href="#" className="text-pink-500 border-b-2 border-pink-500 pb-1">INICIO</a>
             <a href="#ranking">RANKING</a>
             <a href="#como-funciona">CÓMO FUNCIONA</a>
-            <a href="#historial">HISTORIAL</a>
+            <HistorialLink />
             <a href="#faq">FAQ</a>
           </nav>
           <ThemeToggle />
@@ -305,7 +306,7 @@ export default async function Home() {
 
           {/* Debajo del top 8: sidebar de donadores en vivo + resto de las bandas, uno al lado del otro */}
           <div className="flex gap-6">
-            <aside className="hidden lg:block w-64 shrink-0 sticky top-8 self-start">
+            <aside id="historial-desktop" className="hidden lg:block w-64 shrink-0 sticky top-8 self-start">
               <DonorSidebar initialItems={feed ?? []} />
             </aside>
 
@@ -387,7 +388,7 @@ export default async function Home() {
         </div>
 
         {/* Actividad en vivo — oculta en lg+ porque ahí ya está el sidebar de donadores mostrando lo mismo */}
-        <div className="lg:hidden">
+        <div id="historial-mobile" className="lg:hidden">
           <ActivityFeed initialItems={feed ?? []} />
         </div>
 
