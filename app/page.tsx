@@ -134,6 +134,44 @@ function RankCard({
   );
 }
 
+// Puesto todavía sin reclamar — mantiene el hueco visible en vez de desaparecer.
+function EmptySlotCard({ rank, size, orderClassName }: { rank: number; size: 'lg' | 'md' | 'sm'; orderClassName?: string }) {
+  const isThrone = size === 'lg';
+  const isCompact = size === 'sm';
+
+  return (
+    <div
+      className={
+        (isThrone
+          ? 'relative border-2 border-dashed border-neutral-800 rounded-2xl p-6 text-center space-y-2'
+          : isCompact
+            ? 'relative border border-dashed border-neutral-800 rounded-xl p-3 text-center space-y-1'
+            : 'relative border border-dashed border-neutral-800 rounded-2xl p-5 text-center space-y-2') +
+        (orderClassName ? ' ' + orderClassName : '')
+      }
+    >
+      <p className={isCompact ? 'text-[10px] tracking-[0.2em] text-neutral-700 font-semibold' : 'text-xs tracking-[0.3em] text-neutral-700 font-semibold'}>
+        #{rank}
+      </p>
+      <div
+        className={
+          isThrone
+            ? 'w-32 h-32 mx-auto rounded-full border-2 border-dashed border-neutral-800 flex items-center justify-center'
+            : isCompact
+              ? 'w-12 h-12 mx-auto rounded-full border border-dashed border-neutral-800 flex items-center justify-center'
+              : 'w-20 h-20 mx-auto rounded-full border-2 border-dashed border-neutral-800 flex items-center justify-center'
+        }
+      >
+        <span className={isThrone ? 'text-4xl opacity-30' : isCompact ? 'text-base opacity-30' : 'text-2xl opacity-30'}>🎤</span>
+      </div>
+      <p className={isThrone ? 'text-lg font-bold text-neutral-600' : isCompact ? 'text-[10px] text-neutral-600' : 'text-sm font-bold text-neutral-600'}>
+        Vacío
+      </p>
+      {!isCompact && <p className="text-xs text-neutral-700">Nadie ha reclamado este puesto</p>}
+    </div>
+  );
+}
+
 export default async function Home() {
   const supabase = getSupabasePublicClient();
 
@@ -203,14 +241,21 @@ export default async function Home() {
 
         {/* Podio: top 3 */}
         <section id="ranking" className="space-y-4">
-          {top3.length === 0 ? (
-            <div className="relative border-2 border-pink-600 rounded-2xl p-10 text-center">
-              <p className="text-xl">El trono está vacío. ¡Sé el primero en reclamarlo!</p>
+          {top3.length === 0 && (
+            <div className="text-center py-4 space-y-1">
+              <p className="text-5xl">👑</p>
+              <h1 className="text-3xl sm:text-4xl font-black tracking-tight">El trono está vacío</h1>
+              <p className="text-neutral-500">¡Sé el primero en reclamarlo!</p>
             </div>
-          ) : (
-            <div className="relative grid sm:grid-cols-3 gap-4">
-              <div className="hidden sm:block absolute inset-0 bg-pink-600/10 blur-3xl rounded-full -z-10" />
-              {top3.map((r, i) => (
+          )}
+
+          <div className="relative grid sm:grid-cols-3 gap-4">
+            <div className="hidden sm:block absolute inset-0 bg-pink-600/10 blur-3xl rounded-full -z-10" />
+            {[0, 1, 2].map((i) => {
+              const r = top3[i];
+              const orderClassName = i === 0 ? 'sm:order-2' : i === 1 ? 'sm:order-1' : 'sm:order-3';
+              if (!r) return <EmptySlotCard key={i} rank={i + 1} size={i === 0 ? 'lg' : 'md'} orderClassName={orderClassName} />;
+              return (
                 <RankCard
                   key={r.group_id}
                   rank={i + 1}
@@ -218,20 +263,20 @@ export default async function Home() {
                   size={i === 0 ? 'lg' : 'md'}
                   throneCents={throneCents}
                   topDonor={i === 0 ? topDonor : undefined}
-                  orderClassName={i === 0 ? 'sm:order-2' : i === 1 ? 'sm:order-1' : 'sm:order-3'}
+                  orderClassName={orderClassName}
                 />
-              ))}
-            </div>
-          )}
+              );
+            })}
+          </div>
 
           {/* Siguientes 5, tarjetas compactas — las 5 caben en una sola fila */}
-          {midFive.length > 0 && (
-            <div className="grid grid-cols-5 gap-2">
-              {midFive.map((r, i) => (
-                <RankCard key={r.group_id} rank={i + 4} group={r} size="sm" throneCents={throneCents} />
-              ))}
-            </div>
-          )}
+          <div className="grid grid-cols-5 gap-2">
+            {[0, 1, 2, 3, 4].map((i) => {
+              const r = midFive[i];
+              if (!r) return <EmptySlotCard key={i} rank={i + 4} size="sm" />;
+              return <RankCard key={r.group_id} rank={i + 4} group={r} size="sm" throneCents={throneCents} />;
+            })}
+          </div>
 
           {/* Resto del ranking, en lista compacta — no desaparecen los que no tienen pujas */}
           {rest.length > 0 && (
