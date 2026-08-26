@@ -6,12 +6,14 @@ import { getSupabaseServiceClient } from '@/lib/supabase';
 // body: { groupId: string, amountCents: number, supporterName?: string, isAnonymous?: boolean }
 //
 // Flujo:
-// 1. Valida que el monto sea mayor a la puja actual (current_throne) + $1.
-// 2. Valida límites anti-fraude (min/max por transacción).
-// 3. Crea un Stripe Checkout Session.
-// 4. El registro en `bids` se crea DESPUÉS, en el webhook, solo si el
+// 1. Valida límites anti-fraude (min/max por transacción). Cualquier monto
+//    dentro de esos límites es válido: el trono se decide por el TOTAL
+//    acumulado por grupo, no por si esta puja "supera" algo — no hay
+//    mínimo dinámico que cumplir para que la puja cuente.
+// 2. Crea un Stripe Checkout Session.
+// 3. El registro en `bids` se crea DESPUÉS, en el webhook, solo si el
 //    pago se confirma como exitoso — nunca antes, para que nadie pueda
-//    "reclamar el trono" sin haber pagado de verdad.
+//    sumar al total de su grupo sin haber pagado de verdad.
 function isValidHttpUrl(value: string) {
   try {
     const url = new URL(value);
@@ -46,15 +48,6 @@ export async function POST(req: NextRequest) {
 
   const supabase = getSupabaseServiceClient();
 
-  // Verifica que el monto realmente supere el trono actual
-  const { data: throne } = await supabase.from('current_throne').select('*').maybeSingle();
-  if (throne && amountCents <= throne.amount_cents) {
-    return NextResponse.json(
-      { error: `Tu puja debe ser mayor a $${(throne.amount_cents / 100).toFixed(2)}, el monto actual del trono.` },
-      { status: 400 }
-    );
-  }
-
   const { data: group } = await supabase.from('groups').select('*').eq('id', groupId).single();
   if (!group) {
     return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 });
@@ -68,8 +61,8 @@ export async function POST(req: NextRequest) {
         price_data: {
           currency: 'usd',
           product_data: {
-            name: `Reclama el #1 para ${group.name}`,
-            description: `Puja de $${(amountCents / 100).toFixed(2)} para tomar el trono`,
+            name: `Apoya a ${group.name}`,
+            description: `Puja de $${(amountCents / 100).toFixed(2)}, se suma al total acumulado de ${group.name}`,
           },
           unit_amount: amountCents,
         },

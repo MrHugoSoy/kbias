@@ -39,14 +39,14 @@ export default function ReglasPage() {
 
         <Section title="1. Cómo se gana el #1">
           <p>
-            El puesto #1 lo tiene el grupo con la puja individual exitosa más alta de todo el historial. Para tomar el
-            trono, tu puja tiene que superar ese monto — aunque sea por un centavo.
+            El puesto #1 lo tiene el grupo cuya comunidad haya donado <strong>más en total</strong> — se suman todas
+            las pujas exitosas que ha recibido ese grupo, sin importar cuántas fueron ni de qué tamaño cada una.
           </p>
           <p>
-            Las pujas anteriores de un mismo grupo <strong>no se suman</strong>. Cada puja compite por su propio
-            monto, no por el total acumulado que ese grupo haya recibido.
+            No existe un monto mínimo para "tomar la delantera": cualquier puja, por chica que sea, se suma al total
+            acumulado de tu grupo y puede ayudarlo a subir en el ranking.
           </p>
-          <p>El #1 se mantiene hasta que alguien más pague más. No hay resets ni ciclos.</p>
+          <p>El #1 se mantiene hasta que otro grupo acumule más en total. No hay resets ni ciclos.</p>
         </Section>
 
         <Section title="2. Esto es un apoyo, no una apuesta">

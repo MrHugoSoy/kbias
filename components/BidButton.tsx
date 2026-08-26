@@ -5,12 +5,10 @@ import { useState } from 'react';
 export default function BidButton({
   groupId,
   groupName,
-  currentThroneCents,
   compact,
 }: {
   groupId: string;
   groupName: string;
-  currentThroneCents: number;
   compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
@@ -21,14 +19,16 @@ export default function BidButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const minRequired = (currentThroneCents + 100) / 100; // trono actual + $1 mínimo
-
   async function handleSubmit() {
     setError('');
     const amountCents = Math.round(parseFloat(amount) * 100);
 
-    if (!amountCents || amountCents <= currentThroneCents) {
-      setError(`Tu puja debe ser mayor a $${(currentThroneCents / 100).toFixed(2)}`);
+    if (!amountCents || amountCents < 100) {
+      setError('El monto mínimo es $1.00');
+      return;
+    }
+    if (amountCents > 500000) {
+      setError('El monto máximo por transacción es $5,000.00');
       return;
     }
     if (!anonymous && socialUrl && !/^https?:\/\/.+/.test(socialUrl)) {
@@ -72,15 +72,16 @@ export default function BidButton({
             : 'bg-pink-600 hover:bg-pink-500 text-white font-bold px-4 py-2 rounded-lg transition'
         }
       >
-        {compact ? 'Pujar' : `Reclama este puesto para ${groupName}`}
+        {compact ? 'Apoyar' : `Apoya a ${groupName}`}
       </button>
 
       {open && (
         <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
           <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl w-full max-w-sm space-y-4">
-            <h3 className="text-xl font-bold">Puja por {groupName}</h3>
+            <h3 className="text-xl font-bold">Apoya a {groupName}</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Mínimo para tomar el trono: ${minRequired.toFixed(2)}
+              Cada puja se suma al total de tu grupo. No hay un mínimo para "tomar la delantera" — entre más done tu
+              comunidad, más arriba queda.
             </p>
             <input
               type="number"

@@ -1,8 +1,10 @@
 -- ============================================================
 -- Esquema base del proyecto "outbid para K-pop"
--- Mecánica: cada grupo puede tomar el puesto #1 pagando más que
--- la puja actual. No hay ciclos ni reset — el trono es permanente
--- hasta que alguien pague más.
+-- Mecánica: el trono lo tiene el grupo cuya comunidad haya donado
+-- MÁS EN TOTAL (suma de todas sus pujas exitosas), no quien haga
+-- la puja individual más grande. Cada puja, sin importar el monto,
+-- se suma al total acumulado de su grupo. No hay ciclos ni reset —
+-- el trono es permanente hasta que otro grupo acumule más.
 -- ============================================================
 
 -- Extensión para UUIDs
@@ -49,24 +51,27 @@ create index if not exists idx_bids_group on bids (group_id);
 
 -- ------------------------------------------------------------
 -- Vista: current_throne — quién tiene el puesto #1 en este momento
--- (la puja exitosa más alta de todo el historial)
+-- (el grupo con la SUMA más alta de pujas exitosas, no la puja más
+-- grande de una sola vez). "supporter_name"/"is_anonymous"/"social_url"
+-- muestran quién hizo la puja individual más grande a ese grupo, solo
+-- como referencia de "quién lidera" — no es lo que decide el trono.
 -- ------------------------------------------------------------
-create or replace view current_throne as
+drop view if exists current_throne;
+create view current_throne as
 select
-  b.id as bid_id,
-  b.group_id,
+  g.id as group_id,
   g.name as group_name,
   g.fandom_name,
   g.image_url,
-  b.amount_cents,
-  b.supporter_name,
-  b.is_anonymous,
-  b.created_at,
-  b.social_url
+  sum(b.amount_cents) as amount_cents,
+  (array_agg(b.supporter_name order by b.amount_cents desc nulls last))[1] as supporter_name,
+  (array_agg(b.is_anonymous order by b.amount_cents desc nulls last))[1] as is_anonymous,
+  (array_agg(b.social_url order by b.amount_cents desc nulls last))[1] as social_url
 from bids b
 join groups g on g.id = b.group_id
 where b.status = 'succeeded'
-order by b.amount_cents desc, b.created_at asc
+group by g.id, g.name, g.fandom_name, g.image_url
+order by amount_cents desc
 limit 1;
 
 -- ------------------------------------------------------------
@@ -92,6 +97,10 @@ limit 50;
 -- ------------------------------------------------------------
 -- Vista: hall_of_fame — cada vez que un grupo NUEVO tomó el trono
 -- (útil para mostrar historial de "reinados" sin resetear nada)
+-- NOTA: quedó desactualizada tras pasar a trono-por-suma-total —
+-- esta vista todavía razona en base a pujas individuales, no a
+-- totales acumulados en el tiempo. No se usa en la app todavía;
+-- si se llega a usar, hay que rehacerla con una suma corrida.
 -- ------------------------------------------------------------
 create or replace view hall_of_fame as
 with ranked as (
@@ -129,25 +138,28 @@ create index if not exists idx_bids_supporter on bids (group_id, supporter_name)
   where status = 'succeeded' and is_anonymous = false;
 
 -- ------------------------------------------------------------
--- Vista: group_rankings — cada grupo con su puja individual más
--- alta (su "récord personal"), para el podio de top 3 + siguientes 5.
--- El #1 de esta vista es el mismo grupo que current_throne (misma
--- métrica), pero aquí se ve también el resto de los grupos.
+-- Vista: group_rankings — cada grupo con el TOTAL acumulado de todas
+-- sus pujas exitosas (no la puja más grande individual), para el
+-- podio de top 3 + siguientes 5. El #1 de esta vista es el mismo
+-- grupo que current_throne (misma métrica: suma total).
+-- top_supporter_* sigue mostrando quién hizo la puja individual más
+-- grande a ese grupo, solo como referencia de "quién va liderando".
 -- ------------------------------------------------------------
-create or replace view group_rankings as
+drop view if exists group_rankings;
+create view group_rankings as
 select
   g.id as group_id,
   g.name as group_name,
   g.fandom_name,
   g.image_url,
-  coalesce(max(b.amount_cents), 0) as best_bid_cents,
+  coalesce(sum(b.amount_cents), 0) as total_donated_cents,
   (array_agg(b.supporter_name order by b.amount_cents desc nulls last))[1] as top_supporter_name,
   (array_agg(b.is_anonymous order by b.amount_cents desc nulls last))[1] as top_is_anonymous,
   (array_agg(b.social_url order by b.amount_cents desc nulls last))[1] as top_social_url
 from groups g
 left join bids b on b.group_id = g.id and b.status = 'succeeded'
 group by g.id, g.name, g.fandom_name, g.image_url
-order by best_bid_cents desc, g.name asc;
+order by total_donated_cents desc, g.name asc;
 
 -- ------------------------------------------------------------
 -- Contador de visitas totales del sitio (para la barra "X visitas

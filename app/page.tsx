@@ -44,7 +44,7 @@ type RankingRow = {
   group_name: string;
   fandom_name: string | null;
   image_url: string | null;
-  best_bid_cents: number;
+  total_donated_cents: number;
   top_supporter_name: string | null;
   top_is_anonymous: boolean | null;
   top_social_url: string | null;
@@ -55,14 +55,12 @@ function RankCard({
   rank,
   group,
   size,
-  throneCents,
   topDonor,
   orderClassName,
 }: {
   rank: number;
   group: RankingRow;
   size: 'lg' | 'md' | 'sm';
-  throneCents: number;
   topDonor?: { supporter_name: string | null; total_donated_cents: number } | null;
   orderClassName?: string;
 }) {
@@ -127,11 +125,11 @@ function RankCard({
               : 'text-xl font-bold text-amber-400 font-mono'
         }
       >
-        ${(group.best_bid_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+        ${(group.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
       </p>
       {!isCompact && (
         <p className="text-xs text-neutral-500">
-          {group.best_bid_cents === 0 ? (
+          {group.total_donated_cents === 0 ? (
             'Nadie ha pujado aún'
           ) : (
             <>
@@ -152,7 +150,7 @@ function RankCard({
         </p>
       )}
       <div className={isCompact ? 'pt-0.5' : 'pt-1'}>
-        <BidButton groupId={group.group_id} groupName={group.group_name} currentThroneCents={throneCents} compact={isCompact} />
+        <BidButton groupId={group.group_id} groupName={group.group_name} compact={isCompact} />
       </div>
     </div>
   );
@@ -199,40 +197,37 @@ function EmptySlotCard({ rank, size, orderClassName }: { rank: number; size: 'lg
 export default async function Home() {
   const supabase = getSupabasePublicClient();
 
-  const { data: throne, error: throneError } = await supabase.from('current_throne').select('*').maybeSingle();
   const { data: feed, error: feedError } = await supabase.from('activity_feed').select('*');
   const { data: groups, error: groupsError } = await supabase.from('groups').select('*').order('name');
   const { data: rankings, error: rankingsError } = await supabase
     .from('group_rankings')
     .select('*')
-    .order('best_bid_cents', { ascending: false });
+    .order('total_donated_cents', { ascending: false });
 
   // TEMPORAL: diagnóstico de por qué producción no trae datos de Supabase.
-  if (throneError || feedError || groupsError || rankingsError) {
+  if (feedError || groupsError || rankingsError) {
     console.error('Supabase debug:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 12),
-      throneError,
       feedError,
       groupsError,
       rankingsError,
     });
   }
 
-  // Mayor donador (no anónimo) del grupo que tiene el trono ahora mismo.
-  const { data: topDonor } = throne
+  // Solo los grupos que ya recibieron al menos una puja ocupan un puesto en el podio.
+  // Sin eso, se llenaría el top 8 con grupos en $0.00 solo por orden alfabético.
+  const bidded = (rankings ?? []).filter((r) => r.total_donated_cents > 0);
+  const unbidded = (rankings ?? []).filter((r) => r.total_donated_cents === 0);
+
+  // Mayor donador (no anónimo) del grupo que tiene el trono ahora mismo (el #1 del ranking).
+  const { data: topDonor } = bidded[0]
     ? await supabase
         .from('top_donor_per_group')
         .select('*')
-        .eq('group_id', throne.group_id)
+        .eq('group_id', bidded[0].group_id)
         .maybeSingle()
     : { data: null };
-
-  const throneCents = throne?.amount_cents ?? 0;
-  // Solo los grupos que ya recibieron al menos una puja ocupan un puesto en el podio.
-  // Sin eso, se llenaría el top 8 con grupos en $0.00 solo por orden alfabético.
-  const bidded = (rankings ?? []).filter((r) => r.best_bid_cents > 0);
-  const unbidded = (rankings ?? []).filter((r) => r.best_bid_cents === 0);
   const top3 = bidded.slice(0, 3);
   const midFive = bidded.slice(3, 8);
   const rest = [...bidded.slice(8), ...unbidded];
@@ -296,7 +291,6 @@ export default async function Home() {
                   rank={i + 1}
                   group={r}
                   size={i === 0 ? 'lg' : 'md'}
-                  throneCents={throneCents}
                   topDonor={i === 0 ? topDonor : undefined}
                   orderClassName={orderClassName}
                 />
@@ -309,7 +303,7 @@ export default async function Home() {
             {[0, 1, 2, 3, 4].map((i) => {
               const r = midFive[i];
               if (!r) return <EmptySlotCard key={i} rank={i + 4} size="sm" />;
-              return <RankCard key={r.group_id} rank={i + 4} group={r} size="sm" throneCents={throneCents} />;
+              return <RankCard key={r.group_id} rank={i + 4} group={r} size="sm" />;
             })}
           </div>
 
@@ -341,14 +335,14 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="text-right hidden sm:block">
-                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Su mejor puja</p>
+                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Total donado</p>
                       <p className="text-pink-400 font-mono text-sm">
-                        {r.best_bid_cents > 0
-                          ? `$${(r.best_bid_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
+                        {r.total_donated_cents > 0
+                          ? `$${(r.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
                           : 'Sin pujas'}
                       </p>
                     </div>
-                    <BidButton groupId={r.group_id} groupName={r.group_name} currentThroneCents={throneCents} />
+                    <BidButton groupId={r.group_id} groupName={r.group_name} />
                   </div>
                 ))}
               </div>
@@ -369,8 +363,8 @@ export default async function Home() {
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">02</p>
-              <p className="font-semibold">Puja más que el trono actual</p>
-              <p className="text-sm text-neutral-500">Tu monto debe superar el monto que ves en "El trono actual", aunque sea por un centavo.</p>
+              <p className="font-semibold">Dona lo que quieras</p>
+              <p className="text-sm text-neutral-500">No hay mínimo para "tomar la delantera". Cada puja, sin importar el monto, se suma al total de tu grupo.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">03</p>
@@ -379,8 +373,8 @@ export default async function Home() {
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">04</p>
-              <p className="font-semibold">Tu grupo toma el #1</p>
-              <p className="text-sm text-neutral-500">El puesto se actualiza al instante y se mantiene hasta que alguien más pague más.</p>
+              <p className="font-semibold">Tu grupo sube en el ranking</p>
+              <p className="text-sm text-neutral-500">El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más en total.</p>
             </div>
           </div>
         </section>
@@ -417,7 +411,7 @@ export default async function Home() {
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Cómo se decide quién tiene el #1?</p>
-              <p className="text-sm text-neutral-500">Gana la puja individual más alta de todo el historial. No se suman pujas anteriores del mismo grupo.</p>
+              <p className="text-sm text-neutral-500">Gana el grupo cuya comunidad haya donado más EN TOTAL — se suman todas las pujas exitosas que ha recibido ese grupo, no solo la más grande.</p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">Represento a un grupo, ¿puedo reclamar su perfil?</p>
@@ -427,7 +421,7 @@ export default async function Home() {
         </section>
 
         {/* Formulario de puja */}
-        <BidForm groups={groups ?? []} currentThroneCents={throneCents} />
+        <BidForm groups={groups ?? []} />
 
         {/* Footer de confianza */}
         <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6 border-t border-neutral-200 dark:border-neutral-900">
@@ -439,7 +433,7 @@ export default async function Home() {
           <div>
             <Zap className="w-6 h-6 mx-auto mb-1 text-pink-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">SIN RESETS</p>
-            <p>El #1 se mantiene hasta que alguien pague más.</p>
+            <p>El #1 se mantiene hasta que otro grupo done más en total.</p>
           </div>
           <div>
             <Trophy className="w-6 h-6 mx-auto mb-1 text-pink-500" />

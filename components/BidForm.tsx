@@ -5,13 +5,7 @@ import { Gavel, VenetianMask, Zap } from 'lucide-react';
 
 type Group = { id: string; name: string; fandom_name: string | null };
 
-export default function BidForm({
-  groups,
-  currentThroneCents,
-}: {
-  groups: Group[];
-  currentThroneCents: number;
-}) {
+export default function BidForm({ groups }: { groups: Group[] }) {
   const [groupId, setGroupId] = useState(groups[0]?.id ?? '');
   const [amount, setAmount] = useState('');
   const [name, setName] = useState('');
@@ -19,8 +13,6 @@ export default function BidForm({
   const [anonymous, setAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  const minRequired = (currentThroneCents + 100) / 100;
 
   async function handleSubmit() {
     setError('');
@@ -30,8 +22,12 @@ export default function BidForm({
       setError('Elige un grupo');
       return;
     }
-    if (!amountCents || amountCents <= currentThroneCents) {
-      setError(`Tu puja debe ser mayor a $${(currentThroneCents / 100).toFixed(2)}`);
+    if (!amountCents || amountCents < 100) {
+      setError('El monto mínimo es $1.00');
+      return;
+    }
+    if (amountCents > 500000) {
+      setError('El monto máximo por transacción es $5,000.00');
       return;
     }
     if (!anonymous && socialUrl && !/^https?:\/\/.+/.test(socialUrl)) {
@@ -71,7 +67,7 @@ export default function BidForm({
         <Gavel className="w-6 h-6 text-pink-500" />
         <div>
           <h2 className="font-bold">HAZ TU PUJA</h2>
-          <p className="text-xs text-neutral-500">Toma el trono para tu grupo favorito</p>
+          <p className="text-xs text-neutral-500">Apoya a tu grupo favorito — cada puja suma a su total</p>
         </div>
       </div>
 
@@ -132,7 +128,7 @@ export default function BidForm({
       </div>
 
       <p className="text-xs text-neutral-500">
-        Mínimo para tomar el trono: <span className="text-amber-600 dark:text-amber-400 font-semibold">${minRequired.toFixed(2)}</span>
+        Monto mínimo: <span className="text-amber-600 dark:text-amber-400 font-semibold">$1.00</span> — no hay tope para "tomar la delantera", cada donación cuenta.
       </p>
 
       <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
