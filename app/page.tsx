@@ -216,6 +216,7 @@ export default async function Home() {
 
   // Contador de visitas: incrementa y lee el total en una sola llamada atómica (RPC).
   const { data: totalVisits } = await supabase.rpc('increment_site_visits');
+  const { data: totalRaised } = await supabase.from('total_raised').select('*').maybeSingle();
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white">
@@ -238,8 +239,10 @@ export default async function Home() {
       </header>
 
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 flex gap-6">
-        {/* Sidebar: donadores en vivo, estilo sidebar de outbid.lol (solo en pantallas grandes) */}
-        <aside className="hidden xl:block w-64 shrink-0 sticky top-8 self-start">
+        {/* Sidebar: donadores en vivo, estilo sidebar de outbid.lol. Siempre visible
+            desde 'lg' (no solo en pantallas ultra anchas), y siempre renderizada
+            aunque no haya donaciones todavía (DonorSidebar ya maneja ese estado vacío). */}
+        <aside className="hidden lg:block w-64 shrink-0 sticky top-8 self-start">
           <DonorSidebar initialItems={feed ?? []} />
         </aside>
 
@@ -346,6 +349,15 @@ export default async function Home() {
             </div>
           </div>
         </section>
+
+        {/* Total recaudado + mensaje de caridad */}
+        <div className="text-center py-2">
+          <p className="text-sm text-neutral-400">Este proyecto ha recaudado</p>
+          <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
+            ${((totalRaised?.total_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          </p>
+          <p className="text-xs text-pink-400 mt-2">🎗️ El 5% de cada puja se dona a fundaciones caritativas</p>
+        </div>
 
         {/* Actividad en vivo */}
         <ActivityFeed initialItems={feed ?? []} />

@@ -168,6 +168,16 @@ create policy "site_stats_public_read" on site_stats for select using (true);
 -- Sin policy de insert/update para anon: el incremento pasa por la
 -- función security definer de abajo, nunca por escritura directa.
 
+-- ------------------------------------------------------------
+-- Vista: total_raised — suma de todas las pujas exitosas de
+-- siempre (para el banner "esto ha recaudado $X, el 5% va a
+-- fundaciones caritativas").
+-- ------------------------------------------------------------
+create or replace view total_raised as
+select coalesce(sum(amount_cents), 0) as total_cents
+from bids
+where status = 'succeeded';
+
 create or replace function increment_site_visits()
 returns bigint
 language sql
