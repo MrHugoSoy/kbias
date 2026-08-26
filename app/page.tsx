@@ -143,31 +143,31 @@ function EmptySlotCard({ rank, size, orderClassName }: { rank: number; size: 'lg
     <div
       className={
         (isThrone
-          ? 'relative border-2 border-dashed border-neutral-800 rounded-2xl p-6 text-center space-y-2'
+          ? 'relative border-2 border-dashed border-pink-700/60 rounded-2xl p-6 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 hover:bg-pink-600/10 transition'
           : isCompact
-            ? 'relative border border-dashed border-neutral-800 rounded-xl p-3 text-center space-y-1'
-            : 'relative border border-dashed border-neutral-800 rounded-2xl p-5 text-center space-y-2') +
+            ? 'relative border border-dashed border-pink-800/50 rounded-xl p-3 text-center space-y-1 bg-pink-600/5 hover:border-pink-500 transition'
+            : 'relative border border-dashed border-pink-800/50 rounded-2xl p-5 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 transition') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
-      <p className={isCompact ? 'text-[10px] tracking-[0.2em] text-neutral-700 font-semibold' : 'text-xs tracking-[0.3em] text-neutral-700 font-semibold'}>
+      <p className={isCompact ? 'text-[10px] tracking-[0.2em] text-pink-500/70 font-bold' : 'text-xs tracking-[0.3em] text-pink-500/70 font-bold'}>
         #{rank}
       </p>
       <div
         className={
           isThrone
-            ? 'w-32 h-32 mx-auto rounded-full border-2 border-dashed border-neutral-800 flex items-center justify-center'
+            ? 'w-32 h-32 mx-auto rounded-full border-2 border-dashed border-pink-600/60 flex items-center justify-center animate-pulse'
             : isCompact
-              ? 'w-12 h-12 mx-auto rounded-full border border-dashed border-neutral-800 flex items-center justify-center'
-              : 'w-20 h-20 mx-auto rounded-full border-2 border-dashed border-neutral-800 flex items-center justify-center'
+              ? 'w-12 h-12 mx-auto rounded-full border border-dashed border-pink-700/60 flex items-center justify-center'
+              : 'w-20 h-20 mx-auto rounded-full border-2 border-dashed border-pink-700/60 flex items-center justify-center'
         }
       >
-        <span className={isThrone ? 'text-4xl opacity-30' : isCompact ? 'text-base opacity-30' : 'text-2xl opacity-30'}>🎤</span>
+        <span className={isThrone ? 'text-4xl text-pink-500' : isCompact ? 'text-base text-pink-500' : 'text-2xl text-pink-500'}>+</span>
       </div>
-      <p className={isThrone ? 'text-lg font-bold text-neutral-600' : isCompact ? 'text-[10px] text-neutral-600' : 'text-sm font-bold text-neutral-600'}>
-        Vacío
+      <p className={isThrone ? 'text-xl font-black text-pink-400' : isCompact ? 'text-[10px] font-bold text-pink-400' : 'text-sm font-bold text-pink-400'}>
+        ¡Disponible!
       </p>
-      {!isCompact && <p className="text-xs text-neutral-700">Nadie ha reclamado este puesto</p>}
+      {!isCompact && <p className="text-xs text-neutral-500">Sé el primero en reclamarlo</p>}
     </div>
   );
 }
