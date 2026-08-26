@@ -6,6 +6,7 @@ import BidForm from '@/components/BidForm';
 import OnlineBar from '@/components/OnlineBar';
 import DonorSidebar from '@/components/DonorSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
+import { FooterLinks } from '@/components/LegalPage';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
@@ -447,16 +448,7 @@ export default async function Home() {
           </div>
         </footer>
 
-        {/* Links legales, estilo outbid.lol */}
-        <div className="text-center text-xs text-neutral-600 pb-4">
-          <a href="/reglas" className="hover:text-pink-400">Reglas</a>
-          <span className="mx-2">·</span>
-          <a href="/terminos" className="hover:text-pink-400">Términos</a>
-          <span className="mx-2">·</span>
-          <a href="/privacidad" className="hover:text-pink-400">Privacidad</a>
-          <span className="mx-2">·</span>
-          <a href="/estadisticas" className="hover:text-pink-400">Estadísticas en vivo</a>
-        </div>
+        <FooterLinks />
       </div>
     </main>
   );

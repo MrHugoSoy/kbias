@@ -1,6 +1,28 @@
 import Link from 'next/link';
 import { ArrowLeft, Crown } from 'lucide-react';
 
+export function FooterLinks() {
+  return (
+    <div className="text-center text-xs text-neutral-600 pb-4">
+      <Link href="/reglas" className="hover:text-pink-400">
+        Reglas
+      </Link>
+      <span className="mx-2">·</span>
+      <Link href="/terminos" className="hover:text-pink-400">
+        Términos
+      </Link>
+      <span className="mx-2">·</span>
+      <Link href="/privacidad" className="hover:text-pink-400">
+        Privacidad
+      </Link>
+      <span className="mx-2">·</span>
+      <Link href="/estadisticas" className="hover:text-pink-400">
+        Estadísticas en vivo
+      </Link>
+    </div>
+  );
+}
+
 export function LegalPage({
   title,
   subtitle,
@@ -33,6 +55,8 @@ export function LegalPage({
         </div>
 
         {children}
+
+        <FooterLinks />
       </div>
     </main>
   );
