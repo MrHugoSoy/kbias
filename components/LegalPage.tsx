@@ -4,6 +4,10 @@ import { ArrowLeft, Crown } from 'lucide-react';
 export function FooterLinks() {
   return (
     <div className="text-center text-xs text-neutral-600 pb-4">
+      <Link href="/sobre-nosotros" className="hover:text-pink-400">
+        Sobre nosotros
+      </Link>
+      <span className="mx-2">·</span>
       <Link href="/reglas" className="hover:text-pink-400">
         Reglas
       </Link>

@@ -17,12 +17,18 @@ create table if not exists groups (
   id uuid primary key default gen_random_uuid(),
   name text not null,                    -- ej. "BLACKPINK"
   fandom_name text,                      -- ej. "BLINK" (nombre oficial del fandom)
-  slug text unique not null,             -- para URLs: /group/blackpink
+  slug text unique not null,             -- para URLs: /grupo/blackpink
   image_url text,                        -- foto/logo del grupo
+  bio text,                              -- descripción corta (1-2 líneas) para su tarjeta y página propia
+  official_url text,                     -- link oficial del grupo (Instagram, sitio, etc.)
   agency text,                           -- opcional: SM, JYP, HYBE, etc.
   claimed_by_fan boolean default false,  -- si un fan/admin verificado gestiona el perfil
   created_at timestamptz default now()
 );
+
+-- Por si la tabla ya existía antes de agregar estas columnas (idempotente).
+alter table groups add column if not exists bio text;
+alter table groups add column if not exists official_url text;
 
 -- ------------------------------------------------------------
 -- Tabla: bids (cada pago que reclama o intenta reclamar el trono)
@@ -159,13 +165,16 @@ select
   g.name as group_name,
   g.fandom_name,
   g.image_url,
+  g.slug,
+  g.bio,
+  g.official_url,
   coalesce(sum(b.amount_cents), 0) as total_donated_cents,
   (array_agg(b.supporter_name order by b.amount_cents desc nulls last))[1] as top_supporter_name,
   (array_agg(b.is_anonymous order by b.amount_cents desc nulls last))[1] as top_is_anonymous,
   (array_agg(b.social_url order by b.amount_cents desc nulls last))[1] as top_social_url
 from groups g
 left join bids b on b.group_id = g.id and b.status = 'succeeded'
-group by g.id, g.name, g.fandom_name, g.image_url
+group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url
 order by total_donated_cents desc, g.name asc;
 
 -- ------------------------------------------------------------

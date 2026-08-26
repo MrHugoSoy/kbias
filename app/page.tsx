@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { Crown, Mic2, Plus, Zap, ShieldCheck, Trophy, Handshake, HelpCircle, Heart, HeartHandshake, VenetianMask } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import BidButton from '@/components/BidButton';
@@ -46,6 +47,9 @@ type RankingRow = {
   group_name: string;
   fandom_name: string | null;
   image_url: string | null;
+  slug: string;
+  bio: string | null;
+  official_url: string | null;
   total_donated_cents: number;
   top_supporter_name: string | null;
   top_is_anonymous: boolean | null;
@@ -94,32 +98,40 @@ function RankCard({
           `#${rank}`
         )}
       </p>
-      <div
-        className={
-          (isThrone
-            ? 'w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
-            : isCompact
-              ? 'w-12 h-12 mx-auto rounded-full border border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
-              : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden') +
-          ' relative transition-transform duration-200 hover:z-20 ' +
-          (isThrone ? 'hover:scale-150' : isCompact ? 'hover:scale-[3.5]' : 'hover:scale-[2]')
-        }
-      >
-        {group.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={group.image_url} alt={group.group_name} className="w-full h-full object-cover" />
-        ) : (
-          <Mic2 className={(isThrone ? 'w-12 h-12' : isCompact ? 'w-5 h-5' : 'w-8 h-8') + ' text-neutral-500 dark:text-neutral-600'} />
-        )}
-      </div>
-      <h2 className={isThrone ? 'text-3xl font-black tracking-tight' : isCompact ? 'text-xs font-bold truncate' : 'text-lg font-bold'}>
-        {group.group_name}
-      </h2>
+      <Link href={`/grupo/${group.slug}`} className="block">
+        <div
+          className={
+            (isThrone
+              ? 'w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
+              : isCompact
+                ? 'w-12 h-12 mx-auto rounded-full border border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
+                : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden') +
+            ' relative transition-transform duration-200 hover:z-20 ' +
+            (isThrone ? 'hover:scale-150' : isCompact ? 'hover:scale-[3.5]' : 'hover:scale-[2]')
+          }
+        >
+          {group.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={group.image_url} alt={group.group_name} className="w-full h-full object-cover" />
+          ) : (
+            <Mic2 className={(isThrone ? 'w-12 h-12' : isCompact ? 'w-5 h-5' : 'w-8 h-8') + ' text-neutral-500 dark:text-neutral-600'} />
+          )}
+        </div>
+        <h2
+          className={
+            'hover:underline ' +
+            (isThrone ? 'text-3xl font-black tracking-tight' : isCompact ? 'text-xs font-bold truncate' : 'text-lg font-bold')
+          }
+        >
+          {group.group_name}
+        </h2>
+      </Link>
       {group.fandom_name && !isCompact && (
         <p className="text-pink-400 text-sm font-semibold flex items-center justify-center gap-1">
           <Heart className="w-3 h-3 fill-current" /> {group.fandom_name} <Heart className="w-3 h-3 fill-current" />
         </p>
       )}
+      {group.bio && !isCompact && <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">{group.bio}</p>}
       <p
         className={
           isThrone
@@ -145,6 +157,11 @@ function RankCard({
               })}
             </>
           )}
+        </p>
+      )}
+      {!isCompact && group.total_donated_cents > 0 && (
+        <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
+          Para quitarle el puesto: +${(group.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
         </p>
       )}
       {isThrone && topDonor?.supporter_name && (
@@ -318,16 +335,18 @@ export default async function Home() {
                       {i < rankedOverflowCount && (
                         <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 9}</span>
                       )}
-                      <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center relative transition-transform duration-200 hover:scale-[3.5] hover:z-20">
+                      <Link href={`/grupo/${r.slug}`} className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center relative transition-transform duration-200 hover:scale-[3.5] hover:z-20">
                         {r.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
                         ) : (
                           <Mic2 className="w-5 h-5 text-neutral-500 dark:text-neutral-600" />
                         )}
-                      </div>
+                      </Link>
                       <div>
-                        <p className="font-bold">{r.group_name}</p>
+                        <Link href={`/grupo/${r.slug}`} className="font-bold hover:underline">
+                          {r.group_name}
+                        </Link>
                         <p className="text-xs text-pink-400">{r.fandom_name}</p>
                       </div>
                     </div>
@@ -338,6 +357,11 @@ export default async function Home() {
                           ? `$${(r.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
                           : 'Sin pujas'}
                       </p>
+                      {r.total_donated_cents > 0 && (
+                        <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
+                          Quítaselo: +${(r.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                        </p>
+                      )}
                     </div>
                     <BidButton groupId={r.group_id} groupName={r.group_name} />
                   </div>
@@ -346,6 +370,9 @@ export default async function Home() {
             )}
           </div>
         </section>
+
+        {/* Formulario de puja — pegado al ranking para que no haya que bajar tanto */}
+        <BidForm groups={groups ?? []} />
 
         {/* Cómo funciona */}
         <section id="como-funciona" className="space-y-4">
@@ -422,9 +449,6 @@ export default async function Home() {
             </div>
           </div>
         </section>
-
-        {/* Formulario de puja */}
-        <BidForm groups={groups ?? []} />
 
         {/* Footer de confianza */}
         <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6 border-t border-neutral-200 dark:border-neutral-900">
