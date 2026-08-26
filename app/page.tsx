@@ -6,21 +6,50 @@ import OnlineBar from '@/components/OnlineBar';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
+type Supporter = {
+  supporter_name: string | null;
+  is_anonymous: boolean | null;
+  social_url: string | null;
+};
+
+// Nombre del donador, como link a su red social si la puso (nunca si es anónimo).
+function renderSupporter(entry: Supporter) {
+  if (entry.is_anonymous) return 'un fan anónimo 🎭';
+  if (entry.social_url) {
+    return (
+      <a
+        href={entry.social_url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="underline decoration-dotted underline-offset-2 hover:text-pink-400"
+      >
+        {entry.supporter_name || 'un fan'}
+      </a>
+    );
+  }
+  return entry.supporter_name || 'un fan';
+}
+
 export default async function Home() {
   const supabase = getSupabasePublicClient();
 
   const { data: throne, error: throneError } = await supabase.from('current_throne').select('*').maybeSingle();
   const { data: feed, error: feedError } = await supabase.from('activity_feed').select('*');
   const { data: groups, error: groupsError } = await supabase.from('groups').select('*').order('name');
+  const { data: rankings, error: rankingsError } = await supabase
+    .from('group_rankings')
+    .select('*')
+    .order('best_bid_cents', { ascending: false });
 
   // TEMPORAL: diagnóstico de por qué producción no trae datos de Supabase.
-  if (throneError || feedError || groupsError) {
+  if (throneError || feedError || groupsError || rankingsError) {
     console.error('Supabase debug:', {
       url: process.env.NEXT_PUBLIC_SUPABASE_URL,
       keyPrefix: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.slice(0, 12),
       throneError,
       feedError,
       groupsError,
+      rankingsError,
     });
   }
 
@@ -34,8 +63,8 @@ export default async function Home() {
     : { data: null };
 
   const throneCents = throne?.amount_cents ?? 0;
-  // Grupos que no están en el trono, ordenados por qué tan cerca están de tomarlo
-  const competitors = (groups ?? []).filter((g) => g.id !== throne?.group_id);
+  const top3 = (rankings ?? []).slice(0, 3);
+  const nextFive = (rankings ?? []).slice(3, 8);
 
   // Contador de visitas: incrementa y lee el total en una sola llamada atómica (RPC).
   const { data: totalVisits } = await supabase.rpc('increment_site_visits');
@@ -63,102 +92,104 @@ export default async function Home() {
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
         <OnlineBar totalVisits={totalVisits ?? 0} />
 
-        {/* Trono actual */}
-        <section className="relative">
-          <div className="absolute inset-0 bg-pink-600/10 blur-3xl rounded-full" />
-          {throne ? (
-            <div className="relative border-2 border-pink-600 rounded-2xl p-8 text-center space-y-3 bg-gradient-to-b from-pink-950/30 to-black">
-              <div className="text-5xl">👑</div>
-              <p className="text-xs tracking-[0.3em] text-pink-400 font-semibold">✦ EL TRONO ACTUAL ✦</p>
-              <div className="w-40 h-40 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-800 flex items-center justify-center overflow-hidden">
-                {throne.image_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={throne.image_url} alt={throne.group_name} className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-4xl">🎤</span>
-                )}
-              </div>
-              <h2 className="text-4xl font-black tracking-tight">{throne.group_name}</h2>
-              {throne.fandom_name && (
-                <p className="text-pink-400 font-semibold">♥ {throne.fandom_name} ♥</p>
-              )}
-              <p className="text-xs text-neutral-500 tracking-widest uppercase pt-2">Monto actual</p>
-              <p className="text-5xl font-black text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)] font-mono">
-                ${(throne.amount_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-              </p>
-              <p className="text-sm text-neutral-500">
-                reclamado por{' '}
-                {!throne.is_anonymous && throne.social_url ? (
-                  <a
-                    href={throne.social_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline decoration-dotted underline-offset-2 hover:text-pink-400"
-                  >
-                    {throne.supporter_name || 'un fan'}
-                  </a>
-                ) : throne.is_anonymous ? (
-                  'un fan anónimo 🎭'
-                ) : (
-                  throne.supporter_name || 'un fan'
-                )}
-              </p>
-              {topDonor?.supporter_name && (
-                <p className="text-xs text-neutral-600">
-                  Mayor fan: <span className="text-pink-300 font-semibold">{topDonor.supporter_name}</span> — $
-                  {(topDonor.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                </p>
-              )}
-            </div>
-          ) : (
+        {/* Podio: top 3 */}
+        <section id="ranking" className="space-y-4">
+          {top3.length === 0 ? (
             <div className="relative border-2 border-pink-600 rounded-2xl p-10 text-center">
               <p className="text-xl">El trono está vacío. ¡Sé el primero en reclamarlo!</p>
             </div>
-          )}
-        </section>
-
-        {/* Grupos competidores */}
-        <section id="ranking" className="space-y-3">
-          <div className="flex items-baseline gap-2">
-            <h2 className="text-lg font-bold flex items-center gap-2">👑 GRUPOS COMPETIDORES</h2>
-            <span className="text-xs text-neutral-500">¡Tú puedes tomar el trono!</span>
-          </div>
-          <div className="space-y-2">
-            {/*
-              La puja mínima para tomar el trono es SIEMPRE throneCents + $0.01,
-              sin importar cuánto haya pagado antes cada grupo (current_throne y
-              /api/bid comparan contra el monto más alto histórico, no contra
-              una suma acumulada por grupo). Por eso la diferencia es la misma
-              para todos los competidores.
-            */}
-            {competitors.map((group) => (
-              <div key={group.id} className="flex items-center justify-between bg-neutral-900 rounded-xl p-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-neutral-800 overflow-hidden flex items-center justify-center">
-                    {group.image_url ? (
+          ) : (
+            <div className="relative grid sm:grid-cols-3 gap-4">
+              <div className="hidden sm:block absolute inset-0 bg-pink-600/10 blur-3xl rounded-full -z-10" />
+              {top3.map((r, i) => (
+                <div
+                  key={r.group_id}
+                  className={
+                    i === 0
+                      ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-950/30 to-black sm:col-span-1'
+                      : 'relative border border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-neutral-950'
+                  }
+                >
+                  <p className="text-xs tracking-[0.3em] text-pink-400 font-semibold">
+                    {i === 0 ? '👑 #1 · EL TRONO' : `#${i + 1}`}
+                  </p>
+                  <div
+                    className={
+                      i === 0
+                        ? 'w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-800 flex items-center justify-center overflow-hidden'
+                        : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-700 bg-neutral-800 flex items-center justify-center overflow-hidden'
+                    }
+                  >
+                    {r.image_url ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" />
+                      <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
                     ) : (
-                      <span>🎤</span>
+                      <span className={i === 0 ? 'text-4xl' : 'text-2xl'}>🎤</span>
                     )}
                   </div>
-                  <div>
-                    <p className="font-bold">{group.name}</p>
-                    <p className="text-xs text-pink-400">{group.fandom_name}</p>
+                  <h2 className={i === 0 ? 'text-3xl font-black tracking-tight' : 'text-lg font-bold'}>{r.group_name}</h2>
+                  {r.fandom_name && <p className="text-pink-400 text-sm font-semibold">♥ {r.fandom_name} ♥</p>}
+                  <p
+                    className={
+                      i === 0
+                        ? 'text-4xl font-black text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)] font-mono'
+                        : 'text-xl font-bold text-amber-400 font-mono'
+                    }
+                  >
+                    ${(r.best_bid_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    {r.best_bid_cents === 0
+                      ? 'Nadie ha pujado aún'
+                      : <>liderado por {renderSupporter({ supporter_name: r.top_supporter_name, is_anonymous: r.top_is_anonymous, social_url: r.top_social_url })}</>}
+                  </p>
+                  {i === 0 && topDonor?.supporter_name && (
+                    <p className="text-xs text-neutral-600">
+                      Mayor fan: <span className="text-pink-300 font-semibold">{topDonor.supporter_name}</span> — $
+                      {(topDonor.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                    </p>
+                  )}
+                  <div className="pt-1">
+                    <BidButton groupId={r.group_id} groupName={r.group_name} currentThroneCents={throneCents} />
                   </div>
                 </div>
-                <div className="text-right hidden sm:block">
-                  <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Diferencia con el trono</p>
-                  <p className="text-pink-400 font-mono text-sm">
-                    {throneCents > 0
-                      ? `-$${(throneCents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
-                      : '¡Sé el primero!'}
-                  </p>
+              ))}
+            </div>
+          )}
+
+          {/* Siguientes 5 */}
+          {nextFive.length > 0 && (
+            <div className="space-y-2">
+              {nextFive.map((r, i) => (
+                <div key={r.group_id} className="flex items-center justify-between bg-neutral-900 rounded-xl p-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 4}</span>
+                    <div className="w-12 h-12 rounded-full bg-neutral-800 overflow-hidden flex items-center justify-center">
+                      {r.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span>🎤</span>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-bold">{r.group_name}</p>
+                      <p className="text-xs text-pink-400">{r.fandom_name}</p>
+                    </div>
+                  </div>
+                  <div className="text-right hidden sm:block">
+                    <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Su mejor puja</p>
+                    <p className="text-pink-400 font-mono text-sm">
+                      {r.best_bid_cents > 0
+                        ? `$${(r.best_bid_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
+                        : 'Sin pujas'}
+                    </p>
+                  </div>
+                  <BidButton groupId={r.group_id} groupName={r.group_name} currentThroneCents={throneCents} />
                 </div>
-                <BidButton groupId={group.id} groupName={group.name} currentThroneCents={throneCents} />
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
 
         {/* Cómo funciona */}

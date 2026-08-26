@@ -129,6 +129,27 @@ create index if not exists idx_bids_supporter on bids (group_id, supporter_name)
   where status = 'succeeded' and is_anonymous = false;
 
 -- ------------------------------------------------------------
+-- Vista: group_rankings — cada grupo con su puja individual más
+-- alta (su "récord personal"), para el podio de top 3 + siguientes 5.
+-- El #1 de esta vista es el mismo grupo que current_throne (misma
+-- métrica), pero aquí se ve también el resto de los grupos.
+-- ------------------------------------------------------------
+create or replace view group_rankings as
+select
+  g.id as group_id,
+  g.name as group_name,
+  g.fandom_name,
+  g.image_url,
+  coalesce(max(b.amount_cents), 0) as best_bid_cents,
+  (array_agg(b.supporter_name order by b.amount_cents desc nulls last))[1] as top_supporter_name,
+  (array_agg(b.is_anonymous order by b.amount_cents desc nulls last))[1] as top_is_anonymous,
+  (array_agg(b.social_url order by b.amount_cents desc nulls last))[1] as top_social_url
+from groups g
+left join bids b on b.group_id = g.id and b.status = 'succeeded'
+group by g.id, g.name, g.fandom_name, g.image_url
+order by best_bid_cents desc, g.name asc;
+
+-- ------------------------------------------------------------
 -- Contador de visitas totales del sitio (para la barra "X visitas
 -- desde el lanzamiento", estilo outbid.lol). Fila única, incrementada
 -- de forma atómica en cada carga de la página vía RPC.
