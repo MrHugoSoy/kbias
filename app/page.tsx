@@ -238,15 +238,7 @@ export default async function Home() {
         </nav>
       </header>
 
-      <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 flex gap-6">
-        {/* Sidebar: donadores en vivo, estilo sidebar de outbid.lol. Siempre visible
-            desde 'lg' (no solo en pantallas ultra anchas), y siempre renderizada
-            aunque no haya donaciones todavía (DonorSidebar ya maneja ese estado vacío). */}
-        <aside className="hidden lg:block w-64 shrink-0 sticky top-8 self-start">
-          <DonorSidebar initialItems={feed ?? []} />
-        </aside>
-
-        <div className="flex-1 min-w-0 space-y-10">
+      <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
         <OnlineBar totalVisits={totalVisits ?? 0} />
 
         {/* Podio: top 3 */}
@@ -288,39 +280,45 @@ export default async function Home() {
             })}
           </div>
 
-          {/* Resto del ranking, en lista compacta — no desaparecen los que no tienen pujas */}
-          {rest.length > 0 && (
-            <div className="space-y-2">
-              {rest.map((r, i) => (
-                <div key={r.group_id} className="flex items-center justify-between bg-neutral-900 rounded-xl p-3">
-                  <div className="flex items-center gap-3">
-                    <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 9}</span>
-                    <div className="w-12 h-12 rounded-full bg-neutral-800 overflow-hidden flex items-center justify-center">
-                      {r.image_url ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
-                      ) : (
-                        <span>🎤</span>
-                      )}
+          {/* Debajo del top 8: sidebar de donadores en vivo + resto de las bandas, uno al lado del otro */}
+          <div className="flex gap-6">
+            <aside className="hidden lg:block w-64 shrink-0 sticky top-8 self-start">
+              <DonorSidebar initialItems={feed ?? []} />
+            </aside>
+
+            {rest.length > 0 && (
+              <div className="flex-1 min-w-0 space-y-2">
+                {rest.map((r, i) => (
+                  <div key={r.group_id} className="flex items-center justify-between bg-neutral-900 rounded-xl p-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 9}</span>
+                      <div className="w-12 h-12 rounded-full bg-neutral-800 overflow-hidden flex items-center justify-center">
+                        {r.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
+                        ) : (
+                          <span>🎤</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-bold">{r.group_name}</p>
+                        <p className="text-xs text-pink-400">{r.fandom_name}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-bold">{r.group_name}</p>
-                      <p className="text-xs text-pink-400">{r.fandom_name}</p>
+                    <div className="text-right hidden sm:block">
+                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Su mejor puja</p>
+                      <p className="text-pink-400 font-mono text-sm">
+                        {r.best_bid_cents > 0
+                          ? `$${(r.best_bid_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
+                          : 'Sin pujas'}
+                      </p>
                     </div>
+                    <BidButton groupId={r.group_id} groupName={r.group_name} currentThroneCents={throneCents} />
                   </div>
-                  <div className="text-right hidden sm:block">
-                    <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Su mejor puja</p>
-                    <p className="text-pink-400 font-mono text-sm">
-                      {r.best_bid_cents > 0
-                        ? `$${(r.best_bid_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
-                        : 'Sin pujas'}
-                    </p>
-                  </div>
-                  <BidButton groupId={r.group_id} groupName={r.group_name} currentThroneCents={throneCents} />
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
         </section>
 
         {/* Cómo funciona */}
@@ -423,7 +421,6 @@ export default async function Home() {
           <a href="#" className="hover:text-pink-400">Privacidad</a>
           <span className="mx-2">·</span>
           <a href="#" className="hover:text-pink-400">Estadísticas en vivo</a>
-        </div>
         </div>
       </div>
     </main>
