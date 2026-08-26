@@ -294,9 +294,9 @@ export default async function Home() {
                 {rest.map((r, i) => (
                   <div key={r.group_id} className="flex items-center justify-between bg-neutral-900 rounded-xl p-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-neutral-600 font-mono text-sm w-6 text-center">
-                        {i < rankedOverflowCount ? `#${i + 9}` : ''}
-                      </span>
+                      {i < rankedOverflowCount && (
+                        <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 9}</span>
+                      )}
                       <div className="w-12 h-12 rounded-full bg-neutral-800 overflow-hidden flex items-center justify-center">
                         {r.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
