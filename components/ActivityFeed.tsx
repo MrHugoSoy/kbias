@@ -10,6 +10,7 @@ type FeedItem = {
   amount_cents: number;
   supporter_name: string | null;
   is_anonymous: boolean;
+  social_url: string | null;
   created_at: string;
 };
 
@@ -40,6 +41,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             amount_cents: number;
             supporter_name: string | null;
             is_anonymous: boolean;
+            social_url: string | null;
             created_at: string;
           };
 
@@ -56,6 +58,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             amount_cents: newBid.amount_cents,
             supporter_name: newBid.supporter_name,
             is_anonymous: newBid.is_anonymous,
+            social_url: newBid.social_url,
             created_at: newBid.created_at,
           };
 
@@ -94,8 +97,21 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             <span className="text-xs text-neutral-500 w-16 shrink-0">{timeAgo(item.created_at)}</span>
             <span>{item.is_anonymous ? '🎭' : '👤'}</span>
             <span className="flex-1">
-              {item.is_anonymous ? 'un fan anónimo' : item.supporter_name || 'un fan'} apoyó a{' '}
-              <strong className="text-pink-400">{item.group_name}</strong>
+              {!item.is_anonymous && item.social_url ? (
+                <a
+                  href={item.social_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline decoration-dotted underline-offset-2 hover:text-pink-400"
+                >
+                  {item.supporter_name || 'un fan'}
+                </a>
+              ) : item.is_anonymous ? (
+                'un fan anónimo'
+              ) : (
+                item.supporter_name || 'un fan'
+              )}{' '}
+              apoyó a <strong className="text-pink-400">{item.group_name}</strong>
             </span>
             <span className="font-mono text-amber-400">${(item.amount_cents / 100).toFixed(2)}</span>
           </div>

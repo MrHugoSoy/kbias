@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
     const groupId = session.metadata?.groupId;
     const supporterName = session.metadata?.supporterName || null;
     const isAnonymous = session.metadata?.isAnonymous === 'true';
+    const socialUrl = session.metadata?.socialUrl || null;
     const amountCents = session.amount_total ?? 0;
 
     if (!groupId) {
@@ -42,6 +43,7 @@ export async function POST(req: NextRequest) {
       amount_cents: amountCents,
       supporter_name: isAnonymous ? null : supporterName,
       is_anonymous: isAnonymous,
+      social_url: isAnonymous ? null : socialUrl,
       stripe_payment_intent_id: session.payment_intent as string,
       status: 'succeeded',
     });

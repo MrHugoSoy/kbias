@@ -12,12 +12,25 @@ import { getSupabaseServiceClient } from '@/lib/supabase';
 // 4. El registro en `bids` se crea DESPUÉS, en el webhook, solo si el
 //    pago se confirma como exitoso — nunca antes, para que nadie pueda
 //    "reclamar el trono" sin haber pagado de verdad.
+function isValidHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === 'http:' || url.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const { groupId, amountCents, supporterName, isAnonymous } = body;
+  const { groupId, amountCents, supporterName, isAnonymous, socialUrl } = body;
 
   if (!groupId || !amountCents) {
     return NextResponse.json({ error: 'Faltan datos: groupId y amountCents son requeridos' }, { status: 400 });
+  }
+
+  if (socialUrl && !isValidHttpUrl(socialUrl)) {
+    return NextResponse.json({ error: 'El link de red social debe ser una URL válida (http/https)' }, { status: 400 });
   }
 
   if (amountCents < BID_LIMITS.MIN_CENTS) {
@@ -67,6 +80,7 @@ export async function POST(req: NextRequest) {
       groupId,
       supporterName: supporterName || '',
       isAnonymous: isAnonymous ? 'true' : 'false',
+      socialUrl: !isAnonymous && socialUrl ? socialUrl : '',
     },
     success_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?success=true`,
     cancel_url: `${process.env.NEXT_PUBLIC_SITE_URL}/?canceled=true`,

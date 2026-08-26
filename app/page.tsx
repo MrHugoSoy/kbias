@@ -87,7 +87,21 @@ export default async function Home() {
                 ${(throne.amount_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
               </p>
               <p className="text-sm text-neutral-500">
-                reclamado por {throne.is_anonymous ? 'un fan anónimo 🎭' : throne.supporter_name || 'un fan'}
+                reclamado por{' '}
+                {!throne.is_anonymous && throne.social_url ? (
+                  <a
+                    href={throne.social_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-dotted underline-offset-2 hover:text-pink-400"
+                  >
+                    {throne.supporter_name || 'un fan'}
+                  </a>
+                ) : throne.is_anonymous ? (
+                  'un fan anónimo 🎭'
+                ) : (
+                  throne.supporter_name || 'un fan'
+                )}
               </p>
               {topDonor?.supporter_name && (
                 <p className="text-xs text-neutral-600">

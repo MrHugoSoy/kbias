@@ -14,6 +14,7 @@ export default function BidButton({
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
   const [name, setName] = useState('');
+  const [socialUrl, setSocialUrl] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -28,6 +29,10 @@ export default function BidButton({
       setError(`Tu puja debe ser mayor a $${(currentThroneCents / 100).toFixed(2)}`);
       return;
     }
+    if (!anonymous && socialUrl && !/^https?:\/\/.+/.test(socialUrl)) {
+      setError('El link de red social debe empezar con http:// o https://');
+      return;
+    }
 
     setLoading(true);
     try {
@@ -39,6 +44,7 @@ export default function BidButton({
           amountCents,
           supporterName: name,
           isAnonymous: anonymous,
+          socialUrl: anonymous ? '' : socialUrl,
         }),
       });
       const data = await res.json();
@@ -82,6 +88,14 @@ export default function BidButton({
               placeholder="Tu nombre o el de tu fandom (opcional)"
               value={name}
               onChange={(e) => setName(e.target.value)}
+              disabled={anonymous}
+              className="w-full bg-neutral-800 rounded-lg px-3 py-2 disabled:opacity-50"
+            />
+            <input
+              type="url"
+              placeholder="Tu red social (opcional): https://instagram.com/tu_usuario"
+              value={socialUrl}
+              onChange={(e) => setSocialUrl(e.target.value)}
               disabled={anonymous}
               className="w-full bg-neutral-800 rounded-lg px-3 py-2 disabled:opacity-50"
             />

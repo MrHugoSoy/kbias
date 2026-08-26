@@ -14,6 +14,7 @@ export default function BidForm({
   const [groupId, setGroupId] = useState(groups[0]?.id ?? '');
   const [amount, setAmount] = useState('');
   const [name, setName] = useState('');
+  const [socialUrl, setSocialUrl] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,13 +33,23 @@ export default function BidForm({
       setError(`Tu puja debe ser mayor a $${(currentThroneCents / 100).toFixed(2)}`);
       return;
     }
+    if (!anonymous && socialUrl && !/^https?:\/\/.+/.test(socialUrl)) {
+      setError('El link de red social debe empezar con http:// o https://');
+      return;
+    }
 
     setLoading(true);
     try {
       const res = await fetch('/api/bid', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId, amountCents, supporterName: name, isAnonymous: anonymous }),
+        body: JSON.stringify({
+          groupId,
+          amountCents,
+          supporterName: name,
+          isAnonymous: anonymous,
+          socialUrl: anonymous ? '' : socialUrl,
+        }),
       });
       const data = await res.json();
       if (data.url) {
@@ -104,6 +115,19 @@ export default function BidForm({
             className="w-full mt-1 bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
           />
         </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-neutral-500 uppercase tracking-wide">Tu red social (opcional)</label>
+        <input
+          type="url"
+          value={socialUrl}
+          onChange={(e) => setSocialUrl(e.target.value)}
+          disabled={anonymous}
+          placeholder="https://instagram.com/tu_usuario"
+          className="w-full mt-1 bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
+        />
+        <p className="text-[10px] text-neutral-600 mt-1">Se muestra como link junto a tu nombre en el feed.</p>
       </div>
 
       <p className="text-xs text-neutral-500">
