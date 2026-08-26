@@ -13,6 +13,12 @@ export default function PrivacidadPage() {
         específicas de protección de datos (como el RGPD en la Unión Europea).
       </div>
 
+      <div className="text-sm bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900/60 rounded-lg p-4 font-semibold">
+        No guardamos datos personales de nuestros usuarios por nuestra cuenta. Lo único que existe en el sistema es
+        lo que tú decides escribir voluntariamente al pujar — tu nombre y/o tu link de red social, ambos opcionales.
+        No hay cuentas, no pedimos tu correo, y si pujas de forma anónima, ni siquiera eso se guarda.
+      </div>
+
       <LegalSection title="1. Qué recopilamos">
         <p>
           <strong>Datos que tú decides compartir:</strong> tu nombre o el de tu fandom (opcional), un link a tu red
@@ -78,11 +84,24 @@ export default function PrivacidadPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Cambios a esta política">
+      <LegalSection title="7. Sin importar en qué país estés">
+        <p>
+          Al recopilar solo lo mínimo indispensable (y nada si pujas de forma anónima), buscamos cumplir de forma
+          natural con el espíritu de las leyes de protección de datos más comunes, sin importar desde dónde nos
+          visites — por ejemplo el RGPD en la Unión Europea/Reino Unido, o la CCPA en California, EE. UU.
+        </p>
+        <p>
+          Si vives en un país cuya ley te da derechos específicos sobre tus datos (acceso, corrección, eliminación,
+          oposición), puedes ejercerlos escribiéndonos — dado lo poco que guardamos, la mayoría de esas solicitudes
+          se resuelven de inmediato.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="8. Cambios a esta política">
         <p>Podemos actualizar esta política conforme el sitio crece. Si el cambio es importante, lo anunciaremos aquí.</p>
       </LegalSection>
 
-      <LegalSection title="8. Contacto">
+      <LegalSection title="9. Contacto">
         <p>¿Dudas sobre tus datos? Contáctanos directamente por los canales del sitio.</p>
       </LegalSection>
     </LegalPage>

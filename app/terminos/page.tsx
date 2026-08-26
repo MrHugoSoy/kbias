@@ -10,8 +10,7 @@ export default function TerminosPage() {
     <LegalPage title="Términos de servicio" subtitle="Última actualización: pendiente de fecha de lanzamiento.">
       <div className="text-xs bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 rounded-lg p-3">
         Esta es una plantilla base para arrancar, no un documento legal revisado por un abogado. Antes de operar con
-        dinero real, hazla revisar por alguien con conocimiento legal en tu jurisdicción — sobre todo la sección de
-        ley aplicable, que todavía no está definida.
+        dinero real, hazla revisar por alguien con conocimiento legal en tu jurisdicción.
       </div>
 
       <LegalSection title="1. Qué es El Trono">
@@ -100,12 +99,16 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Ley aplicable">
+      <LegalSection title="10. Ley aplicable, sin importar tu país">
         <p>
-          <em>
-            Pendiente — aquí va la jurisdicción/país cuyas leyes rigen estos Términos. Complétalo antes de considerar
-            este documento como definitivo.
-          </em>
+          El Trono recibe pujas de fans en distintos países, así que estos Términos no están atados a la ley de un
+          solo lugar. Si tu país o región te da derechos que no se pueden renunciar por contrato (por ejemplo,
+          protecciones al consumidor en tu jurisdicción local), esos derechos siguen aplicando sin importar lo que
+          digan estos Términos.
+        </p>
+        <p>
+          Para todo lo demás, preferimos resolver cualquier problema escribiéndonos directamente antes de recurrir a
+          la vía legal — dado el tamaño del servicio, casi siempre es más rápido así.
         </p>
       </LegalSection>
 
