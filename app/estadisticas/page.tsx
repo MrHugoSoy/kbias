@@ -55,7 +55,7 @@ export default async function EstadisticasPage() {
             {(rankings ?? []).map((r, i) => (
               <div key={r.group_id} className="flex items-center gap-3 px-4 py-3 text-sm">
                 <span className="text-neutral-500 font-mono w-8 shrink-0">#{i + 1}</span>
-                <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center shrink-0">
+                <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center shrink-0 relative transition-transform duration-200 hover:scale-125 hover:z-10">
                   {r.image_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
