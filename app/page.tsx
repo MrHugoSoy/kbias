@@ -167,9 +167,13 @@ export default async function Home() {
     : { data: null };
 
   const throneCents = throne?.amount_cents ?? 0;
-  const top3 = (rankings ?? []).slice(0, 3);
-  const midFive = (rankings ?? []).slice(3, 8);
-  const rest = (rankings ?? []).slice(8);
+  // Solo los grupos que ya recibieron al menos una puja ocupan un puesto en el podio.
+  // Sin eso, se llenaría el top 8 con grupos en $0.00 solo por orden alfabético.
+  const bidded = (rankings ?? []).filter((r) => r.best_bid_cents > 0);
+  const unbidded = (rankings ?? []).filter((r) => r.best_bid_cents === 0);
+  const top3 = bidded.slice(0, 3);
+  const midFive = bidded.slice(3, 8);
+  const rest = [...bidded.slice(8), ...unbidded];
 
   // Contador de visitas: incrementa y lee el total en una sola llamada atómica (RPC).
   const { data: totalVisits } = await supabase.rpc('increment_site_visits');
