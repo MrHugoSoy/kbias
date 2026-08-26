@@ -54,8 +54,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ received: true });
 }
-
-// Stripe necesita el body crudo para verificar la firma
-export const config = {
-  api: { bodyParser: false },
-};
