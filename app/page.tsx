@@ -39,7 +39,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 max-w-4xl mx-auto">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
         <div className="flex items-center gap-2">
           <span className="text-2xl">👑</span>
           <div>
@@ -56,7 +56,7 @@ export default async function Home() {
         </nav>
       </header>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
+      <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
         {/* Trono actual */}
         <section className="relative">
           <div className="absolute inset-0 bg-pink-600/10 blur-3xl rounded-full" />
@@ -141,8 +141,58 @@ export default async function Home() {
           </div>
         </section>
 
+        {/* Cómo funciona */}
+        <section id="como-funciona" className="space-y-4">
+          <h2 className="text-lg font-bold flex items-center gap-2">⚡ ¿CÓMO FUNCIONA?</h2>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="bg-neutral-900 rounded-xl p-4 space-y-1">
+              <p className="text-pink-400 font-mono text-sm">01</p>
+              <p className="font-semibold">Elige tu grupo</p>
+              <p className="text-sm text-neutral-500">Escoge al grupo por el que quieres pujar en la lista de competidores.</p>
+            </div>
+            <div className="bg-neutral-900 rounded-xl p-4 space-y-1">
+              <p className="text-pink-400 font-mono text-sm">02</p>
+              <p className="font-semibold">Puja más que el trono actual</p>
+              <p className="text-sm text-neutral-500">Tu monto debe superar el monto que ves en "El trono actual", aunque sea por un centavo.</p>
+            </div>
+            <div className="bg-neutral-900 rounded-xl p-4 space-y-1">
+              <p className="text-pink-400 font-mono text-sm">03</p>
+              <p className="font-semibold">Paga de forma segura</p>
+              <p className="text-sm text-neutral-500">El pago se procesa con Stripe. Tu puja solo cuenta si el cobro se confirma.</p>
+            </div>
+            <div className="bg-neutral-900 rounded-xl p-4 space-y-1">
+              <p className="text-pink-400 font-mono text-sm">04</p>
+              <p className="font-semibold">Tu grupo toma el #1</p>
+              <p className="text-sm text-neutral-500">El puesto se actualiza al instante y se mantiene hasta que alguien más pague más.</p>
+            </div>
+          </div>
+        </section>
+
         {/* Actividad en vivo */}
         <ActivityFeed initialItems={feed ?? []} />
+
+        {/* FAQ */}
+        <section id="faq" className="space-y-3">
+          <h2 className="text-lg font-bold flex items-center gap-2">❓ FAQ</h2>
+          <div className="divide-y divide-neutral-900 bg-neutral-950 rounded-xl overflow-hidden">
+            <div className="p-4 space-y-1">
+              <p className="font-semibold text-sm">¿Esto es una apuesta?</p>
+              <p className="text-sm text-neutral-500">No. Es un apoyo/tip a tu grupo favorito. No hay premio ni retorno económico para quien paga.</p>
+            </div>
+            <div className="p-4 space-y-1">
+              <p className="font-semibold text-sm">¿Puedo recuperar mi dinero?</p>
+              <p className="text-sm text-neutral-500">Las pujas no son reembolsables, salvo error técnico comprobado.</p>
+            </div>
+            <div className="p-4 space-y-1">
+              <p className="font-semibold text-sm">¿Cómo se decide quién tiene el #1?</p>
+              <p className="text-sm text-neutral-500">Gana la puja individual más alta de todo el historial. No se suman pujas anteriores del mismo grupo.</p>
+            </div>
+            <div className="p-4 space-y-1">
+              <p className="font-semibold text-sm">Represento a un grupo, ¿puedo reclamar su perfil?</p>
+              <p className="text-sm text-neutral-500">Estamos preparando ese flujo de verificación. Mientras tanto, contáctanos directamente.</p>
+            </div>
+          </div>
+        </section>
 
         {/* Formulario de puja */}
         <BidForm groups={groups ?? []} currentThroneCents={throneCents} />
@@ -170,6 +220,17 @@ export default async function Home() {
             <p>Tú decides quién reina en el mundo del K-pop.</p>
           </div>
         </footer>
+
+        {/* Links legales, estilo outbid.lol */}
+        <div className="text-center text-xs text-neutral-600 pb-4">
+          <a href="#" className="hover:text-pink-400">Reglas</a>
+          <span className="mx-2">·</span>
+          <a href="#" className="hover:text-pink-400">Términos</a>
+          <span className="mx-2">·</span>
+          <a href="#" className="hover:text-pink-400">Privacidad</a>
+          <span className="mx-2">·</span>
+          <a href="#" className="hover:text-pink-400">Estadísticas en vivo</a>
+        </div>
       </div>
     </main>
   );
