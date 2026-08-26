@@ -39,7 +39,7 @@ export default async function Home() {
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 max-w-5xl mx-auto">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 max-w-4xl mx-auto">
         <div className="flex items-center gap-2">
           <span className="text-2xl">👑</span>
           <div>
@@ -56,7 +56,7 @@ export default async function Home() {
         </nav>
       </header>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-10">
+      <div className="max-w-4xl mx-auto px-4 py-8 space-y-10">
         {/* Trono actual */}
         <section className="relative">
           <div className="absolute inset-0 bg-pink-600/10 blur-3xl rounded-full" />
