@@ -6,10 +6,12 @@ export default function BidButton({
   groupId,
   groupName,
   currentThroneCents,
+  compact,
 }: {
   groupId: string;
   groupName: string;
   currentThroneCents: number;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [amount, setAmount] = useState('');
@@ -64,9 +66,13 @@ export default function BidButton({
     <>
       <button
         onClick={() => setOpen(true)}
-        className="bg-pink-600 hover:bg-pink-500 text-white font-bold px-4 py-2 rounded-lg transition"
+        className={
+          compact
+            ? 'w-full bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg transition'
+            : 'bg-pink-600 hover:bg-pink-500 text-white font-bold px-4 py-2 rounded-lg transition'
+        }
       >
-        Reclama este puesto para {groupName}
+        {compact ? 'Pujar' : `Reclama este puesto para ${groupName}`}
       </button>
 
       {open && (
