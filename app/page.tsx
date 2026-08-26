@@ -3,6 +3,7 @@ import BidButton from '@/components/BidButton';
 import ActivityFeed from '@/components/ActivityFeed';
 import BidForm from '@/components/BidForm';
 import OnlineBar from '@/components/OnlineBar';
+import DonorSidebar from '@/components/DonorSidebar';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
@@ -236,7 +237,13 @@ export default async function Home() {
         </nav>
       </header>
 
-      <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
+      <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 flex gap-6">
+        {/* Sidebar: donadores en vivo, estilo sidebar de outbid.lol (solo en pantallas grandes) */}
+        <aside className="hidden xl:block w-64 shrink-0 sticky top-8 self-start">
+          <DonorSidebar initialItems={feed ?? []} />
+        </aside>
+
+        <div className="flex-1 min-w-0 space-y-10">
         <OnlineBar totalVisits={totalVisits ?? 0} />
 
         {/* Podio: top 3 */}
@@ -402,6 +409,7 @@ export default async function Home() {
           <a href="#" className="hover:text-pink-400">Privacidad</a>
           <span className="mx-2">·</span>
           <a href="#" className="hover:text-pink-400">Estadísticas en vivo</a>
+        </div>
         </div>
       </div>
     </main>
