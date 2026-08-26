@@ -81,7 +81,8 @@ limit 1;
 -- ------------------------------------------------------------
 -- Vista: activity_feed — últimas pujas exitosas (para el feed en vivo)
 -- ------------------------------------------------------------
-create or replace view activity_feed as
+drop view if exists activity_feed;
+create view activity_feed as
 select
   b.id,
   b.group_id,
@@ -106,7 +107,8 @@ limit 50;
 -- totales acumulados en el tiempo. No se usa en la app todavía;
 -- si se llega a usar, hay que rehacerla con una suma corrida.
 -- ------------------------------------------------------------
-create or replace view hall_of_fame as
+drop view if exists hall_of_fame;
+create view hall_of_fame as
 with ranked as (
   select
     b.*,
@@ -127,7 +129,8 @@ order by amount_cents desc;
 -- Las donaciones anónimas quedan fuera: no hay identidad que reconocer,
 -- y no tendría sentido acumularlas todas bajo un solo "fan anónimo".
 -- ------------------------------------------------------------
-create or replace view top_donor_per_group as
+drop view if exists top_donor_per_group;
+create view top_donor_per_group as
 select distinct on (group_id)
   group_id,
   supporter_name,
@@ -180,6 +183,7 @@ insert into site_stats (id, total_visits) values (1, 0)
 on conflict (id) do nothing;
 
 alter table site_stats enable row level security;
+drop policy if exists "site_stats_public_read" on site_stats;
 create policy "site_stats_public_read" on site_stats for select using (true);
 -- Sin policy de insert/update para anon: el incremento pasa por la
 -- función security definer de abajo, nunca por escritura directa.
@@ -189,7 +193,9 @@ create policy "site_stats_public_read" on site_stats for select using (true);
 -- siempre (para el banner "esto ha recaudado $X, el 5% va a
 -- fundaciones caritativas").
 -- ------------------------------------------------------------
-create or replace view total_raised as
+drop view if exists charity_fund;
+drop view if exists total_raised;
+create view total_raised as
 select coalesce(sum(amount_cents), 0) as total_cents
 from bids
 where status = 'succeeded';
@@ -200,7 +206,7 @@ where status = 'succeeded';
 -- es un cálculo de referencia para que sepas cuánto donar cuando
 -- elijas la fundación — la transferencia sigue siendo manual.
 -- ------------------------------------------------------------
-create or replace view charity_fund as
+create view charity_fund as
 select
   total_cents,
   round(total_cents * 0.05) as charity_cents
@@ -227,6 +233,7 @@ alter table claim_requests enable row level security;
 
 -- Cualquiera puede enviar una solicitud, pero nadie puede leerlas desde
 -- el cliente — se revisan a mano desde el dashboard de Supabase.
+drop policy if exists "claim_requests_public_insert" on claim_requests;
 create policy "claim_requests_public_insert" on claim_requests for insert with check (true);
 
 create or replace function increment_site_visits()
@@ -248,7 +255,9 @@ alter table groups enable row level security;
 alter table bids enable row level security;
 
 -- Cualquiera puede leer grupos y pujas exitosas (es un ranking público)
+drop policy if exists "groups_public_read" on groups;
 create policy "groups_public_read" on groups for select using (true);
+drop policy if exists "bids_public_read" on bids;
 create policy "bids_public_read" on bids for select using (status = 'succeeded');
 
 -- Las inserciones de bids se hacen SOLO desde el backend (service role),
@@ -258,4 +267,12 @@ create policy "bids_public_read" on bids for select using (status = 'succeeded')
 -- ------------------------------------------------------------
 -- Habilitar Realtime en bids para el feed en vivo
 -- ------------------------------------------------------------
-alter publication supabase_realtime add table bids;
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'bids'
+  ) then
+    alter publication supabase_realtime add table bids;
+  end if;
+end $$;
