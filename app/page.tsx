@@ -359,8 +359,10 @@ export default async function Home() {
           <p className="text-xs text-pink-400 mt-2">🎗️ El 5% de cada puja se dona a fundaciones caritativas</p>
         </div>
 
-        {/* Actividad en vivo */}
-        <ActivityFeed initialItems={feed ?? []} />
+        {/* Actividad en vivo — oculta en lg+ porque ahí ya está el sidebar de donadores mostrando lo mismo */}
+        <div className="lg:hidden">
+          <ActivityFeed initialItems={feed ?? []} />
+        </div>
 
         {/* FAQ */}
         <section id="faq" className="space-y-3">
