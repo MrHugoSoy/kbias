@@ -30,6 +30,97 @@ function renderSupporter(entry: Supporter) {
   return entry.supporter_name || 'un fan';
 }
 
+type RankingRow = {
+  group_id: string;
+  group_name: string;
+  fandom_name: string | null;
+  image_url: string | null;
+  best_bid_cents: number;
+  top_supporter_name: string | null;
+  top_is_anonymous: boolean | null;
+  top_social_url: string | null;
+};
+
+// Tarjeta de ranking: el #1 (isThrone) se ve más grande, el resto comparte el mismo estilo.
+function RankCard({
+  rank,
+  group,
+  isThrone,
+  throneCents,
+  topDonor,
+  orderClassName,
+}: {
+  rank: number;
+  group: RankingRow;
+  isThrone: boolean;
+  throneCents: number;
+  topDonor?: { supporter_name: string | null; total_donated_cents: number } | null;
+  orderClassName?: string;
+}) {
+  return (
+    <div
+      className={
+        (isThrone
+          ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-950/30 to-black'
+          : 'relative border border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-neutral-950') +
+        (orderClassName ? ' ' + orderClassName : '')
+      }
+    >
+      <p className="text-xs tracking-[0.3em] text-pink-400 font-semibold">
+        {isThrone ? '👑 #1 · EL TRONO' : `#${rank}`}
+      </p>
+      <div
+        className={
+          isThrone
+            ? 'w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-800 flex items-center justify-center overflow-hidden'
+            : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-700 bg-neutral-800 flex items-center justify-center overflow-hidden'
+        }
+      >
+        {group.image_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={group.image_url} alt={group.group_name} className="w-full h-full object-cover" />
+        ) : (
+          <span className={isThrone ? 'text-4xl' : 'text-2xl'}>🎤</span>
+        )}
+      </div>
+      <h2 className={isThrone ? 'text-3xl font-black tracking-tight' : 'text-lg font-bold'}>{group.group_name}</h2>
+      {group.fandom_name && <p className="text-pink-400 text-sm font-semibold">♥ {group.fandom_name} ♥</p>}
+      <p
+        className={
+          isThrone
+            ? 'text-4xl font-black text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)] font-mono'
+            : 'text-xl font-bold text-amber-400 font-mono'
+        }
+      >
+        ${(group.best_bid_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+      </p>
+      <p className="text-xs text-neutral-500">
+        {group.best_bid_cents === 0 ? (
+          'Nadie ha pujado aún'
+        ) : (
+          <>
+            liderado por{' '}
+            {renderSupporter({
+              supporter_name: group.top_supporter_name,
+              is_anonymous: group.top_is_anonymous,
+              social_url: group.top_social_url,
+            })}
+          </>
+        )}
+      </p>
+      {isThrone && topDonor?.supporter_name && (
+        <p className="text-xs text-neutral-600">
+          Mayor fan: <span className="text-pink-300 font-semibold">{topDonor.supporter_name}</span> — $
+          {(topDonor.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+        </p>
+      )}
+      <div className="pt-1">
+        <BidButton groupId={group.group_id} groupName={group.group_name} currentThroneCents={throneCents} />
+      </div>
+    </div>
+  );
+}
+
 export default async function Home() {
   const supabase = getSupabasePublicClient();
 
@@ -64,7 +155,8 @@ export default async function Home() {
 
   const throneCents = throne?.amount_cents ?? 0;
   const top3 = (rankings ?? []).slice(0, 3);
-  const rest = (rankings ?? []).slice(3);
+  const midFive = (rankings ?? []).slice(3, 8);
+  const rest = (rankings ?? []).slice(8);
 
   // Contador de visitas: incrementa y lee el total en una sola llamada atómica (RPC).
   const { data: totalVisits } = await supabase.rpc('increment_site_visits');
@@ -102,70 +194,35 @@ export default async function Home() {
             <div className="relative grid sm:grid-cols-3 gap-4">
               <div className="hidden sm:block absolute inset-0 bg-pink-600/10 blur-3xl rounded-full -z-10" />
               {top3.map((r, i) => (
-                <div
+                <RankCard
                   key={r.group_id}
-                  className={
-                    (i === 0
-                      ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-950/30 to-black sm:col-span-1'
-                      : 'relative border border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-neutral-950') +
-                    ' ' +
-                    (i === 0 ? 'sm:order-2' : i === 1 ? 'sm:order-1' : 'sm:order-3')
-                  }
-                >
-                  <p className="text-xs tracking-[0.3em] text-pink-400 font-semibold">
-                    {i === 0 ? '👑 #1 · EL TRONO' : `#${i + 1}`}
-                  </p>
-                  <div
-                    className={
-                      i === 0
-                        ? 'w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-800 flex items-center justify-center overflow-hidden'
-                        : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-700 bg-neutral-800 flex items-center justify-center overflow-hidden'
-                    }
-                  >
-                    {r.image_url ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className={i === 0 ? 'text-4xl' : 'text-2xl'}>🎤</span>
-                    )}
-                  </div>
-                  <h2 className={i === 0 ? 'text-3xl font-black tracking-tight' : 'text-lg font-bold'}>{r.group_name}</h2>
-                  {r.fandom_name && <p className="text-pink-400 text-sm font-semibold">♥ {r.fandom_name} ♥</p>}
-                  <p
-                    className={
-                      i === 0
-                        ? 'text-4xl font-black text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)] font-mono'
-                        : 'text-xl font-bold text-amber-400 font-mono'
-                    }
-                  >
-                    ${(r.best_bid_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                  </p>
-                  <p className="text-xs text-neutral-500">
-                    {r.best_bid_cents === 0
-                      ? 'Nadie ha pujado aún'
-                      : <>liderado por {renderSupporter({ supporter_name: r.top_supporter_name, is_anonymous: r.top_is_anonymous, social_url: r.top_social_url })}</>}
-                  </p>
-                  {i === 0 && topDonor?.supporter_name && (
-                    <p className="text-xs text-neutral-600">
-                      Mayor fan: <span className="text-pink-300 font-semibold">{topDonor.supporter_name}</span> — $
-                      {(topDonor.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-                    </p>
-                  )}
-                  <div className="pt-1">
-                    <BidButton groupId={r.group_id} groupName={r.group_name} currentThroneCents={throneCents} />
-                  </div>
-                </div>
+                  rank={i + 1}
+                  group={r}
+                  isThrone={i === 0}
+                  throneCents={throneCents}
+                  topDonor={i === 0 ? topDonor : undefined}
+                  orderClassName={i === 0 ? 'sm:order-2' : i === 1 ? 'sm:order-1' : 'sm:order-3'}
+                />
               ))}
             </div>
           )}
 
-          {/* Resto del ranking, sin límite — no desaparecen los que no tienen pujas */}
+          {/* Siguientes 5, mismo estilo de tarjeta que el podio */}
+          {midFive.length > 0 && (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+              {midFive.map((r, i) => (
+                <RankCard key={r.group_id} rank={i + 4} group={r} isThrone={false} throneCents={throneCents} />
+              ))}
+            </div>
+          )}
+
+          {/* Resto del ranking, en lista compacta — no desaparecen los que no tienen pujas */}
           {rest.length > 0 && (
             <div className="space-y-2">
               {rest.map((r, i) => (
                 <div key={r.group_id} className="flex items-center justify-between bg-neutral-900 rounded-xl p-3">
                   <div className="flex items-center gap-3">
-                    <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 4}</span>
+                    <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 9}</span>
                     <div className="w-12 h-12 rounded-full bg-neutral-800 overflow-hidden flex items-center justify-center">
                       {r.image_url ? (
                         // eslint-disable-next-line @next/next/no-img-element
