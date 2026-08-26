@@ -79,7 +79,7 @@ export default function BidForm({
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
-          className="w-full mt-1 bg-neutral-900 rounded-lg px-3 py-2"
+          className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2"
         >
           {groups.map((g) => (
             <option key={g.id} value={g.id}>
@@ -92,7 +92,7 @@ export default function BidForm({
       <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs text-neutral-500 uppercase tracking-wide">Monto de tu puja (USD)</label>
-          <div className="flex items-center bg-neutral-900 rounded-lg mt-1 px-3">
+          <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-lg mt-1 px-3">
             <span className="text-neutral-500">$</span>
             <input
               type="number"
@@ -112,7 +112,7 @@ export default function BidForm({
             onChange={(e) => setName(e.target.value)}
             disabled={anonymous}
             placeholder="Ej. Luna_92"
-            className="w-full mt-1 bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
+            className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
           />
         </div>
       </div>
@@ -125,21 +125,21 @@ export default function BidForm({
           onChange={(e) => setSocialUrl(e.target.value)}
           disabled={anonymous}
           placeholder="https://instagram.com/tu_usuario"
-          className="w-full mt-1 bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
+          className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
         />
         <p className="text-[10px] text-neutral-600 mt-1">Se muestra como link junto a tu nombre en el feed.</p>
       </div>
 
       <p className="text-xs text-neutral-500">
-        Mínimo para tomar el trono: <span className="text-amber-400 font-semibold">${minRequired.toFixed(2)}</span>
+        Mínimo para tomar el trono: <span className="text-amber-600 dark:text-amber-400 font-semibold">${minRequired.toFixed(2)}</span>
       </p>
 
-      <label className="flex items-center gap-2 text-sm text-neutral-400">
+      <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
         <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
         Pujar de forma anónima 🎭
       </label>
 
-      {error && <p className="text-red-400 text-sm">{error}</p>}
+      {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
 
       <div className="flex gap-3">
         <button
@@ -148,7 +148,7 @@ export default function BidForm({
             setName('');
             setError('');
           }}
-          className="flex-1 py-3 rounded-lg bg-neutral-800 font-semibold"
+          className="flex-1 py-3 rounded-lg bg-neutral-200 dark:bg-neutral-800 font-semibold"
         >
           Cancelar
         </button>

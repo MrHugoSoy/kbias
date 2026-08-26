@@ -4,6 +4,7 @@ import ActivityFeed from '@/components/ActivityFeed';
 import BidForm from '@/components/BidForm';
 import OnlineBar from '@/components/OnlineBar';
 import DonorSidebar from '@/components/DonorSidebar';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
@@ -65,10 +66,10 @@ function RankCard({
     <div
       className={
         (isThrone
-          ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-950/30 to-black'
+          ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-100 to-white dark:from-pink-950/30 dark:to-black'
           : isCompact
-            ? 'relative border border-neutral-800 rounded-xl p-3 text-center space-y-1 bg-neutral-950'
-            : 'relative border border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-neutral-950') +
+            ? 'relative border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-center space-y-1 bg-white dark:bg-neutral-950'
+            : 'relative border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-white dark:bg-neutral-950') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
@@ -78,10 +79,10 @@ function RankCard({
       <div
         className={
           isThrone
-            ? 'w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-800 flex items-center justify-center overflow-hidden'
+            ? 'w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
             : isCompact
-              ? 'w-12 h-12 mx-auto rounded-full border border-neutral-700 bg-neutral-800 flex items-center justify-center overflow-hidden'
-              : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-700 bg-neutral-800 flex items-center justify-center overflow-hidden'
+              ? 'w-12 h-12 mx-auto rounded-full border border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
+              : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
         }
       >
         {group.image_url ? (
@@ -222,9 +223,9 @@ export default async function Home() {
   const { data: totalRaised } = await supabase.from('total_raised').select('*').maybeSingle();
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-white">
+    <main className="min-h-screen bg-white text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
       {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
         <div className="flex items-center gap-2">
           <span className="text-2xl">👑</span>
           <div>
@@ -232,13 +233,16 @@ export default async function Home() {
             <p className="text-[10px] text-pink-400 tracking-widest">EL PODER ES DE LOS FANS</p>
           </div>
         </div>
-        <nav className="hidden md:flex gap-6 text-sm text-neutral-400">
-          <a href="#" className="text-pink-500 border-b-2 border-pink-500 pb-1">INICIO</a>
-          <a href="#ranking">RANKING</a>
-          <a href="#como-funciona">CÓMO FUNCIONA</a>
-          <a href="#historial">HISTORIAL</a>
-          <a href="#faq">FAQ</a>
-        </nav>
+        <div className="flex items-center gap-6">
+          <nav className="hidden md:flex gap-6 text-sm text-neutral-500 dark:text-neutral-400">
+            <a href="#" className="text-pink-500 border-b-2 border-pink-500 pb-1">INICIO</a>
+            <a href="#ranking">RANKING</a>
+            <a href="#como-funciona">CÓMO FUNCIONA</a>
+            <a href="#historial">HISTORIAL</a>
+            <a href="#faq">FAQ</a>
+          </nav>
+          <ThemeToggle />
+        </div>
       </header>
 
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
@@ -247,10 +251,14 @@ export default async function Home() {
         {/* Podio: top 3 */}
         <section id="ranking" className="space-y-4">
           {top3.length === 0 && (
-            <div className="text-center py-4 space-y-1">
-              <p className="text-5xl">👑</p>
-              <h1 className="text-3xl sm:text-4xl font-black tracking-tight">El trono está vacío</h1>
-              <p className="text-neutral-500">¡Sé el primero en reclamarlo!</p>
+            <div className="text-center py-6 space-y-2">
+              <p className="text-6xl animate-bounce">👑</p>
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-pink-500 via-pink-400 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(236,72,153,0.35)]">
+                El trono está vacío
+              </h1>
+              <p className="text-pink-500 dark:text-pink-400 text-xs font-semibold tracking-[0.3em] uppercase">
+                ✦ Sé el primero en reclamarlo ✦
+              </p>
             </div>
           )}
 
@@ -292,12 +300,12 @@ export default async function Home() {
             {rest.length > 0 && (
               <div className="flex-1 min-w-0 space-y-2">
                 {rest.map((r, i) => (
-                  <div key={r.group_id} className="flex items-center justify-between bg-neutral-900 rounded-xl p-3">
+                  <div key={r.group_id} className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-900 rounded-xl p-3">
                     <div className="flex items-center gap-3">
                       {i < rankedOverflowCount && (
                         <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 9}</span>
                       )}
-                      <div className="w-12 h-12 rounded-full bg-neutral-800 overflow-hidden flex items-center justify-center">
+                      <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center">
                         {r.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
@@ -330,22 +338,22 @@ export default async function Home() {
         <section id="como-funciona" className="space-y-4">
           <h2 className="text-lg font-bold flex items-center gap-2">⚡ ¿CÓMO FUNCIONA?</h2>
           <div className="grid sm:grid-cols-2 gap-3">
-            <div className="bg-neutral-900 rounded-xl p-4 space-y-1">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">01</p>
               <p className="font-semibold">Elige tu grupo</p>
               <p className="text-sm text-neutral-500">Escoge al grupo por el que quieres pujar en la lista de competidores.</p>
             </div>
-            <div className="bg-neutral-900 rounded-xl p-4 space-y-1">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">02</p>
               <p className="font-semibold">Puja más que el trono actual</p>
               <p className="text-sm text-neutral-500">Tu monto debe superar el monto que ves en "El trono actual", aunque sea por un centavo.</p>
             </div>
-            <div className="bg-neutral-900 rounded-xl p-4 space-y-1">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">03</p>
               <p className="font-semibold">Paga de forma segura</p>
               <p className="text-sm text-neutral-500">El pago se procesa con Stripe. Tu puja solo cuenta si el cobro se confirma.</p>
             </div>
-            <div className="bg-neutral-900 rounded-xl p-4 space-y-1">
+            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">04</p>
               <p className="font-semibold">Tu grupo toma el #1</p>
               <p className="text-sm text-neutral-500">El puesto se actualiza al instante y se mantiene hasta que alguien más pague más.</p>
@@ -355,7 +363,7 @@ export default async function Home() {
 
         {/* Total recaudado + mensaje de caridad */}
         <div className="text-center py-2">
-          <p className="text-sm text-neutral-400">Este proyecto ha recaudado</p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Este proyecto ha recaudado</p>
           <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
             ${((totalRaised?.total_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           </p>
@@ -370,7 +378,7 @@ export default async function Home() {
         {/* FAQ */}
         <section id="faq" className="space-y-3">
           <h2 className="text-lg font-bold flex items-center gap-2">❓ FAQ</h2>
-          <div className="divide-y divide-neutral-900 bg-neutral-950 rounded-xl overflow-hidden">
+          <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 rounded-xl overflow-hidden">
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Esto es una apuesta?</p>
               <p className="text-sm text-neutral-500">No. Es un apoyo/tip a tu grupo favorito. No hay premio ni retorno económico para quien paga.</p>
@@ -394,25 +402,25 @@ export default async function Home() {
         <BidForm groups={groups ?? []} currentThroneCents={throneCents} />
 
         {/* Footer de confianza */}
-        <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6 border-t border-neutral-900">
+        <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6 border-t border-neutral-200 dark:border-neutral-900">
           <div>
             <p className="text-xl mb-1">🛡️</p>
-            <p className="font-semibold text-neutral-300">PAGO SEGURO</p>
+            <p className="font-semibold text-neutral-700 dark:text-neutral-300">PAGO SEGURO</p>
             <p>Tus transacciones están protegidas y encriptadas.</p>
           </div>
           <div>
             <p className="text-xl mb-1">⚡</p>
-            <p className="font-semibold text-neutral-300">SIN RESETS</p>
+            <p className="font-semibold text-neutral-700 dark:text-neutral-300">SIN RESETS</p>
             <p>El #1 se mantiene hasta que alguien pague más.</p>
           </div>
           <div>
             <p className="text-xl mb-1">🏆</p>
-            <p className="font-semibold text-neutral-300">UN SOLO TRONO</p>
+            <p className="font-semibold text-neutral-700 dark:text-neutral-300">UN SOLO TRONO</p>
             <p>No hay categorías. Solo uno puede reinar.</p>
           </div>
           <div>
             <p className="text-xl mb-1">🤝</p>
-            <p className="font-semibold text-neutral-300">EL PODER ES DE LOS FANS</p>
+            <p className="font-semibold text-neutral-700 dark:text-neutral-300">EL PODER ES DE LOS FANS</p>
             <p>Tú decides quién reina en el mundo del K-pop.</p>
           </div>
         </footer>

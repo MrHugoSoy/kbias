@@ -35,11 +35,11 @@ export default function OnlineBar({ totalVisits }: { totalVisits: number }) {
 
   return (
     <div className="flex justify-center">
-      <div className="inline-flex items-center gap-2 bg-neutral-900 text-neutral-400 text-xs px-4 py-1.5 rounded-full">
+      <div className="inline-flex items-center gap-2 bg-neutral-100 dark:bg-neutral-900 text-neutral-500 dark:text-neutral-400 text-xs px-4 py-1.5 rounded-full">
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-        <span className="text-neutral-200 font-semibold">{onlineCount}</span>
+        <span className="text-neutral-800 dark:text-neutral-200 font-semibold">{onlineCount}</span>
         <span>en línea</span>
-        <span className="text-neutral-700">·</span>
+        <span className="text-neutral-400 dark:text-neutral-700">·</span>
         <span>{totalVisits.toLocaleString('es-MX')} visitas desde el lanzamiento</span>
       </div>
     </div>

@@ -72,16 +72,16 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
     <aside className="space-y-3">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-        <h2 className="text-xs font-bold tracking-widest text-neutral-400 uppercase">Donadores en vivo</h2>
+        <h2 className="text-xs font-bold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase">Donadores en vivo</h2>
       </div>
       <div className="space-y-2 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
         {items.length === 0 && (
-          <p className="text-xs text-neutral-600">Aún no hay donaciones — ¡sé el primero!</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-600">Aún no hay donaciones — ¡sé el primero!</p>
         )}
         {items.map((item) => (
-          <div key={item.id} className="bg-neutral-950 border border-neutral-900 rounded-lg p-3 text-xs space-y-1">
+          <div key={item.id} className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-lg p-3 text-xs space-y-1">
             <div className="flex items-center justify-between gap-2">
-              <span className="font-semibold text-neutral-200 truncate">
+              <span className="font-semibold text-neutral-800 dark:text-neutral-200 truncate">
                 {item.is_anonymous ? (
                   '🎭 Anónimo'
                 ) : item.social_url ? (
@@ -97,10 +97,10 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
                   item.supporter_name || 'un fan'
                 )}
               </span>
-              <span className="text-amber-400 font-mono shrink-0">${(item.amount_cents / 100).toFixed(2)}</span>
+              <span className="text-amber-600 dark:text-amber-400 font-mono shrink-0">${(item.amount_cents / 100).toFixed(2)}</span>
             </div>
             <p className="text-neutral-500">
-              apoyó a <span className="text-pink-400">{item.group_name}</span>
+              apoyó a <span className="text-pink-600 dark:text-pink-400">{item.group_name}</span>
             </p>
           </div>
         ))}

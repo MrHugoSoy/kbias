@@ -87,11 +87,11 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         <div className="flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
           <h2 className="font-bold">ACTIVIDAD EN VIVO</h2>
-          <span className="text-[10px] bg-pink-950 text-pink-400 px-2 py-0.5 rounded-full">EN VIVO</span>
+          <span className="text-[10px] bg-pink-100 dark:bg-pink-950 text-pink-600 dark:text-pink-400 px-2 py-0.5 rounded-full">EN VIVO</span>
         </div>
-        <span className="text-xs text-pink-400">VER TODO ›</span>
+        <span className="text-xs text-pink-500 dark:text-pink-400">VER TODO ›</span>
       </div>
-      <div className="divide-y divide-neutral-900 bg-neutral-950 rounded-xl overflow-hidden">
+      <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-transparent rounded-xl overflow-hidden">
         {items.map((item) => (
           <div key={item.id} className="flex items-center gap-3 px-4 py-3 text-sm">
             <span className="text-xs text-neutral-500 w-16 shrink-0">{timeAgo(item.created_at)}</span>
@@ -111,9 +111,9 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
               ) : (
                 item.supporter_name || 'un fan'
               )}{' '}
-              apoyó a <strong className="text-pink-400">{item.group_name}</strong>
+              apoyó a <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
             </span>
-            <span className="font-mono text-amber-400">${(item.amount_cents / 100).toFixed(2)}</span>
+            <span className="font-mono text-amber-600 dark:text-amber-400">${(item.amount_cents / 100).toFixed(2)}</span>
           </div>
         ))}
         {items.length === 0 && (
