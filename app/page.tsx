@@ -2,6 +2,7 @@ import { getSupabasePublicClient } from '@/lib/supabase';
 import BidButton from '@/components/BidButton';
 import ActivityFeed from '@/components/ActivityFeed';
 import BidForm from '@/components/BidForm';
+import OnlineBar from '@/components/OnlineBar';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
@@ -36,6 +37,9 @@ export default async function Home() {
   // Grupos que no están en el trono, ordenados por qué tan cerca están de tomarlo
   const competitors = (groups ?? []).filter((g) => g.id !== throne?.group_id);
 
+  // Contador de visitas: incrementa y lee el total en una sola llamada atómica (RPC).
+  const { data: totalVisits } = await supabase.rpc('increment_site_visits');
+
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white">
       {/* Header */}
@@ -57,6 +61,8 @@ export default async function Home() {
       </header>
 
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
+        <OnlineBar totalVisits={totalVisits ?? 0} />
+
         {/* Trono actual */}
         <section className="relative">
           <div className="absolute inset-0 bg-pink-600/10 blur-3xl rounded-full" />

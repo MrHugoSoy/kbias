@@ -123,6 +123,37 @@ create index if not exists idx_bids_supporter on bids (group_id, supporter_name)
   where status = 'succeeded' and is_anonymous = false;
 
 -- ------------------------------------------------------------
+-- Contador de visitas totales del sitio (para la barra "X visitas
+-- desde el lanzamiento", estilo outbid.lol). Fila única, incrementada
+-- de forma atómica en cada carga de la página vía RPC.
+-- ------------------------------------------------------------
+create table if not exists site_stats (
+  id smallint primary key default 1,
+  total_visits bigint not null default 0,
+  constraint site_stats_singleton check (id = 1)
+);
+
+insert into site_stats (id, total_visits) values (1, 0)
+on conflict (id) do nothing;
+
+alter table site_stats enable row level security;
+create policy "site_stats_public_read" on site_stats for select using (true);
+-- Sin policy de insert/update para anon: el incremento pasa por la
+-- función security definer de abajo, nunca por escritura directa.
+
+create or replace function increment_site_visits()
+returns bigint
+language sql
+security definer
+set search_path = public
+as $$
+  update site_stats set total_visits = total_visits + 1 where id = 1
+  returning total_visits;
+$$;
+
+grant execute on function increment_site_visits() to anon, authenticated;
+
+-- ------------------------------------------------------------
 -- Row Level Security
 -- ------------------------------------------------------------
 alter table groups enable row level security;
