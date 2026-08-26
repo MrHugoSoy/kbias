@@ -100,7 +100,8 @@ function RankCard({
             : isCompact
               ? 'w-12 h-12 mx-auto rounded-full border border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
               : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden') +
-          ' relative transition-transform duration-200 hover:scale-125 hover:z-10'
+          ' relative transition-transform duration-200 hover:z-20 ' +
+          (isThrone ? 'hover:scale-150' : isCompact ? 'hover:scale-[3.5]' : 'hover:scale-[2]')
         }
       >
         {group.image_url ? (
@@ -323,7 +324,7 @@ export default async function Home() {
                       {i < rankedOverflowCount && (
                         <span className="text-neutral-600 font-mono text-sm w-6 text-center">#{i + 9}</span>
                       )}
-                      <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center relative transition-transform duration-200 hover:scale-125 hover:z-10">
+                      <div className="w-12 h-12 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center relative transition-transform duration-200 hover:scale-[3.5] hover:z-20">
                         {r.image_url ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={r.image_url} alt={r.group_name} className="w-full h-full object-cover" />
