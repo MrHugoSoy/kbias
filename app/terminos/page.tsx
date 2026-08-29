@@ -153,14 +153,24 @@ export default function TerminosPage() {
       <LegalSection title="7. Propiedad intelectual de terceros">
         <p>
           K-pop Wars no está afiliado, patrocinado ni respaldado por ningún grupo de K-pop, agencia de
-          entretenimiento, o sello discográfico mencionado en el sitio. Los nombres y posibles imágenes usados con
-          fines de identificación son propiedad de sus respectivos titulares y se usan bajo un uso
-          referencial/informativo. Si un titular de derechos solicita la eliminación de contenido específico,
-          atenderemos la solicitud a la brevedad escribiendo a{' '}
+          entretenimiento, o sello discográfico mencionado en el sitio. Usamos nombres, fotos y logotipos de grupos
+          únicamente para identificar de qué grupo se trata cada tarjeta del ranking — no como marca propia, y sin
+          insinuar que ese grupo o su agencia respaldan, operan o participan en K-pop Wars. Ese uso identificativo
+          mínimo (nombre y una imagen del grupo, nada más) busca ampararse en las excepciones de uso referencial de
+          marcas y obra que reconocen tanto la legislación mexicana como, en términos generales, otras
+          jurisdicciones — pero no sustituye el análisis legal de tu caso si tienes dudas específicas.
+        </p>
+        <p>
+          Si eres el titular de los derechos sobre un nombre, imagen o logotipo mostrado en el sitio y quieres que lo
+          retiremos o corrijamos, escríbenos a{' '}
           <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
             {CONTACT_EMAIL}
-          </a>
-          .
+          </a>{' '}
+          incluyendo: (1) tu nombre y datos de contacto; (2) la URL exacta de la página o tarjeta en cuestión; (3)
+          una descripción de qué contenido quieres que se retire o corrija y por qué; y (4) una declaración de que
+          eres el titular de esos derechos o estás autorizado para actuar en su nombre. Revisamos y respondemos
+          estas solicitudes a la brevedad. Retirar contenido no revierte pujas ya confirmadas — el total acumulado
+          de ese grupo permanece igual.
         </p>
       </LegalSection>
 
@@ -220,7 +230,25 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="13. Contacto">
+      <LegalSection title="13. Disposiciones generales">
+        <ul className="list-disc pl-5 space-y-1">
+          <li>
+            Si alguna parte de estos Términos resulta inválida o inaplicable, el resto sigue teniendo efecto
+            completo, y esa parte se sustituye por la disposición válida que más se acerque a su intención original.
+          </li>
+          <li>
+            Que no hagamos cumplir una disposición en un caso puntual no significa que renunciemos a hacerla cumplir
+            después. No puedes ceder tus derechos u obligaciones bajo estos Términos sin nuestro consentimiento;
+            nosotros sí podemos cederlos si transferimos la operación del sitio.
+          </li>
+          <li>
+            Estos Términos, junto con las Reglas y la Política de Privacidad, son el acuerdo completo entre tú y
+            nosotros respecto al uso del sitio, y sustituyen cualquier entendimiento previo sobre el mismo tema.
+          </li>
+        </ul>
+      </LegalSection>
+
+      <LegalSection title="14. Contacto">
         <p>
           ¿Dudas sobre estos Términos? Escríbenos a{' '}
           <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
