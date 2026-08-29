@@ -16,8 +16,13 @@ export default function PrivacidadPage() {
       </div>
 
       <p className="text-sm text-neutral-600 dark:text-neutral-400">
-        El responsable de los datos descritos en esta política es Hugo Iván Ramírez Flores (persona física con
-        actividad empresarial, con domicilio en Irapuato, Guanajuato, México), operador de kpopwars.com.
+        El responsable de los datos descritos en esta política es un operador individual con actividad empresarial
+        en México, operador de kpopwars.com. Si necesitas sus datos completos de identificación (por ejemplo, para
+        ejercer tus derechos o por una obligación de cumplimiento), escríbenos a{' '}
+        <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+          {CONTACT_EMAIL}
+        </a>
+        .
       </p>
 
       <div className="text-sm bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900/60 rounded-lg p-4 font-semibold">

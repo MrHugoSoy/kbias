@@ -7,8 +7,7 @@ export const metadata = {
   description: 'Términos de servicio de K-pop Wars: qué es el sitio, cómo funcionan las pujas y qué aceptas al usarlo.',
 };
 
-const LEGAL_ENTITY = 'Hugo Iván Ramírez Flores';
-const LEGAL_ENTITY_TYPE = 'persona física con actividad empresarial, con domicilio en Irapuato, Guanajuato, México';
+const LEGAL_ENTITY_TYPE = 'un operador individual con actividad empresarial en México';
 const GOVERNING_LAW = 'México';
 const CHANGE_NOTICE_DAYS = 15;
 const LAST_UPDATED = '29 de agosto de 2026';
@@ -23,8 +22,13 @@ export default function TerminosPage() {
       </div>
 
       <p className="text-sm text-neutral-600 dark:text-neutral-400">
-        Estos Términos constituyen un acuerdo legal entre tú ("Usuario") y {LEGAL_ENTITY} ({LEGAL_ENTITY_TYPE})
-        ("K-pop Wars", "nosotros"), operador del sitio kpopwars.com.
+        Estos Términos constituyen un acuerdo legal entre tú ("Usuario") y {LEGAL_ENTITY_TYPE} ("K-pop Wars",
+        "nosotros"), operador del sitio kpopwars.com. Si necesitas los datos completos de identificación del
+        responsable (por ejemplo, para fines legales o de cumplimiento), escríbenos a{' '}
+        <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+          {CONTACT_EMAIL}
+        </a>
+        .
       </p>
 
       <LegalSection title="1. Qué es K-pop Wars">
