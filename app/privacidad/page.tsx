@@ -15,6 +15,11 @@ export default function PrivacidadPage() {
         específicas de protección de datos (como el RGPD en la Unión Europea).
       </div>
 
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        El responsable de los datos descritos en esta política es Hugo Iván Ramírez Flores (persona física con
+        actividad empresarial, con domicilio en Irapuato, Guanajuato, México), operador de kpopwars.com.
+      </p>
+
       <div className="text-sm bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900/60 rounded-lg p-4 font-semibold">
         No pedimos cuenta ni correo para pujar. Lo único que tú decides compartir es tu nombre y/o tu link de red
         social, ambos opcionales — y si pujas de forma anónima, ni siquiera eso se guarda. La única excepción es tu
@@ -72,8 +77,9 @@ export default function PrivacidadPage() {
       <LegalSection title="4. Cuánto tiempo guardamos los datos">
         <p>
           El historial de pujas exitosas se guarda de forma permanente porque es lo que arma el ranking público y el
-          feed de actividad — es la naturaleza del servicio. Si pujaste de forma anónima, nunca guardamos tu nombre
-          ni tu link en primer lugar.
+          feed de actividad — es la naturaleza del servicio. Eso incluye la dirección IP asociada a cada puja
+          descrita en la sección 1: como esa fila nunca se borra, la IP queda ligada a ella de forma permanente, no
+          solo temporalmente. Si pujaste de forma anónima, nunca guardamos tu nombre ni tu link en primer lugar.
         </p>
       </LegalSection>
 
@@ -104,11 +110,13 @@ export default function PrivacidadPage() {
         </p>
         <p>
           Si vives en un país cuya ley te da derechos específicos sobre tus datos (acceso, corrección, eliminación,
-          oposición), puedes ejercerlos escribiendo a{' '}
+          oposición, o retirar un consentimiento que hayas dado), puedes ejercerlos escribiendo a{' '}
           <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
             {CONTACT_EMAIL}
           </a>{' '}
-          — dado lo poco que guardamos, la mayoría de esas solicitudes se resuelven de inmediato.
+          — dado lo poco que guardamos, la mayoría de esas solicitudes se resuelven de inmediato. Si no quedas
+          conforme con nuestra respuesta, también tienes derecho a presentar una queja ante la autoridad de
+          protección de datos de tu país (por ejemplo, el INAI en México, o la autoridad equivalente donde vivas).
         </p>
       </LegalSection>
 
