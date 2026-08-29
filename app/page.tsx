@@ -81,7 +81,7 @@ function RankCard({
     <div
       className={
         (isThrone
-          ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-100 to-white dark:from-pink-950/30 dark:to-black'
+          ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-100 to-white dark:from-pink-950/30 dark:to-black sm:min-h-[440px] sm:flex sm:flex-col sm:justify-center'
           : isCompact
             ? 'relative border border-neutral-200 dark:border-neutral-800 rounded-xl text-center space-y-1 bg-white dark:bg-neutral-950 ' +
               (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
@@ -211,7 +211,7 @@ function EmptySlotCard({
     <div
       className={
         (isThrone
-          ? 'relative border-2 border-dashed border-pink-700/60 rounded-2xl p-6 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 hover:bg-pink-600/10 transition'
+          ? 'relative border-2 border-dashed border-pink-700/60 rounded-2xl p-6 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 hover:bg-pink-600/10 transition sm:min-h-[440px] sm:flex sm:flex-col sm:justify-center'
           : isCompact
             ? 'relative border border-dashed border-pink-800/50 rounded-xl text-center space-y-1 bg-pink-600/5 hover:border-pink-500 transition ' +
               (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
