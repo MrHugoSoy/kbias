@@ -2,7 +2,8 @@ import { getSupabasePublicClient } from '@/lib/supabase';
 import { LegalPage, LegalSection } from '@/components/LegalPage';
 
 export const metadata = {
-  title: 'Sobre nosotros — El Trono',
+  title: 'Sobre nosotros',
+  description: 'Por qué existe K-pop Wars y qué tan lejos ha llegado hasta ahora, con números en vivo.',
 };
 
 export const revalidate = 0;
@@ -16,11 +17,11 @@ export default async function SobreNosotrosPage() {
   return (
     <LegalPage
       title="Sobre nosotros"
-      subtitle="Por qué existe El Trono y qué tan lejos ha llegado hasta ahora."
+      subtitle="Por qué existe K-pop Wars y qué tan lejos ha llegado hasta ahora."
     >
       <LegalSection title="La idea">
         <p>
-          El Trono nació de una pregunta simple: ¿qué pasaría si, en vez de discutir en redes sobre qué fandom apoya
+          K-pop Wars nació de una pregunta simple: ¿qué pasaría si, en vez de discutir en redes sobre qué fandom apoya
           más a su grupo, cada quien pudiera demostrarlo con hechos?
         </p>
         <p>
@@ -65,7 +66,7 @@ export default async function SobreNosotrosPage() {
 
       <LegalSection title="Cómo lo construimos">
         <p>
-          El Trono es un proyecto chico, sin inversión ni equipo grande detrás — solo la idea de que el poder de
+          K-pop Wars es un proyecto chico, sin inversión ni equipo grande detrás — solo la idea de que el poder de
           decidir quién reina debería estar en manos de los fans, no de un algoritmo o un jurado.
         </p>
       </LegalSection>

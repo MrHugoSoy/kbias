@@ -3,7 +3,8 @@ import { LegalPage } from '@/components/LegalPage';
 import ClaimForm from '@/components/ClaimForm';
 
 export const metadata = {
-  title: 'Reclamar perfil — El Trono',
+  title: 'Reclamar perfil',
+  description: '¿Representas a un grupo de K-pop o su management? Solicita gestionar su perfil en K-pop Wars.',
 };
 
 export const revalidate = 0;

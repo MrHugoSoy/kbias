@@ -56,33 +56,10 @@ alter table bids add column if not exists ip_address text;
 -- Índice para encontrar rápido la puja más alta vigente
 create index if not exists idx_bids_amount on bids (amount_cents desc) where status = 'succeeded';
 create index if not exists idx_bids_group on bids (group_id);
--- Acelera la suma del tope diario por IP en /api/bid
+-- Acelera la suma del tope diario por IP en /api/bid (pujas confirmadas
+-- de las últimas 24h, y reservas 'pending' de los últimos 30 min).
 create index if not exists idx_bids_ip_time on bids (ip_address, created_at) where status = 'succeeded';
-
--- ------------------------------------------------------------
--- Vista: current_throne — quién tiene el puesto #1 en este momento
--- (el grupo con la SUMA más alta de pujas exitosas, no la puja más
--- grande de una sola vez). "supporter_name"/"is_anonymous"/"social_url"
--- muestran quién hizo la puja individual más grande a ese grupo, solo
--- como referencia de "quién lidera" — no es lo que decide el trono.
--- ------------------------------------------------------------
-drop view if exists current_throne;
-create view current_throne as
-select
-  g.id as group_id,
-  g.name as group_name,
-  g.fandom_name,
-  g.image_url,
-  sum(b.amount_cents) as amount_cents,
-  (array_agg(b.supporter_name order by b.amount_cents desc nulls last))[1] as supporter_name,
-  (array_agg(b.is_anonymous order by b.amount_cents desc nulls last))[1] as is_anonymous,
-  (array_agg(b.social_url order by b.amount_cents desc nulls last))[1] as social_url
-from bids b
-join groups g on g.id = b.group_id
-where b.status = 'succeeded'
-group by g.id, g.name, g.fandom_name, g.image_url
-order by amount_cents desc
-limit 1;
+create index if not exists idx_bids_ip_time_pending on bids (ip_address, created_at) where status = 'pending';
 
 -- ------------------------------------------------------------
 -- Vista: activity_feed — últimas pujas exitosas (para el feed en vivo)
@@ -104,30 +81,6 @@ join groups g on g.id = b.group_id
 where b.status = 'succeeded'
 order by b.created_at desc
 limit 50;
-
--- ------------------------------------------------------------
--- Vista: hall_of_fame — cada vez que un grupo NUEVO tomó el trono
--- (útil para mostrar historial de "reinados" sin resetear nada)
--- NOTA: quedó desactualizada tras pasar a trono-por-suma-total —
--- esta vista todavía razona en base a pujas individuales, no a
--- totales acumulados en el tiempo. No se usa en la app todavía;
--- si se llega a usar, hay que rehacerla con una suma corrida.
--- ------------------------------------------------------------
-drop view if exists hall_of_fame;
-create view hall_of_fame as
-with ranked as (
-  select
-    b.*,
-    g.name as group_name,
-    g.fandom_name,
-    lag(b.group_id) over (order by b.amount_cents) as prev_group_id
-  from bids b
-  join groups g on g.id = b.group_id
-  where b.status = 'succeeded'
-)
-select * from ranked
-where prev_group_id is distinct from group_id
-order by amount_cents desc;
 
 -- ------------------------------------------------------------
 -- Vista: top_donor_per_group — por cada grupo, el supporter_name con
@@ -153,10 +106,9 @@ create index if not exists idx_bids_supporter on bids (group_id, supporter_name)
 -- ------------------------------------------------------------
 -- Vista: group_rankings — cada grupo con el TOTAL acumulado de todas
 -- sus pujas exitosas (no la puja más grande individual), para el
--- podio de top 3 + siguientes 5. El #1 de esta vista es el mismo
--- grupo que current_throne (misma métrica: suma total).
--- top_supporter_* sigue mostrando quién hizo la puja individual más
--- grande a ese grupo, solo como referencia de "quién va liderando".
+-- podio de top 3 + siguientes 5. top_supporter_* sigue mostrando quién
+-- hizo la puja individual más grande a ese grupo, solo como referencia
+-- de "quién va liderando".
 -- ------------------------------------------------------------
 drop view if exists group_rankings;
 create view group_rankings as

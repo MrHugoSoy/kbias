@@ -1,8 +1,10 @@
 import { BID_LIMITS } from '@/lib/stripe';
 import { LegalPage, LegalSection } from '@/components/LegalPage';
+import { CONTACT_EMAIL } from '@/lib/contact';
 
 export const metadata = {
-  title: 'Términos — El Trono',
+  title: 'Términos de servicio',
+  description: 'Términos de servicio de K-pop Wars: qué es el sitio, cómo funcionan las pujas y qué aceptas al usarlo.',
 };
 
 export default function TerminosPage() {
@@ -13,9 +15,9 @@ export default function TerminosPage() {
         dinero real, hazla revisar por alguien con conocimiento legal en tu jurisdicción.
       </div>
 
-      <LegalSection title="1. Qué es El Trono">
+      <LegalSection title="1. Qué es K-pop Wars">
         <p>
-          El Trono es un ranking público donde cualquier persona puede pagar para que un grupo de K-pop suba en el
+          K-pop Wars es un ranking público donde cualquier persona puede pagar para que un grupo de K-pop suba en el
           total acumulado de donaciones y, con eso, en el puesto que ocupa. Al usar el sitio o completar un pago,
           aceptas estos Términos y nuestra{' '}
           <a href="/privacidad" className="underline hover:text-pink-500 dark:hover:text-pink-400">
@@ -34,7 +36,7 @@ export default function TerminosPage() {
 
       <LegalSection title="2. No es una apuesta ni una inversión">
         <p>
-          Pagar en El Trono es un apoyo/tip voluntario a un grupo. No compras un premio, un sorteo, una acción, ni
+          Pagar en K-pop Wars es un apoyo/tip voluntario a un grupo. No compras un premio, un sorteo, una acción, ni
           ningún retorno económico. Tampoco compras exclusividad, un puesto garantizado por tiempo fijo, ni ningún
           resultado específico — otra persona puede donar más después y tu grupo puede bajar de puesto.
         </p>
@@ -78,7 +80,7 @@ export default function TerminosPage() {
 
       <LegalSection title={'7. El servicio se ofrece "tal cual"'}>
         <p>
-          El Trono se ofrece "tal cual" y "según disponibilidad", sin garantías de ningún tipo, expresas o
+          K-pop Wars se ofrece "tal cual" y "según disponibilidad", sin garantías de ningún tipo, expresas o
           implícitas. No garantizamos que el sitio esté libre de errores, interrupciones, o que un puesto específico
           se mantenga por un tiempo determinado.
         </p>
@@ -95,13 +97,13 @@ export default function TerminosPage() {
       <LegalSection title="9. Cambios a estos Términos">
         <p>
           Podemos actualizar estos Términos en cualquier momento. Si el cambio es importante, lo anunciaremos en el
-          sitio. Seguir usando El Trono después de un cambio significa que lo aceptas.
+          sitio. Seguir usando K-pop Wars después de un cambio significa que lo aceptas.
         </p>
       </LegalSection>
 
       <LegalSection title="10. Ley aplicable, sin importar tu país">
         <p>
-          El Trono recibe pujas de fans en distintos países, así que estos Términos no están atados a la ley de un
+          K-pop Wars recibe pujas de fans en distintos países, así que estos Términos no están atados a la ley de un
           solo lugar. Si tu país o región te da derechos que no se pueden renunciar por contrato (por ejemplo,
           protecciones al consumidor en tu jurisdicción local), esos derechos siguen aplicando sin importar lo que
           digan estos Términos.
@@ -113,7 +115,13 @@ export default function TerminosPage() {
       </LegalSection>
 
       <LegalSection title="11. Contacto">
-        <p>¿Dudas sobre estos Términos? Contáctanos directamente por los canales del sitio.</p>
+        <p>
+          ¿Dudas sobre estos Términos? Escríbenos a{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+            {CONTACT_EMAIL}
+          </a>
+          .
+        </p>
       </LegalSection>
     </LegalPage>
   );

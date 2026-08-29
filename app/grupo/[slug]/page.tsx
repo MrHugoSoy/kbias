@@ -11,8 +11,20 @@ type Props = { params: { slug: string } };
 
 export async function generateMetadata({ params }: Props) {
   const supabase = getSupabasePublicClient();
-  const { data: group } = await supabase.from('groups').select('name').eq('slug', params.slug).maybeSingle();
-  return { title: group ? `${group.name} — El Trono` : 'Grupo — El Trono' };
+  const { data: group } = await supabase
+    .from('groups')
+    .select('name, fandom_name, bio')
+    .eq('slug', params.slug)
+    .maybeSingle();
+
+  if (!group) return { title: 'Grupo' };
+
+  return {
+    title: group.name,
+    description:
+      group.bio ||
+      `Apoya a ${group.name}${group.fandom_name ? ` (${group.fandom_name})` : ''} en K-pop Wars — cada puja suma al total de tu grupo.`,
+  };
 }
 
 export default async function GroupDetailPage({ params }: Props) {
@@ -37,17 +49,17 @@ export default async function GroupDetailPage({ params }: Props) {
     >
       <div className="border-2 border-pink-600 rounded-2xl p-8 text-center space-y-3 bg-gradient-to-b from-pink-100 to-white dark:from-pink-950/30 dark:to-black">
         <p className="text-xs tracking-[0.3em] text-pink-400 font-semibold">#{rank} DE {list.length}</p>
-        <div className="w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden">
+        <div className="w-56 h-56 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden">
           {group.image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={group.image_url} alt={group.group_name} className="w-full h-full object-cover" />
           ) : (
-            <span className="text-4xl">🎤</span>
+            <span className="text-6xl">🎤</span>
           )}
         </div>
         <h2 className="text-3xl font-black tracking-tight">{group.group_name}</h2>
         {group.fandom_name && <p className="text-pink-400 font-semibold">♥ {group.fandom_name} ♥</p>}
-        {group.bio && <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mx-auto">{group.bio}</p>}
+        {group.bio && <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mx-auto text-pretty">{group.bio}</p>}
 
         <p className="text-xs text-neutral-500 tracking-widest uppercase pt-2">Total donado</p>
         <p className="text-5xl font-black text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)] font-mono">

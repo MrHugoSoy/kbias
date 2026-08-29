@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { ChevronDown } from 'lucide-react';
 
 type Group = { id: string; name: string; fandom_name: string | null };
 
@@ -71,17 +72,20 @@ export default function ClaimForm({ groups }: { groups: Group[] }) {
     <section className="border-2 border-pink-700/60 rounded-2xl p-6 space-y-4">
       <div>
         <label className="text-xs text-neutral-500 uppercase tracking-wide">Grupo</label>
-        <select
-          value={groupId}
-          onChange={(e) => setGroupId(e.target.value)}
-          className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2"
-        >
-          {groups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name} {g.fandom_name ? `(${g.fandom_name})` : ''}
-            </option>
-          ))}
-        </select>
+        <div className="relative mt-1">
+          <select
+            value={groupId}
+            onChange={(e) => setGroupId(e.target.value)}
+            className="w-full appearance-none bg-neutral-100 dark:bg-neutral-900 rounded-lg pl-3 pr-9 py-2"
+          >
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name} {g.fandom_name ? `(${g.fandom_name})` : ''}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-4 h-4 text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+        </div>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">

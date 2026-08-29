@@ -4,9 +4,12 @@ import { getSupabaseServiceClient } from '@/lib/supabase';
 import Stripe from 'stripe';
 
 // POST /api/webhook — configúralo en el dashboard de Stripe apuntando aquí.
-// Este es el ÚNICO lugar donde se inserta una fila en `bids`. Así garantizamos
-// que el ranking solo se mueve cuando Stripe confirma que el dinero
-// efectivamente se cobró — nunca antes.
+// La fila en `bids` ya existe desde /api/bid (status='pending'); este
+// webhook solo la CONFIRMA o la DESCARTA según lo que diga Stripe. Nunca
+// inserta una fila nueva, así que reintentos del mismo evento (Stripe
+// reintenta automáticamente si no respondemos 2xx) son inofensivos: la
+// segunda vez simplemente vuelve a marcar la misma fila con el mismo
+// resultado, en vez de fallar por una constraint de duplicado.
 export async function POST(req: NextRequest) {
   const body = await req.text();
   const sig = req.headers.get('stripe-signature')!;
@@ -19,36 +22,40 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Firma inválida' }, { status: 400 });
   }
 
+  const supabase = getSupabaseServiceClient();
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
-    const supabase = getSupabaseServiceClient();
+    const bidId = session.metadata?.bidId;
 
-    const groupId = session.metadata?.groupId;
-    const supporterName = session.metadata?.supporterName || null;
-    const isAnonymous = session.metadata?.isAnonymous === 'true';
-    const socialUrl = session.metadata?.socialUrl || null;
-    const ipAddress = session.metadata?.ip || null;
-    const amountCents = session.amount_total ?? 0;
-
-    if (!groupId) {
-      console.error('Webhook sin groupId en metadata');
-      return NextResponse.json({ error: 'Falta groupId' }, { status: 400 });
+    if (!bidId) {
+      console.error('Webhook sin bidId en metadata');
+      return NextResponse.json({ error: 'Falta bidId' }, { status: 400 });
     }
 
-    const { error } = await supabase.from('bids').insert({
-      group_id: groupId,
-      amount_cents: amountCents,
-      supporter_name: isAnonymous ? null : supporterName,
-      is_anonymous: isAnonymous,
-      social_url: isAnonymous ? null : socialUrl,
-      ip_address: ipAddress,
-      stripe_payment_intent_id: session.payment_intent as string,
-      status: 'succeeded',
-    });
+    const { error } = await supabase
+      .from('bids')
+      .update({
+        status: 'succeeded',
+        amount_cents: session.amount_total ?? undefined,
+        stripe_payment_intent_id: session.payment_intent as string,
+      })
+      .eq('id', bidId);
 
     if (error) {
-      console.error('Error insertando puja:', error);
+      console.error('Error confirmando puja:', error);
       return NextResponse.json({ error: 'Error de base de datos' }, { status: 500 });
+    }
+  } else if (event.type === 'checkout.session.expired') {
+    // El usuario no completó el pago a tiempo — libera la reserva.
+    // (Requiere que "checkout.session.expired" esté habilitado como
+    // evento en el webhook de Stripe; si no lo está, la fila se queda en
+    // 'pending' pero deja de contar contra el tope diario después de los
+    // 30 minutos de todas formas, así que no hay impacto en el ranking.)
+    const session = event.data.object as Stripe.Checkout.Session;
+    const bidId = session.metadata?.bidId;
+    if (bidId) {
+      await supabase.from('bids').update({ status: 'failed' }).eq('id', bidId).eq('status', 'pending');
     }
   }
 

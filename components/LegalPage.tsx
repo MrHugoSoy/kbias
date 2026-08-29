@@ -1,28 +1,57 @@
 import Link from 'next/link';
-import { ArrowLeft, Crown } from 'lucide-react';
+import { ArrowLeft, Mail } from 'lucide-react';
+import TikTokIcon from '@/components/icons/TikTokIcon';
+import InstagramIcon from '@/components/icons/InstagramIcon';
+import LogoKW from '@/components/icons/LogoKW';
+import { CONTACT_EMAIL } from '@/lib/contact';
+
+// Agrega aquí cada nueva red social conforme se sumen
+const SOCIAL_LINKS = [
+  { name: 'TikTok', url: 'https://www.tiktok.com/@thekpopwars', Icon: TikTokIcon },
+  { name: 'Instagram', url: 'https://www.instagram.com/thekpopwars', Icon: InstagramIcon },
+];
 
 export function FooterLinks() {
   return (
-    <div className="text-center text-xs text-neutral-600 pb-4">
-      <Link href="/sobre-nosotros" className="hover:text-pink-400">
-        Sobre nosotros
-      </Link>
-      <span className="mx-2">·</span>
-      <Link href="/reglas" className="hover:text-pink-400">
-        Reglas
-      </Link>
-      <span className="mx-2">·</span>
-      <Link href="/terminos" className="hover:text-pink-400">
-        Términos
-      </Link>
-      <span className="mx-2">·</span>
-      <Link href="/privacidad" className="hover:text-pink-400">
-        Privacidad
-      </Link>
-      <span className="mx-2">·</span>
-      <Link href="/estadisticas" className="hover:text-pink-400">
-        Estadísticas en vivo
-      </Link>
+    <div className="text-center text-xs text-neutral-600 pb-4 space-y-3">
+      <div className="flex items-center justify-center gap-4">
+        {SOCIAL_LINKS.map(({ name, url, Icon }) => (
+          <a
+            key={name}
+            href={url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={name}
+            className="text-neutral-500 hover:text-pink-400 transition"
+          >
+            <Icon className="w-5 h-5" />
+          </a>
+        ))}
+        <a href={`mailto:${CONTACT_EMAIL}`} aria-label="Correo" className="text-neutral-500 hover:text-pink-400 transition">
+          <Mail className="w-5 h-5" />
+        </a>
+      </div>
+      <div>
+        <Link href="/sobre-nosotros" className="hover:text-pink-400">
+          Sobre nosotros
+        </Link>
+        <span className="mx-2">·</span>
+        <Link href="/reglas" className="hover:text-pink-400">
+          Reglas
+        </Link>
+        <span className="mx-2">·</span>
+        <Link href="/terminos" className="hover:text-pink-400">
+          Términos
+        </Link>
+        <span className="mx-2">·</span>
+        <Link href="/privacidad" className="hover:text-pink-400">
+          Privacidad
+        </Link>
+        <span className="mx-2">·</span>
+        <Link href="/estadisticas" className="hover:text-pink-400">
+          Estadísticas en vivo
+        </Link>
+      </div>
     </div>
   );
 }
@@ -42,8 +71,8 @@ export function LegalPage({
   return (
     <main className="min-h-screen bg-white text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
       <header className={`flex items-center gap-3 px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 ${maxW} mx-auto`}>
-        <Crown className="w-6 h-6 text-pink-500 fill-pink-500/20" />
-        <p className="font-extrabold tracking-tight">EL TRONO</p>
+        <LogoKW className="w-9 h-9 text-pink-500" />
+        <p className="font-extrabold tracking-tight">K-POP WARS</p>
       </header>
 
       <div className={`${maxW} mx-auto px-4 py-10 space-y-8`}>

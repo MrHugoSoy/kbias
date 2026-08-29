@@ -4,7 +4,8 @@ import { getSupabasePublicClient } from '@/lib/supabase';
 import { LegalPage } from '@/components/LegalPage';
 
 export const metadata = {
-  title: 'Estadísticas — El Trono',
+  title: 'Estadísticas',
+  description: 'Cifras en vivo de K-pop Wars: total recaudado, grupos activos y visitas desde el lanzamiento.',
 };
 
 export const revalidate = 0;
@@ -36,7 +37,7 @@ export default async function EstadisticasPage() {
   const groupsWithDonations = (rankings ?? []).filter((r) => r.total_donated_cents > 0).length;
 
   return (
-    <LegalPage title="Estadísticas en vivo" subtitle="Los números reales detrás de El Trono, actualizados al cargar la página." wide>
+    <LegalPage title="Estadísticas en vivo" subtitle="Los números reales detrás de K-pop Wars, actualizados al cargar la página." wide>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <StatCard
           label="Recaudado en total"

@@ -1,4 +1,4 @@
-# El Trono — Ranking K-pop estilo outbid.lol
+# K-pop Wars — Ranking K-pop estilo outbid.lol
 
 MVP funcional: los fans pujan dinero real para que su grupo tome el
 puesto #1. No hay ciclos ni reset — el trono es permanente hasta que

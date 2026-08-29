@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { validateBid } from '@/lib/bidValidation';
 
 export default function BidButton({
   groupId,
@@ -19,20 +20,22 @@ export default function BidButton({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    if (!open) return;
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false);
+    }
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [open]);
+
   async function handleSubmit() {
     setError('');
     const amountCents = Math.round(parseFloat(amount) * 100);
 
-    if (!amountCents || amountCents < 100) {
-      setError('El monto mínimo es $1.00');
-      return;
-    }
-    if (amountCents > 500000) {
-      setError('El monto máximo por transacción es $5,000.00');
-      return;
-    }
-    if (!anonymous && socialUrl && !/^https?:\/\/.+/.test(socialUrl)) {
-      setError('El link de red social debe empezar con http:// o https://');
+    const validationError = validateBid({ amountCents, anonymous, socialUrl });
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -69,15 +72,28 @@ export default function BidButton({
         className={
           compact
             ? 'w-full bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg transition'
-            : 'bg-pink-600 hover:bg-pink-500 text-white font-bold px-4 py-2 rounded-lg transition'
+            : 'bg-pink-600 hover:bg-pink-500 text-white font-bold px-4 py-2 rounded-lg transition whitespace-nowrap'
         }
       >
-        {compact ? 'Apoyar' : `Apoya a ${groupName}`}
+        {compact ? (
+          'Apoyar'
+        ) : (
+          <>
+            <span className="sm:hidden">Apoyar</span>
+            <span className="hidden sm:inline">Apoya a {groupName}</span>
+          </>
+        )}
       </button>
 
       {open && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl w-full max-w-sm space-y-4">
+        <div
+          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className="bg-white dark:bg-neutral-900 p-6 rounded-xl w-full max-w-sm space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-xl font-bold">Apoya a {groupName}</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Cada puja se suma al total de tu grupo. No hay un mínimo para "tomar la delantera" — entre más done tu

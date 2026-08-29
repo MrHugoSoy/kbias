@@ -1,7 +1,7 @@
 import { ImageResponse } from 'next/og';
 
 export const runtime = 'edge';
-export const alt = 'El Trono — El poder es de los fans';
+export const alt = 'K-pop Wars — El poder es de los fans';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 
@@ -31,7 +31,7 @@ export default async function Image() {
           <path d="M5 21h14" stroke="#ec4899" strokeWidth="2" strokeLinecap="round" />
         </svg>
         <div style={{ display: 'flex', fontSize: 96, fontWeight: 900, color: 'white', letterSpacing: -2, marginTop: 24 }}>
-          EL TRONO
+          K-POP WARS
         </div>
         <div style={{ display: 'flex', fontSize: 30, color: '#f472b6', marginTop: 12, letterSpacing: 8 }}>
           EL PODER ES DE LOS FANS

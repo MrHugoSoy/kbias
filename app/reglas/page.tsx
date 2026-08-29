@@ -1,14 +1,16 @@
 import Link from 'next/link';
-import { BID_LIMITS } from '@/lib/stripe';
+import { BID_LIMITS } from '@/lib/bidLimits';
 import { LegalPage, LegalSection } from '@/components/LegalPage';
+import { CONTACT_EMAIL } from '@/lib/contact';
 
 export const metadata = {
-  title: 'Reglas — El Trono',
+  title: 'Reglas',
+  description: 'Cómo se gana el #1 en K-pop Wars, límites de monto, reembolsos y moderación.',
 };
 
 export default function ReglasPage() {
   return (
-    <LegalPage title="Reglas" subtitle="Cómo funciona el juego y qué se permite en El Trono.">
+    <LegalPage title="Reglas" subtitle="Cómo funciona el juego y qué se permite en K-pop Wars.">
       <LegalSection title="1. Cómo se gana el #1">
         <p>
           El puesto #1 lo tiene el grupo cuya comunidad haya donado <strong>más en total</strong> — se suman todas
@@ -23,7 +25,7 @@ export default function ReglasPage() {
 
       <LegalSection title="2. Esto es un apoyo, no una apuesta">
         <p>
-          Pujar en El Trono es un apoyo/tip a tu grupo favorito. No hay premio, sorteo ni retorno económico para
+          Pujar en K-pop Wars es un apoyo/tip a tu grupo favorito. No hay premio, sorteo ni retorno económico para
           quien paga — el único "premio" es ver a tu grupo en el #1.
         </p>
       </LegalSection>
@@ -44,7 +46,11 @@ export default function ReglasPage() {
       <LegalSection title="4. Reembolsos">
         <p>
           Las pujas no son reembolsables, salvo error técnico comprobado (por ejemplo, un cobro duplicado o una
-          falla de nuestro sistema). Escríbenos si crees que eso pasó.
+          falla de nuestro sistema).{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+            Escríbenos
+          </a>{' '}
+          si crees que eso pasó.
         </p>
       </LegalSection>
 
@@ -83,7 +89,11 @@ export default function ReglasPage() {
         <Link href="/#faq" className="underline hover:text-pink-500 dark:hover:text-pink-400">
           FAQ
         </Link>{' '}
-        o contáctanos directamente.
+        o escríbenos a{' '}
+        <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+          {CONTACT_EMAIL}
+        </a>
+        .
       </p>
     </LegalPage>
   );

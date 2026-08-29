@@ -8,7 +8,9 @@ import OnlineBar from '@/components/OnlineBar';
 import DonorSidebar from '@/components/DonorSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
 import HistorialLink from '@/components/HistorialLink';
+import MobileNavMenu from '@/components/MobileNavMenu';
 import { FooterLinks } from '@/components/LegalPage';
+import LogoKW from '@/components/icons/LogoKW';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
@@ -61,12 +63,14 @@ function RankCard({
   rank,
   group,
   size,
+  emphasize,
   topDonor,
   orderClassName,
 }: {
   rank: number;
   group: RankingRow;
   size: 'lg' | 'md' | 'sm';
+  emphasize?: boolean;
   topDonor?: { supporter_name: string | null; total_donated_cents: number } | null;
   orderClassName?: string;
 }) {
@@ -79,14 +83,15 @@ function RankCard({
         (isThrone
           ? 'relative border-2 border-pink-600 rounded-2xl p-6 text-center space-y-2 bg-gradient-to-b from-pink-100 to-white dark:from-pink-950/30 dark:to-black'
           : isCompact
-            ? 'relative border border-neutral-200 dark:border-neutral-800 rounded-xl p-3 text-center space-y-1 bg-white dark:bg-neutral-950'
+            ? 'relative border border-neutral-200 dark:border-neutral-800 rounded-xl text-center space-y-1 bg-white dark:bg-neutral-950 ' +
+              (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
             : 'relative border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-white dark:bg-neutral-950') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
       <p
         className={
-          (isCompact ? 'text-[10px] tracking-[0.2em]' : 'text-xs tracking-[0.3em]') +
+          (isCompact ? (emphasize ? 'text-xs tracking-[0.2em]' : 'text-[10px] tracking-[0.2em]') : 'text-xs tracking-[0.3em]') +
           ' text-pink-400 font-semibold flex items-center justify-center gap-1'
         }
       >
@@ -104,7 +109,8 @@ function RankCard({
             (isThrone
               ? 'w-32 h-32 mx-auto rounded-full border-2 border-pink-500 shadow-[0_0_40px_rgba(236,72,153,0.5)] bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
               : isCompact
-                ? 'w-12 h-12 mx-auto rounded-full border border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
+                ? (emphasize ? 'w-16 h-16' : 'w-12 h-12') +
+                  ' mx-auto rounded-full border border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden'
                 : 'w-20 h-20 mx-auto rounded-full border-2 border-neutral-300 dark:border-neutral-700 bg-neutral-200 dark:bg-neutral-800 flex items-center justify-center overflow-hidden') +
             ' relative transition-transform duration-200 hover:z-20 ' +
             (isThrone ? 'hover:scale-150' : isCompact ? 'hover:scale-[3.5]' : 'hover:scale-[2]')
@@ -114,13 +120,22 @@ function RankCard({
             // eslint-disable-next-line @next/next/no-img-element
             <img src={group.image_url} alt={group.group_name} className="w-full h-full object-cover" />
           ) : (
-            <Mic2 className={(isThrone ? 'w-12 h-12' : isCompact ? 'w-5 h-5' : 'w-8 h-8') + ' text-neutral-500 dark:text-neutral-600'} />
+            <Mic2
+              className={
+                (isThrone ? 'w-12 h-12' : isCompact ? (emphasize ? 'w-6 h-6' : 'w-5 h-5') : 'w-8 h-8') +
+                ' text-neutral-500 dark:text-neutral-600'
+              }
+            />
           )}
         </div>
         <h2
           className={
             'hover:underline ' +
-            (isThrone ? 'text-3xl font-black tracking-tight' : isCompact ? 'text-xs font-bold truncate' : 'text-lg font-bold')
+            (isThrone
+              ? 'text-3xl font-black tracking-tight'
+              : isCompact
+                ? (emphasize ? 'text-sm' : 'text-xs') + ' font-bold truncate'
+                : 'text-lg font-bold')
           }
         >
           {group.group_name}
@@ -131,13 +146,13 @@ function RankCard({
           <Heart className="w-3 h-3 fill-current" /> {group.fandom_name} <Heart className="w-3 h-3 fill-current" />
         </p>
       )}
-      {group.bio && !isCompact && <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2">{group.bio}</p>}
+      {group.bio && !isCompact && <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 text-pretty">{group.bio}</p>}
       <p
         className={
           isThrone
             ? 'text-4xl font-black text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)] font-mono'
             : isCompact
-              ? 'text-sm font-bold text-amber-400 font-mono'
+              ? (emphasize ? 'text-base' : 'text-sm') + ' font-bold text-amber-400 font-mono'
               : 'text-xl font-bold text-amber-400 font-mono'
         }
       >
@@ -178,7 +193,17 @@ function RankCard({
 }
 
 // Puesto todavía sin reclamar — mantiene el hueco visible en vez de desaparecer.
-function EmptySlotCard({ rank, size, orderClassName }: { rank: number; size: 'lg' | 'md' | 'sm'; orderClassName?: string }) {
+function EmptySlotCard({
+  rank,
+  size,
+  emphasize,
+  orderClassName,
+}: {
+  rank: number;
+  size: 'lg' | 'md' | 'sm';
+  emphasize?: boolean;
+  orderClassName?: string;
+}) {
   const isThrone = size === 'lg';
   const isCompact = size === 'sm';
 
@@ -188,12 +213,19 @@ function EmptySlotCard({ rank, size, orderClassName }: { rank: number; size: 'lg
         (isThrone
           ? 'relative border-2 border-dashed border-pink-700/60 rounded-2xl p-6 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 hover:bg-pink-600/10 transition'
           : isCompact
-            ? 'relative border border-dashed border-pink-800/50 rounded-xl p-3 text-center space-y-1 bg-pink-600/5 hover:border-pink-500 transition'
+            ? 'relative border border-dashed border-pink-800/50 rounded-xl text-center space-y-1 bg-pink-600/5 hover:border-pink-500 transition ' +
+              (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
             : 'relative border border-dashed border-pink-800/50 rounded-2xl p-5 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 transition') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
-      <p className={isCompact ? 'text-[10px] tracking-[0.2em] text-pink-500/70 font-bold' : 'text-xs tracking-[0.3em] text-pink-500/70 font-bold'}>
+      <p
+        className={
+          isCompact
+            ? (emphasize ? 'text-xs' : 'text-[10px]') + ' tracking-[0.2em] text-pink-500/70 font-bold'
+            : 'text-xs tracking-[0.3em] text-pink-500/70 font-bold'
+        }
+      >
         #{rank}
       </p>
       <div
@@ -201,13 +233,22 @@ function EmptySlotCard({ rank, size, orderClassName }: { rank: number; size: 'lg
           isThrone
             ? 'w-32 h-32 mx-auto rounded-full border-2 border-dashed border-pink-600/60 flex items-center justify-center animate-pulse'
             : isCompact
-              ? 'w-12 h-12 mx-auto rounded-full border border-dashed border-pink-700/60 flex items-center justify-center'
+              ? (emphasize ? 'w-16 h-16' : 'w-12 h-12') +
+                ' mx-auto rounded-full border border-dashed border-pink-700/60 flex items-center justify-center'
               : 'w-20 h-20 mx-auto rounded-full border-2 border-dashed border-pink-700/60 flex items-center justify-center'
         }
       >
-        <Plus className={(isThrone ? 'w-10 h-10' : isCompact ? 'w-4 h-4' : 'w-7 h-7') + ' text-pink-500'} />
+        <Plus className={(isThrone ? 'w-10 h-10' : isCompact ? (emphasize ? 'w-5 h-5' : 'w-4 h-4') : 'w-7 h-7') + ' text-pink-500'} />
       </div>
-      <p className={isThrone ? 'text-xl font-black text-pink-400' : isCompact ? 'text-[10px] font-bold text-pink-400' : 'text-sm font-bold text-pink-400'}>
+      <p
+        className={
+          isThrone
+            ? 'text-xl font-black text-pink-400'
+            : isCompact
+              ? (emphasize ? 'text-xs' : 'text-[10px]') + ' font-bold text-pink-400'
+              : 'text-sm font-bold text-pink-400'
+        }
+      >
         ¡Disponible!
       </p>
       {!isCompact && <p className="text-xs text-neutral-500">Sé el primero en reclamarlo</p>}
@@ -258,9 +299,9 @@ export default async function Home() {
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
         <div className="flex items-center gap-2">
-          <Crown className="w-7 h-7 text-pink-500 fill-pink-500/20" />
+          <LogoKW className="w-10 h-10 text-pink-500" />
           <div>
-            <p className="font-extrabold tracking-tight leading-none">EL TRONO</p>
+            <p className="font-extrabold tracking-tight leading-none">K-POP WARS</p>
             <p className="text-[10px] text-pink-400 tracking-widest">EL PODER ES DE LOS FANS</p>
           </div>
         </div>
@@ -273,6 +314,7 @@ export default async function Home() {
             <a href="#faq">FAQ</a>
           </nav>
           <ThemeToggle />
+          <MobileNavMenu />
         </div>
       </header>
 
@@ -283,7 +325,7 @@ export default async function Home() {
         <section id="ranking" className="space-y-4">
           {top3.length === 0 && (
             <div className="text-center py-6 space-y-2">
-              <Crown className="w-16 h-16 mx-auto text-pink-500 fill-pink-500/20 animate-bounce" />
+              <LogoKW className="w-24 h-24 mx-auto text-pink-500 fill-pink-500/20 animate-bounce" />
               <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-pink-500 via-pink-400 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(236,72,153,0.35)]">
                 El trono está vacío
               </h1>
@@ -312,8 +354,24 @@ export default async function Home() {
             })}
           </div>
 
-          {/* Siguientes 5, tarjetas compactas — las 5 caben en una sola fila */}
-          <div className="grid grid-cols-5 gap-2">
+          {/* Móvil: #4 y #5 un poco más grandes arriba, #6-#8 abajo. Desde sm: los 5 en una sola fila, mismo tamaño. */}
+          <div className="sm:hidden space-y-2">
+            <div className="grid grid-cols-2 gap-2">
+              {[0, 1].map((i) => {
+                const r = midFive[i];
+                if (!r) return <EmptySlotCard key={i} rank={i + 4} size="sm" emphasize />;
+                return <RankCard key={r.group_id} rank={i + 4} group={r} size="sm" emphasize />;
+              })}
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {[2, 3, 4].map((i) => {
+                const r = midFive[i];
+                if (!r) return <EmptySlotCard key={i} rank={i + 4} size="sm" />;
+                return <RankCard key={r.group_id} rank={i + 4} group={r} size="sm" />;
+              })}
+            </div>
+          </div>
+          <div className="hidden sm:grid sm:grid-cols-5 gap-2">
             {[0, 1, 2, 3, 4].map((i) => {
               const r = midFive[i];
               if (!r) return <EmptySlotCard key={i} rank={i + 4} size="sm" />;

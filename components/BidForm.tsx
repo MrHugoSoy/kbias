@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Gavel, VenetianMask, Zap } from 'lucide-react';
+import { ChevronDown, Gavel, VenetianMask, Zap } from 'lucide-react';
+import { validateBid } from '@/lib/bidValidation';
 
 type Group = { id: string; name: string; fandom_name: string | null };
 
@@ -22,16 +23,9 @@ export default function BidForm({ groups }: { groups: Group[] }) {
       setError('Elige un grupo');
       return;
     }
-    if (!amountCents || amountCents < 100) {
-      setError('El monto mínimo es $1.00');
-      return;
-    }
-    if (amountCents > 500000) {
-      setError('El monto máximo por transacción es $5,000.00');
-      return;
-    }
-    if (!anonymous && socialUrl && !/^https?:\/\/.+/.test(socialUrl)) {
-      setError('El link de red social debe empezar con http:// o https://');
+    const validationError = validateBid({ amountCents, anonymous, socialUrl });
+    if (validationError) {
+      setError(validationError);
       return;
     }
 
@@ -71,22 +65,24 @@ export default function BidForm({ groups }: { groups: Group[] }) {
         </div>
       </div>
 
-      <div>
-        <label className="text-xs text-neutral-500 uppercase tracking-wide">Grupo</label>
-        <select
-          value={groupId}
-          onChange={(e) => setGroupId(e.target.value)}
-          className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2"
-        >
-          {groups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name} {g.fandom_name ? `(${g.fandom_name})` : ''}
-            </option>
-          ))}
-        </select>
-      </div>
-
       <div className="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label className="text-xs text-neutral-500 uppercase tracking-wide">Grupo</label>
+          <div className="relative mt-1">
+            <select
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
+              className="w-full appearance-none bg-neutral-100 dark:bg-neutral-900 rounded-lg pl-3 pr-9 py-2"
+            >
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name} {g.fandom_name ? `(${g.fandom_name})` : ''}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
         <div>
           <label className="text-xs text-neutral-500 uppercase tracking-wide">Monto de tu puja (USD)</label>
           <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-lg mt-1 px-3">
@@ -101,6 +97,9 @@ export default function BidForm({ groups }: { groups: Group[] }) {
             <span className="text-neutral-500 text-xs">USD</span>
           </div>
         </div>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
         <div>
           <label className="text-xs text-neutral-500 uppercase tracking-wide">Tu nombre (opcional)</label>
           <input
@@ -112,19 +111,18 @@ export default function BidForm({ groups }: { groups: Group[] }) {
             className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
           />
         </div>
-      </div>
-
-      <div>
-        <label className="text-xs text-neutral-500 uppercase tracking-wide">Tu red social (opcional)</label>
-        <input
-          type="url"
-          value={socialUrl}
-          onChange={(e) => setSocialUrl(e.target.value)}
-          disabled={anonymous}
-          placeholder="https://instagram.com/tu_usuario"
-          className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
-        />
-        <p className="text-[10px] text-neutral-600 mt-1">Se muestra como link junto a tu nombre en el feed.</p>
+        <div>
+          <label className="text-xs text-neutral-500 uppercase tracking-wide">Tu red social (opcional)</label>
+          <input
+            type="url"
+            value={socialUrl}
+            onChange={(e) => setSocialUrl(e.target.value)}
+            disabled={anonymous}
+            placeholder="https://instagram.com/tu_usuario"
+            className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 disabled:opacity-50"
+          />
+          <p className="text-[10px] text-neutral-600 mt-1">Se muestra como link junto a tu nombre en el feed.</p>
+        </div>
       </div>
 
       <p className="text-xs text-neutral-500">

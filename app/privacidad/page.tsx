@@ -1,7 +1,9 @@
 import { LegalPage, LegalSection } from '@/components/LegalPage';
+import { CONTACT_EMAIL } from '@/lib/contact';
 
 export const metadata = {
-  title: 'Privacidad — El Trono',
+  title: 'Privacidad',
+  description: 'Qué datos usa K-pop Wars y por qué: no pedimos cuenta ni correo para pujar.',
 };
 
 export default function PrivacidadPage() {
@@ -49,7 +51,7 @@ export default function PrivacidadPage() {
 
       <LegalSection title="2. Cookies y almacenamiento local">
         <p>
-          El Trono no usa cookies de rastreo ni de publicidad. Guardamos tu preferencia de tema (claro/oscuro) en el
+          K-pop Wars no usa cookies de rastreo ni de publicidad. Guardamos tu preferencia de tema (claro/oscuro) en el
           almacenamiento local de tu navegador (localStorage), que se queda en tu dispositivo y nunca se envía a
           nuestros servidores.
         </p>
@@ -78,15 +80,18 @@ export default function PrivacidadPage() {
       <LegalSection title="5. Tus opciones">
         <p>
           Puedes pujar sin dar tu nombre ni tu red social usando la opción "pujar de forma anónima". Si ya pujaste
-          con tu nombre y quieres que lo quitemos del feed público, contáctanos y lo evaluamos caso por caso (el
-          monto de la puja se queda, ya que forma parte del ranking público, pero podemos anonimizar el nombre
-          asociado).
+          con tu nombre y quieres que lo quitemos del feed público,{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+            escríbenos
+          </a>{' '}
+          y lo evaluamos caso por caso (el monto de la puja se queda, ya que forma parte del ranking público, pero
+          podemos anonimizar el nombre asociado).
         </p>
       </LegalSection>
 
       <LegalSection title="6. Menores de edad">
         <p>
-          El Trono no está dirigido a niños. Si eres menor de edad, necesitas la autorización de un adulto
+          K-pop Wars no está dirigido a niños. Si eres menor de edad, necesitas la autorización de un adulto
           responsable del método de pago antes de usar el sitio.
         </p>
       </LegalSection>
@@ -99,8 +104,11 @@ export default function PrivacidadPage() {
         </p>
         <p>
           Si vives en un país cuya ley te da derechos específicos sobre tus datos (acceso, corrección, eliminación,
-          oposición), puedes ejercerlos escribiéndonos — dado lo poco que guardamos, la mayoría de esas solicitudes
-          se resuelven de inmediato.
+          oposición), puedes ejercerlos escribiendo a{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+            {CONTACT_EMAIL}
+          </a>{' '}
+          — dado lo poco que guardamos, la mayoría de esas solicitudes se resuelven de inmediato.
         </p>
       </LegalSection>
 
@@ -109,7 +117,13 @@ export default function PrivacidadPage() {
       </LegalSection>
 
       <LegalSection title="9. Contacto">
-        <p>¿Dudas sobre tus datos? Contáctanos directamente por los canales del sitio.</p>
+        <p>
+          ¿Dudas sobre tus datos? Escríbenos a{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+            {CONTACT_EMAIL}
+          </a>
+          .
+        </p>
       </LegalSection>
     </LegalPage>
   );
