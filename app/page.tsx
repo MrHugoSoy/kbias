@@ -301,7 +301,7 @@ export default async function Home() {
         <div className="flex items-center gap-2">
           <LogoKW className="w-10 h-10 text-pink-500" />
           <div>
-            <p className="font-extrabold tracking-tight leading-none">K-POP WARS</p>
+            <h1 className="font-extrabold tracking-tight leading-none">K-POP WARS</h1>
             <p className="text-[10px] text-pink-400 tracking-widest">EL PODER ES DE LOS FANS</p>
           </div>
         </div>
@@ -326,9 +326,9 @@ export default async function Home() {
           {top3.length === 0 && (
             <div className="text-center py-6 space-y-2">
               <LogoKW className="w-24 h-24 mx-auto text-pink-500 fill-pink-500/20 animate-bounce" />
-              <h1 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-pink-500 via-pink-400 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(236,72,153,0.35)]">
+              <h2 className="text-4xl sm:text-5xl font-black tracking-tight bg-gradient-to-r from-pink-500 via-pink-400 to-amber-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(236,72,153,0.35)]">
                 El trono está vacío
-              </h1>
+              </h2>
               <p className="text-pink-500 dark:text-pink-400 text-xs font-semibold tracking-[0.3em] uppercase">
                 ✦ Sé el primero en reclamarlo ✦
               </p>
