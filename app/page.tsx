@@ -298,13 +298,13 @@ export default async function Home() {
     <main className="min-h-screen bg-white text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex items-center gap-2">
           <LogoKW className="w-10 h-10 text-pink-500" />
           <div>
             <h1 className="font-extrabold tracking-tight leading-none">K-POP WARS</h1>
             <p className="text-[10px] text-pink-400 tracking-widest">EL PODER ES DE LOS FANS</p>
           </div>
-        </div>
+        </Link>
         <div className="flex items-center gap-6">
           <nav className="hidden md:flex gap-6 text-sm text-neutral-500 dark:text-neutral-400">
             <a href="#" className="text-pink-500 border-b-2 border-pink-500 pb-1">INICIO</a>
