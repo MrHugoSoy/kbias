@@ -85,7 +85,7 @@ function RankCard({
           : isCompact
             ? 'relative border border-neutral-200 dark:border-neutral-800 rounded-xl text-center space-y-1 bg-white dark:bg-neutral-950 ' +
               (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
-            : 'relative border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-white dark:bg-neutral-950') +
+            : 'relative border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-white dark:bg-neutral-950 sm:h-[390px] sm:flex sm:flex-col sm:justify-center') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
@@ -215,7 +215,7 @@ function EmptySlotCard({
           : isCompact
             ? 'relative border border-dashed border-pink-800/50 rounded-xl text-center space-y-1 bg-pink-600/5 hover:border-pink-500 transition ' +
               (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
-            : 'relative border border-dashed border-pink-800/50 rounded-2xl p-5 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 transition') +
+            : 'relative border border-dashed border-pink-800/50 rounded-2xl p-5 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 transition sm:h-[390px] sm:flex sm:flex-col sm:justify-center') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
@@ -335,7 +335,7 @@ export default async function Home() {
             </div>
           )}
 
-          <div className="relative grid sm:grid-cols-3 gap-4">
+          <div className="relative grid sm:grid-cols-[1fr_1.2fr_1fr] sm:items-end gap-4">
             <div className="hidden sm:block absolute inset-0 bg-pink-600/10 blur-3xl rounded-full -z-10" />
             {[0, 1, 2].map((i) => {
               const r = top3[i];
