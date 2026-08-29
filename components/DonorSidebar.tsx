@@ -12,6 +12,7 @@ type FeedItem = {
   supporter_name: string | null;
   is_anonymous: boolean;
   social_url: string | null;
+  message: string | null;
   created_at: string;
 };
 
@@ -39,6 +40,7 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             supporter_name: string | null;
             is_anonymous: boolean;
             social_url: string | null;
+            message: string | null;
             created_at: string;
           };
 
@@ -56,6 +58,7 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             supporter_name: newBid.supporter_name,
             is_anonymous: newBid.is_anonymous,
             social_url: newBid.social_url,
+            message: newBid.message,
             created_at: newBid.created_at,
           };
 
@@ -105,6 +108,7 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             <p className="text-neutral-500">
               apoyó a <span className="text-pink-600 dark:text-pink-400">{item.group_name}</span>
             </p>
+            {item.message && <p className="text-neutral-500 dark:text-neutral-400 italic break-words">"{item.message}"</p>}
           </div>
         ))}
       </div>

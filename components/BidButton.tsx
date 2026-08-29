@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { validateBid } from '@/lib/bidValidation';
+import { validateBid, MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
 
 export default function BidButton({
   groupId,
@@ -16,6 +16,7 @@ export default function BidButton({
   const [amount, setAmount] = useState('');
   const [name, setName] = useState('');
   const [socialUrl, setSocialUrl] = useState('');
+  const [message, setMessage] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,7 +34,7 @@ export default function BidButton({
     setError('');
     const amountCents = Math.round(parseFloat(amount) * 100);
 
-    const validationError = validateBid({ amountCents, anonymous, socialUrl });
+    const validationError = validateBid({ amountCents, anonymous, socialUrl, message });
     if (validationError) {
       setError(validationError);
       return;
@@ -50,6 +51,7 @@ export default function BidButton({
           supporterName: name,
           isAnonymous: anonymous,
           socialUrl: anonymous ? '' : socialUrl,
+          message,
         }),
       });
       const data = await res.json();
@@ -122,6 +124,18 @@ export default function BidButton({
               disabled={anonymous}
               className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2 disabled:opacity-50"
             />
+            <div>
+              <textarea
+                placeholder="Mensaje (opcional): ¡Fighting!"
+                value={message}
+                onChange={(e) => setMessage(e.target.value.slice(0, MESSAGE_MAX_LENGTH))}
+                rows={2}
+                className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2 resize-none"
+              />
+              <p className="text-[10px] text-neutral-500 mt-1 text-right">
+                {message.length}/{MESSAGE_MAX_LENGTH}
+              </p>
+            </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
               Pujar de forma anónima

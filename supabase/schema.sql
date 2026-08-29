@@ -43,6 +43,7 @@ create table if not exists bids (
   supporter_name text,                   -- nombre público del fan (opcional/anónimo)
   is_anonymous boolean default false,
   social_url text,                       -- link a su red social (opcional, nunca si es anónimo)
+  message text,                          -- mensaje corto opcional del fan (máx. 140 caracteres, validado en /api/bid)
   ip_address text,                       -- IP de quien inició la puja (para el tope diario anti-abuso)
   stripe_payment_intent_id text unique,  -- referencia de Stripe para verificar el pago
   status text not null default 'pending' check (status in ('pending','succeeded','failed')),
@@ -52,6 +53,7 @@ create table if not exists bids (
 -- Por si la tabla ya existía antes de agregar estas columnas (idempotente).
 alter table bids add column if not exists social_url text;
 alter table bids add column if not exists ip_address text;
+alter table bids add column if not exists message text;
 
 -- Índice para encontrar rápido la puja más alta vigente
 create index if not exists idx_bids_amount on bids (amount_cents desc) where status = 'succeeded';
@@ -75,7 +77,8 @@ select
   b.supporter_name,
   b.is_anonymous,
   b.created_at,
-  b.social_url
+  b.social_url,
+  b.message
 from bids b
 join groups g on g.id = b.group_id
 where b.status = 'succeeded'

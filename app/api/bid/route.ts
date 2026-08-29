@@ -3,6 +3,7 @@ import { stripe, BID_LIMITS } from '@/lib/stripe';
 import { getSupabaseServiceClient } from '@/lib/supabase';
 import { isOffensive } from '@/lib/moderation';
 import { siteUrl } from '@/lib/siteUrl';
+import { MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
 
 // POST /api/bid
 // body: { groupId: string, amountCents: number, supporterName?: string, isAnonymous?: boolean }
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { groupId, amountCents, supporterName, isAnonymous, socialUrl } = body;
+    const { groupId, amountCents, supporterName, isAnonymous, socialUrl, message } = body;
 
     if (!groupId || !amountCents) {
       return NextResponse.json({ error: 'Faltan datos: groupId y amountCents son requeridos' }, { status: 400 });
@@ -48,6 +49,15 @@ export async function POST(req: NextRequest) {
 
     if (!isAnonymous && supporterName && isOffensive(supporterName)) {
       return NextResponse.json({ error: 'Ese nombre no está permitido. Elige otro o puja de forma anónima.' }, { status: 400 });
+    }
+
+    if (message) {
+      if (message.length > MESSAGE_MAX_LENGTH) {
+        return NextResponse.json({ error: `El mensaje no puede pasar de ${MESSAGE_MAX_LENGTH} caracteres` }, { status: 400 });
+      }
+      if (isOffensive(message)) {
+        return NextResponse.json({ error: 'Ese mensaje no está permitido. Intenta con otro.' }, { status: 400 });
+      }
     }
 
     if (amountCents < BID_LIMITS.MIN_CENTS) {
@@ -107,6 +117,7 @@ export async function POST(req: NextRequest) {
         supporter_name: isAnonymous ? null : supporterName || null,
         is_anonymous: !!isAnonymous,
         social_url: isAnonymous ? null : socialUrl || null,
+        message: message?.trim() || null,
         ip_address: ip,
         status: 'pending',
       })

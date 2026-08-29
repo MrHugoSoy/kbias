@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { ChevronDown, Gavel, VenetianMask, Zap } from 'lucide-react';
-import { validateBid } from '@/lib/bidValidation';
+import { validateBid, MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
 
 type Group = { id: string; name: string; fandom_name: string | null };
 
@@ -11,6 +11,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
   const [amount, setAmount] = useState('');
   const [name, setName] = useState('');
   const [socialUrl, setSocialUrl] = useState('');
+  const [message, setMessage] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -23,7 +24,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
       setError('Elige un grupo');
       return;
     }
-    const validationError = validateBid({ amountCents, anonymous, socialUrl });
+    const validationError = validateBid({ amountCents, anonymous, socialUrl, message });
     if (validationError) {
       setError(validationError);
       return;
@@ -40,6 +41,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
           supporterName: name,
           isAnonymous: anonymous,
           socialUrl: anonymous ? '' : socialUrl,
+          message,
         }),
       });
       const data = await res.json();
@@ -125,6 +127,20 @@ export default function BidForm({ groups }: { groups: Group[] }) {
         </div>
       </div>
 
+      <div>
+        <label className="text-xs text-neutral-500 uppercase tracking-wide">Mensaje (opcional)</label>
+        <textarea
+          value={message}
+          onChange={(e) => setMessage(e.target.value.slice(0, MESSAGE_MAX_LENGTH))}
+          placeholder="Ej. ¡Fighting, siempre con ustedes!"
+          rows={2}
+          className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 resize-none"
+        />
+        <p className="text-[10px] text-neutral-600 mt-1 text-right">
+          {message.length}/{MESSAGE_MAX_LENGTH}
+        </p>
+      </div>
+
       <p className="text-xs text-neutral-500">
         Monto mínimo: <span className="text-amber-600 dark:text-amber-400 font-semibold">$1.00</span> — no hay tope para "tomar la delantera", cada donación cuenta.
       </p>
@@ -141,6 +157,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
           onClick={() => {
             setAmount('');
             setName('');
+            setMessage('');
             setError('');
           }}
           className="flex-1 py-3 rounded-lg bg-neutral-200 dark:bg-neutral-800 font-semibold"

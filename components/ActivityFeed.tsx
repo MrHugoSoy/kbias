@@ -12,6 +12,7 @@ type FeedItem = {
   supporter_name: string | null;
   is_anonymous: boolean;
   social_url: string | null;
+  message: string | null;
   created_at: string;
 };
 
@@ -43,6 +44,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             supporter_name: string | null;
             is_anonymous: boolean;
             social_url: string | null;
+            message: string | null;
             created_at: string;
           };
 
@@ -60,6 +62,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             supporter_name: newBid.supporter_name,
             is_anonymous: newBid.is_anonymous,
             social_url: newBid.social_url,
+            message: newBid.message,
             created_at: newBid.created_at,
           };
 
@@ -94,31 +97,38 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
       </div>
       <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-transparent rounded-xl overflow-hidden">
         {items.map((item) => (
-          <div key={item.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-            <span className="text-xs text-neutral-500 w-16 shrink-0">{timeAgo(item.created_at)}</span>
-            {item.is_anonymous ? (
-              <VenetianMask className="w-4 h-4 text-neutral-500 shrink-0" />
-            ) : (
-              <User className="w-4 h-4 text-neutral-500 shrink-0" />
-            )}
-            <span className="flex-1">
-              {!item.is_anonymous && item.social_url ? (
-                <a
-                  href={item.social_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="underline decoration-dotted underline-offset-2 hover:text-pink-400"
-                >
-                  {item.supporter_name || 'un fan'}
-                </a>
-              ) : item.is_anonymous ? (
-                'un fan anónimo'
+          <div key={item.id} className="px-4 py-3 text-sm space-y-1">
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-neutral-500 w-16 shrink-0">{timeAgo(item.created_at)}</span>
+              {item.is_anonymous ? (
+                <VenetianMask className="w-4 h-4 text-neutral-500 shrink-0" />
               ) : (
-                item.supporter_name || 'un fan'
-              )}{' '}
-              apoyó a <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
-            </span>
-            <span className="font-mono text-amber-600 dark:text-amber-400">${(item.amount_cents / 100).toFixed(2)}</span>
+                <User className="w-4 h-4 text-neutral-500 shrink-0" />
+              )}
+              <span className="flex-1">
+                {!item.is_anonymous && item.social_url ? (
+                  <a
+                    href={item.social_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline decoration-dotted underline-offset-2 hover:text-pink-400"
+                  >
+                    {item.supporter_name || 'un fan'}
+                  </a>
+                ) : item.is_anonymous ? (
+                  'un fan anónimo'
+                ) : (
+                  item.supporter_name || 'un fan'
+                )}{' '}
+                apoyó a <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
+              </span>
+              <span className="font-mono text-amber-600 dark:text-amber-400">${(item.amount_cents / 100).toFixed(2)}</span>
+            </div>
+            {item.message && (
+              <p className="pl-[calc(4rem+1.75rem)] text-neutral-500 dark:text-neutral-400 italic break-words">
+                "{item.message}"
+              </p>
+            )}
           </div>
         ))}
         {items.length === 0 && (
