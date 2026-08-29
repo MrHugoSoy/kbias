@@ -85,7 +85,7 @@ function RankCard({
           : isCompact
             ? 'relative border border-neutral-200 dark:border-neutral-800 rounded-xl text-center space-y-1 bg-white dark:bg-neutral-950 ' +
               (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
-            : 'relative border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-white dark:bg-neutral-950 sm:h-[390px] sm:flex sm:flex-col sm:justify-center') +
+            : 'relative border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-gradient-to-b from-pink-50 to-white dark:from-pink-950/15 dark:to-black sm:h-[390px] sm:flex sm:flex-col sm:justify-center') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
@@ -215,7 +215,7 @@ function EmptySlotCard({
           : isCompact
             ? 'relative border border-dashed border-pink-800/50 rounded-xl text-center space-y-1 bg-pink-600/5 hover:border-pink-500 transition ' +
               (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
-            : 'relative border border-dashed border-pink-800/50 rounded-2xl p-5 text-center space-y-2 bg-pink-600/5 hover:border-pink-500 transition sm:h-[390px] sm:flex sm:flex-col sm:justify-center') +
+            : 'relative border border-dashed border-pink-800/50 rounded-2xl p-5 text-center space-y-2 bg-gradient-to-b from-pink-100/60 to-pink-600/5 dark:from-pink-950/20 dark:to-black hover:border-pink-500 transition sm:h-[390px] sm:flex sm:flex-col sm:justify-center') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
