@@ -180,6 +180,34 @@ export default function PerfilPage() {
     );
   }
 
+  if (loadingData) {
+    return (
+      <LegalPage title="Mi perfil" subtitle="Cargando...">
+        <div className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-11 h-11 rounded-full bg-neutral-200 dark:bg-neutral-800 animate-pulse shrink-0" />
+            <div className="space-y-2">
+              <div className="h-4 w-28 rounded bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+              <div className="h-3 w-36 rounded bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+            </div>
+          </div>
+          <div className="h-8 w-24 rounded-lg bg-neutral-200 dark:bg-neutral-800 animate-pulse shrink-0" />
+        </div>
+
+        <div className="h-14 rounded-xl bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
+
+        <div className="space-y-3">
+          <div className="h-5 w-40 rounded bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+          <div className="space-y-2">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-14 rounded-xl bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </LegalPage>
+    );
+  }
+
   const startOfDayUtc = new Date();
   startOfDayUtc.setUTCHours(0, 0, 0, 0);
   const votedToday = votes.find((v) => new Date(v.created_at) >= startOfDayUtc);
@@ -322,9 +350,7 @@ export default function PerfilPage() {
           Tu historial de votos {votes.length > 0 && `(${votes.length} en total)`}
         </h2>
 
-        {loadingData ? (
-          <p className="text-sm text-neutral-500">Cargando...</p>
-        ) : tallies.length === 0 ? (
+        {tallies.length === 0 ? (
           <p className="text-sm text-neutral-500">Todavía no has votado por ningún grupo.</p>
         ) : (
           <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
