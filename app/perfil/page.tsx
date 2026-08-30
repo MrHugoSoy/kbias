@@ -17,6 +17,20 @@ type VoteRow = { group_id: string; created_at: string };
 
 type GroupTally = { group: Group; count: number };
 
+type ProfileCache = {
+  userId: string;
+  votes: VoteRow[];
+  groups: Group[];
+  username: string | null;
+  avatarSpecies: string | null;
+  avatarUrl: string | null;
+};
+
+// Vive fuera del componente a propósito: sobrevive a que el usuario salga
+// de /perfil y regrese (client-side navigation), así no se repite el
+// parpadeo de carga cada vez — solo se refresca en segundo plano.
+let profileCache: ProfileCache | null = null;
+
 export default function PerfilPage() {
   const router = useRouter();
   const [user, setUser] = useState<SupabaseUser | null>(null);
@@ -50,24 +64,51 @@ export default function PerfilPage() {
 
   useEffect(() => {
     if (!user) return;
+
+    // Si ya visitamos el perfil de este mismo usuario en esta sesión,
+    // pinta esos datos de inmediato (sin parpadeo) y refresca en silencio.
+    const cached = profileCache?.userId === user.id ? profileCache : null;
+    if (cached) {
+      setVotes(cached.votes);
+      setGroups(cached.groups);
+      setUsername(cached.username);
+      setAvatarSpecies(cached.avatarSpecies);
+      setAvatarUrl(cached.avatarUrl);
+      setLoadingData(false);
+    }
+
     async function loadData() {
-      setLoadingData(true);
+      if (!cached) setLoadingData(true);
       const [{ data: voteRows }, { data: groupRows }, { data: profileRow }] = await Promise.all([
         supabase.from('votes').select('group_id, created_at').eq('user_id', user!.id),
         supabase.from('groups').select('id, name, fandom_name, image_url'),
         supabase.from('profiles').select('username, avatar_species, avatar_url').eq('id', user!.id).maybeSingle(),
       ]);
-      setVotes(voteRows ?? []);
-      setGroups(groupRows ?? []);
-      setUsername(profileRow?.username ?? null);
-      setAvatarSpecies(profileRow?.avatar_species ?? null);
-      setAvatarUrl(profileRow?.avatar_url ?? null);
+      const next: ProfileCache = {
+        userId: user!.id,
+        votes: voteRows ?? [],
+        groups: groupRows ?? [],
+        username: profileRow?.username ?? null,
+        avatarSpecies: profileRow?.avatar_species ?? null,
+        avatarUrl: profileRow?.avatar_url ?? null,
+      };
+      profileCache = next;
+      setVotes(next.votes);
+      setGroups(next.groups);
+      setUsername(next.username);
+      setAvatarSpecies(next.avatarSpecies);
+      setAvatarUrl(next.avatarUrl);
       setLoadingData(false);
     }
     loadData();
   }, [user]);
 
+  function patchCache(partial: Partial<Omit<ProfileCache, 'userId'>>) {
+    if (profileCache) profileCache = { ...profileCache, ...partial };
+  }
+
   async function signOut() {
+    profileCache = null;
     await supabase.auth.signOut();
     router.replace('/');
   }
@@ -87,6 +128,7 @@ export default function PerfilPage() {
         return;
       }
       setUsername(data.username);
+      patchCache({ username: data.username });
       setEditingUsername(false);
     } catch {
       setUsernameError('Error de conexión, intenta de nuevo');
@@ -109,6 +151,7 @@ export default function PerfilPage() {
     }
     setAvatarSpecies(key);
     setAvatarUrl(null);
+    patchCache({ avatarSpecies: key, avatarUrl: null });
     setShowAvatarPicker(false);
   }
 
@@ -148,6 +191,7 @@ export default function PerfilPage() {
 
       setAvatarUrl(publicUrl);
       setAvatarSpecies(null);
+      patchCache({ avatarUrl: publicUrl, avatarSpecies: null });
       setShowAvatarPicker(false);
     } catch (err) {
       setAvatarError(err instanceof Error ? err.message : 'Error al subir la foto');
