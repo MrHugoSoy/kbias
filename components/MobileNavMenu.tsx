@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, Home, Trophy, Zap, Clock, HelpCircle, User } from 'lucide-react';
 
 // Nav de escritorio vive oculta en celular (md:hidden en el <nav> del
 // header) — este botón le da a los mismos links (INICIO/RANKING/CÓMO
@@ -25,23 +25,23 @@ export default function MobileNavMenu() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <nav className="absolute right-0 top-12 z-50 w-48 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl overflow-hidden flex flex-col text-sm">
-            <a href="#" onClick={() => setOpen(false)} className="px-4 py-3 text-pink-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              INICIO
+            <a href="#" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 text-pink-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Home className="w-4 h-4" /> INICIO
             </a>
-            <a href="#ranking" onClick={() => setOpen(false)} className="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              RANKING
+            <a href="#ranking" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Trophy className="w-4 h-4" /> RANKING
             </a>
-            <a href="#como-funciona" onClick={() => setOpen(false)} className="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              CÓMO FUNCIONA
+            <a href="#como-funciona" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Zap className="w-4 h-4" /> CÓMO FUNCIONA
             </a>
-            <a href="#historial-mobile" onClick={() => setOpen(false)} className="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              HISTORIAL
+            <a href="#historial-mobile" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Clock className="w-4 h-4" /> HISTORIAL
             </a>
-            <a href="#faq" onClick={() => setOpen(false)} className="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              FAQ
+            <a href="#faq" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <HelpCircle className="w-4 h-4" /> FAQ
             </a>
-            <Link href="/perfil" onClick={() => setOpen(false)} className="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              MI PERFIL
+            <Link href="/perfil" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <User className="w-4 h-4" /> MI PERFIL
             </Link>
           </nav>
         </>

@@ -370,6 +370,11 @@ export default async function Home() {
         {/* Panel de voto — pegado al ranking para que no haya que bajar tanto */}
         <BidForm groups={groups ?? []} />
 
+        {/* Actividad en vivo — oculta en lg+ porque ahí ya está el sidebar de donadores mostrando lo mismo */}
+        <div id="historial-mobile" className="lg:hidden">
+          <ActivityFeed initialItems={feed ?? []} />
+        </div>
+
         {/* Cómo funciona */}
         <section id="como-funciona" className="space-y-4">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -405,11 +410,6 @@ export default async function Home() {
           <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
             {totalVotes.toLocaleString('es-MX')} votos
           </p>
-        </div>
-
-        {/* Actividad en vivo — oculta en lg+ porque ahí ya está el sidebar de donadores mostrando lo mismo */}
-        <div id="historial-mobile" className="lg:hidden">
-          <ActivityFeed initialItems={feed ?? []} />
         </div>
 
         {/* FAQ */}
