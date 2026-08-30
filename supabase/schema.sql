@@ -177,24 +177,6 @@ group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url
 order by total_points desc, g.name asc;
 
 -- ------------------------------------------------------------
--- Vista: vote_feed — últimos votos (para el feed en vivo). Sin nombre
--- ni red social: el voto es gratis y anónimo de cara al público, solo
--- se sabe a qué grupo fue.
--- ------------------------------------------------------------
-drop view if exists vote_feed;
-create view vote_feed as
-select
-  v.id,
-  v.group_id,
-  g.name as group_name,
-  g.fandom_name,
-  v.created_at
-from votes v
-join groups g on g.id = v.group_id
-order by v.created_at desc
-limit 50;
-
--- ------------------------------------------------------------
 -- Tabla: profiles — nombre de usuario único y opcional por cuenta.
 -- Se guarda siempre en minúsculas (normalizado en /api/username) para que
 -- el unique constraint funcione sin distinguir mayúsculas/minúsculas.
@@ -218,6 +200,31 @@ create policy "profiles_public_read" on profiles for select using (true);
 -- Sin policy de insert/update para anon/authenticated: pasa por
 -- /api/username y /api/avatar, que verifican el token real de sesión y
 -- escriben con el service role.
+
+-- ------------------------------------------------------------
+-- Vista: vote_feed — últimos votos (para el feed en vivo), con el nombre
+-- de usuario y avatar del votante si los tiene configurados. Si no eligió
+-- username, username sale null y el feed muestra "un fan" — el avatar
+-- pixel siempre se puede mostrar (se deriva del user_id si no hay uno
+-- elegido ni foto subida).
+-- ------------------------------------------------------------
+drop view if exists vote_feed;
+create view vote_feed as
+select
+  v.id,
+  v.group_id,
+  g.name as group_name,
+  g.fandom_name,
+  v.created_at,
+  v.user_id,
+  p.username,
+  p.avatar_species,
+  p.avatar_url
+from votes v
+join groups g on g.id = v.group_id
+left join profiles p on p.id = v.user_id
+order by v.created_at desc
+limit 50;
 
 -- ------------------------------------------------------------
 -- Storage: bucket "avatars" para fotos de perfil subidas por el usuario.

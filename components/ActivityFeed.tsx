@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { Heart } from 'lucide-react';
+import PixelAvatar from './PixelAvatar';
 
 type FeedItem = {
   id: string;
@@ -10,6 +10,10 @@ type FeedItem = {
   group_name: string;
   fandom_name: string | null;
   created_at: string;
+  user_id: string;
+  username: string | null;
+  avatar_species: string | null;
+  avatar_url: string | null;
 };
 
 export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[] }) {
@@ -28,13 +32,12 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'votes' },
         async (payload) => {
-          const newVote = payload.new as { id: string; group_id: string; created_at: string };
+          const newVote = payload.new as { id: string; group_id: string; created_at: string; user_id: string };
 
-          const { data: group } = await supabase
-            .from('groups')
-            .select('name, fandom_name')
-            .eq('id', newVote.group_id)
-            .single();
+          const [{ data: group }, { data: profile }] = await Promise.all([
+            supabase.from('groups').select('name, fandom_name').eq('id', newVote.group_id).single(),
+            supabase.from('profiles').select('username, avatar_species, avatar_url').eq('id', newVote.user_id).maybeSingle(),
+          ]);
 
           const feedItem: FeedItem = {
             id: newVote.id,
@@ -42,6 +45,10 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             group_name: group?.name ?? 'Grupo desconocido',
             fandom_name: group?.fandom_name ?? null,
             created_at: newVote.created_at,
+            user_id: newVote.user_id,
+            username: profile?.username ?? null,
+            avatar_species: profile?.avatar_species ?? null,
+            avatar_url: profile?.avatar_url ?? null,
           };
 
           setItems((prev) => [feedItem, ...prev].slice(0, 50));
@@ -76,9 +83,15 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         {items.map((item) => (
           <div key={item.id} className="px-4 py-3 text-sm flex items-center gap-3">
             <span className="text-xs text-neutral-500 w-16 shrink-0" suppressHydrationWarning>{timeAgo(item.created_at)}</span>
-            <Heart className="w-4 h-4 text-pink-500 shrink-0 fill-current" />
+            {item.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={item.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+            ) : (
+              <PixelAvatar seed={item.user_id} species={item.avatar_species} size={24} />
+            )}
             <span className="flex-1">
-              Un fan votó por <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
+              {item.username ? <strong>@{item.username}</strong> : 'Un fan'} votó por{' '}
+              <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
             </span>
           </div>
         ))}
