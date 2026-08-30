@@ -33,9 +33,10 @@ export default function TerminosPage() {
 
       <LegalSection title="1. Qué es K-pop Wars">
         <p>
-          K-pop Wars es un ranking público donde cualquier persona puede hacer una aportación económica voluntaria
-          ("impulso") para que un grupo de K-pop suba en el total acumulado de aportaciones y, con eso, en el puesto
-          que ocupa en el ranking. Al usar el sitio o completar un pago, aceptas estos Términos y nuestra{' '}
+          K-pop Wars es un ranking público donde cualquier persona puede comprar un paquete de puntos de precio fijo
+          (ver Sección 4) para un grupo de K-pop ("impulso"), sumando esos puntos al total acumulado de ese grupo y,
+          con eso, al puesto que ocupa en el ranking. Al usar el sitio o completar un pago, aceptas estos Términos y
+          nuestra{' '}
           <a href="/privacidad" className="underline hover:text-pink-500 dark:hover:text-pink-400">
             Política de Privacidad
           </a>

@@ -18,8 +18,8 @@ export default function ReglasPage() {
           los impulsos exitosos que ha recibido ese grupo, sin importar cuántos fueron ni de qué tamaño cada uno.
         </p>
         <p>
-          No existe un monto mínimo para "tomar la delantera": cualquier impulso, por chico que sea, se suma al total
-          acumulado de tu grupo y puede ayudarlo a subir en el ranking.
+          No existe un umbral especial para "tomar la delantera": hasta el paquete más chico (ver Sección 3) suma sus
+          puntos al total acumulado de tu grupo y puede ayudarlo a subir en el ranking.
         </p>
         <p>El #1 se mantiene hasta que otro grupo acumule más en total. No hay resets ni ciclos.</p>
       </LegalSection>
