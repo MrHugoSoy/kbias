@@ -4,6 +4,8 @@ import { getSupabasePublicClient } from '@/lib/supabase';
 import { LegalPage } from '@/components/LegalPage';
 import BidButton from '@/components/BidButton';
 import CopyLinkButton from '@/components/CopyLinkButton';
+import ShareButtons from '@/components/ShareButtons';
+import { siteUrl } from '@/lib/siteUrl';
 
 export const revalidate = 0;
 
@@ -19,11 +21,29 @@ export async function generateMetadata({ params }: Props) {
 
   if (!group) return { title: 'Grupo' };
 
+  const title = group.name;
+  const description =
+    group.bio ||
+    `Vota gratis por ${group.name}${group.fandom_name ? ` (${group.fandom_name})` : ''} en K-pop Wars — cada voto suma al total de tu grupo.`;
+  const url = `${siteUrl}/grupo/${params.slug}`;
+
   return {
-    title: group.name,
-    description:
-      group.bio ||
-      `Vota gratis por ${group.name}${group.fandom_name ? ` (${group.fandom_name})` : ''} en K-pop Wars — cada voto suma al total de tu grupo.`,
+    title,
+    description,
+    alternates: { canonical: `/grupo/${params.slug}` },
+    openGraph: {
+      title,
+      description,
+      url,
+      siteName: 'K-pop Wars',
+      locale: 'es_MX',
+      type: 'profile',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    },
   };
 }
 
@@ -84,6 +104,7 @@ export default async function GroupDetailPage({ params }: Props) {
             </a>
           )}
           <CopyLinkButton slug={group.slug} />
+          <ShareButtons slug={group.slug} groupName={group.group_name} />
         </div>
 
         <div className="pt-2">
