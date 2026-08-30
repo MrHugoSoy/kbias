@@ -201,16 +201,48 @@ limit 50;
 -- ------------------------------------------------------------
 create table if not exists profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  username text not null unique,
+  username text unique,
+  avatar_species text,   -- animalito pixel elegido (ver components/PixelAvatar.tsx); null = se deriva del id
+  avatar_url text,       -- foto real subida por el usuario; si existe, tiene prioridad sobre avatar_species
   created_at timestamptz default now()
 );
+
+-- Por si la tabla ya existía antes de agregar estas columnas (idempotente).
+alter table profiles alter column username drop not null;
+alter table profiles add column if not exists avatar_species text;
+alter table profiles add column if not exists avatar_url text;
 
 alter table profiles enable row level security;
 drop policy if exists "profiles_public_read" on profiles;
 create policy "profiles_public_read" on profiles for select using (true);
 -- Sin policy de insert/update para anon/authenticated: pasa por
--- /api/username, que verifica el token real de sesión y escribe con el
--- service role.
+-- /api/username y /api/avatar, que verifican el token real de sesión y
+-- escriben con el service role.
+
+-- ------------------------------------------------------------
+-- Storage: bucket "avatars" para fotos de perfil subidas por el usuario.
+-- Público de lectura; cada quien solo puede escribir dentro de su propia
+-- carpeta ({user_id}/archivo.ext), verificado por RLS con auth.uid().
+-- ------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "avatars_public_read" on storage.objects;
+create policy "avatars_public_read" on storage.objects for select
+  using (bucket_id = 'avatars');
+
+drop policy if exists "avatars_owner_write" on storage.objects;
+create policy "avatars_owner_write" on storage.objects for insert
+  with check (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "avatars_owner_update" on storage.objects;
+create policy "avatars_owner_update" on storage.objects for update
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
+
+drop policy if exists "avatars_owner_delete" on storage.objects;
+create policy "avatars_owner_delete" on storage.objects for delete
+  using (bucket_id = 'avatars' and (storage.foldername(name))[1] = auth.uid()::text);
 
 -- ------------------------------------------------------------
 -- Contador de visitas totales del sitio (para la barra "X visitas

@@ -1,14 +1,16 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Mic2, Pencil } from 'lucide-react';
+import { LogOut, Mic2, Pencil, Upload } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import { LegalPage } from '@/components/LegalPage';
 import AuthModal from '@/components/AuthModal';
-import PixelAvatar from '@/components/PixelAvatar';
+import PixelAvatar, { SPECIES } from '@/components/PixelAvatar';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
+
+const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
 type Group = { id: string; name: string; fandom_name: string | null; image_url: string | null };
 type VoteRow = { group_id: string; created_at: string };
@@ -28,6 +30,12 @@ export default function PerfilPage() {
   const [usernameInput, setUsernameInput] = useState('');
   const [usernameError, setUsernameError] = useState('');
   const [savingUsername, setSavingUsername] = useState(false);
+  const [avatarSpecies, setAvatarSpecies] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [avatarError, setAvatarError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -47,11 +55,13 @@ export default function PerfilPage() {
       const [{ data: voteRows }, { data: groupRows }, { data: profileRow }] = await Promise.all([
         supabase.from('votes').select('group_id, created_at').eq('user_id', user!.id),
         supabase.from('groups').select('id, name, fandom_name, image_url'),
-        supabase.from('profiles').select('username').eq('id', user!.id).maybeSingle(),
+        supabase.from('profiles').select('username, avatar_species, avatar_url').eq('id', user!.id).maybeSingle(),
       ]);
       setVotes(voteRows ?? []);
       setGroups(groupRows ?? []);
       setUsername(profileRow?.username ?? null);
+      setAvatarSpecies(profileRow?.avatar_species ?? null);
+      setAvatarUrl(profileRow?.avatar_url ?? null);
       setLoadingData(false);
     }
     loadData();
@@ -82,6 +92,67 @@ export default function PerfilPage() {
       setUsernameError('Error de conexión, intenta de nuevo');
     } finally {
       setSavingUsername(false);
+    }
+  }
+
+  async function chooseSpecies(key: string) {
+    setAvatarError('');
+    const res = await authFetch('/api/avatar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ species: key }),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      setAvatarError(data.error || 'Algo salió mal');
+      return;
+    }
+    setAvatarSpecies(key);
+    setAvatarUrl(null);
+    setShowAvatarPicker(false);
+  }
+
+  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !user) return;
+    setAvatarError('');
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setAvatarError('Solo se aceptan JPG, PNG o WEBP');
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setAvatarError('La foto no puede superar 2MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      // Nombre único por subida (no fijo) para evitar que el cache del CDN
+      // siga sirviendo la foto vieja bajo la misma URL.
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+
+      const res = await authFetch('/api/avatar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl: publicUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setAvatarUrl(publicUrl);
+      setAvatarSpecies(null);
+      setShowAvatarPicker(false);
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : 'Error al subir la foto');
+    } finally {
+      setUploadingPhoto(false);
     }
   }
 
@@ -125,7 +196,21 @@ export default function PerfilPage() {
     <LegalPage title="Mi perfil" subtitle={`Miembro desde ${memberSince}.`}>
       <div className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4">
         <div className="flex items-center gap-3 min-w-0">
-          <PixelAvatar seed={user.id} size={44} />
+          <button
+            onClick={() => setShowAvatarPicker((v) => !v)}
+            className="relative group shrink-0"
+            title="Cambiar avatar"
+          >
+            {avatarUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={avatarUrl} alt="Tu avatar" className="w-11 h-11 rounded-full object-cover" />
+            ) : (
+              <PixelAvatar seed={user.id} species={avatarSpecies} size={44} />
+            )}
+            <span className="absolute inset-0 rounded-full bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition">
+              <Pencil className="w-3.5 h-3.5 text-white" />
+            </span>
+          </button>
           <div className="min-w-0">
             {editingUsername ? (
               <div className="space-y-1">
@@ -176,6 +261,45 @@ export default function PerfilPage() {
           <LogOut className="w-3.5 h-3.5" /> Cerrar sesión
         </button>
       </div>
+
+      {showAvatarPicker && (
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-3">
+          <p className="text-xs font-semibold text-neutral-500 uppercase tracking-wide">Elige un animalito</p>
+          <div className="flex flex-wrap gap-2">
+            {SPECIES.map((s) => (
+              <button
+                key={s.key}
+                onClick={() => chooseSpecies(s.key)}
+                className={
+                  'rounded-full transition ring-2 ' +
+                  (avatarSpecies === s.key && !avatarUrl ? 'ring-pink-500' : 'ring-transparent hover:ring-pink-300')
+                }
+                title={s.name}
+              >
+                <PixelAvatar seed={user.id} species={s.key} size={48} />
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-3 pt-1 border-t border-neutral-200 dark:border-neutral-800">
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploadingPhoto}
+              className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-pink-600 dark:text-pink-400 hover:underline disabled:opacity-50"
+            >
+              <Upload className="w-3.5 h-3.5" /> {uploadingPhoto ? 'Subiendo...' : 'Subir tu propia foto'}
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,.webp"
+              onChange={handlePhotoUpload}
+              className="hidden"
+            />
+          </div>
+          <p className="text-[10px] text-neutral-500">JPG, PNG o WEBP · máx. 2MB</p>
+          {avatarError && <p className="text-xs text-red-500">{avatarError}</p>}
+        </div>
+      )}
 
       <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/60 rounded-xl p-4">
         {votedTodayGroup ? (

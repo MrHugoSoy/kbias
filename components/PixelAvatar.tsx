@@ -1,7 +1,8 @@
-// Avatar pixel-art de animalito, asignado de forma determinística por usuario
-// (mismo seed = mismo animal siempre). Placeholder mientras no exista subida
-// de foto real — no depende de ningún dato del usuario más que su id.
+// Avatar pixel-art de animalito. Si no se pasa `species` explícito, se
+// deriva de forma determinística del seed (mismo seed = mismo animal
+// siempre) — es el fallback mientras el usuario no elija uno ni suba foto.
 type Species = {
+  key: string;
   name: string;
   bg: string;
   fur: string;
@@ -11,14 +12,16 @@ type Species = {
   accent?: 'mask' | 'stripes' | 'blush';
 };
 
-const SPECIES: Species[] = [
-  { name: 'Gato', bg: '#FDEBD3', fur: '#F0A050', ear: '#C97A2E', snout: '#FFFFFF', earShape: 'pointy' },
-  { name: 'Zorro', bg: '#FBE0D2', fur: '#E8703A', ear: '#2B2B2B', snout: '#FFFFFF', earShape: 'pointy' },
-  { name: 'Panda', bg: '#EAEAEA', fur: '#FAFAF7', ear: '#2B2B2B', snout: '#F6C6C6', earShape: 'round', accent: 'mask' },
-  { name: 'Oso', bg: '#E8DCCB', fur: '#8B5E3C', ear: '#6E4A2E', snout: '#D8B48A', earShape: 'round' },
-  { name: 'Conejo', bg: '#F6E3EC', fur: '#EDEDED', ear: '#F3B6CB', snout: '#F3B6CB', earShape: 'floppy', accent: 'blush' },
-  { name: 'Tigre', bg: '#FCE7CE', fur: '#F0973A', ear: '#2B2B2B', snout: '#FFFFFF', earShape: 'pointy', accent: 'stripes' },
+export const SPECIES: Species[] = [
+  { key: 'gato', name: 'Gato', bg: '#FDEBD3', fur: '#F0A050', ear: '#C97A2E', snout: '#FFFFFF', earShape: 'pointy' },
+  { key: 'zorro', name: 'Zorro', bg: '#FBE0D2', fur: '#E8703A', ear: '#2B2B2B', snout: '#FFFFFF', earShape: 'pointy' },
+  { key: 'panda', name: 'Panda', bg: '#EAEAEA', fur: '#FAFAF7', ear: '#2B2B2B', snout: '#F6C6C6', earShape: 'round', accent: 'mask' },
+  { key: 'oso', name: 'Oso', bg: '#E8DCCB', fur: '#8B5E3C', ear: '#6E4A2E', snout: '#D8B48A', earShape: 'round' },
+  { key: 'conejo', name: 'Conejo', bg: '#F6E3EC', fur: '#EDEDED', ear: '#F3B6CB', snout: '#F3B6CB', earShape: 'floppy', accent: 'blush' },
+  { key: 'tigre', name: 'Tigre', bg: '#FCE7CE', fur: '#F0973A', ear: '#2B2B2B', snout: '#FFFFFF', earShape: 'pointy', accent: 'stripes' },
 ];
+
+export const SPECIES_KEYS = SPECIES.map((s) => s.key);
 
 function hashSeed(seed: string): number {
   let h = 0;
@@ -30,8 +33,24 @@ export function pixelAvatarSpecies(seed: string): Species {
   return SPECIES[hashSeed(seed) % SPECIES.length];
 }
 
-export default function PixelAvatar({ seed, size = 40 }: { seed: string; size?: number }) {
-  const species = pixelAvatarSpecies(seed);
+function getSpecies(seed: string, speciesKey?: string | null): Species {
+  if (speciesKey) {
+    const found = SPECIES.find((s) => s.key === speciesKey);
+    if (found) return found;
+  }
+  return pixelAvatarSpecies(seed);
+}
+
+export default function PixelAvatar({
+  seed,
+  species: speciesKey,
+  size = 40,
+}: {
+  seed: string;
+  species?: string | null;
+  size?: number;
+}) {
+  const species = getSpecies(seed, speciesKey);
 
   return (
     <div
