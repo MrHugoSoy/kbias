@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { User, LogOut, Mic2 } from 'lucide-react';
+import { LogOut, Mic2, Pencil } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { authFetch } from '@/lib/authFetch';
 import { LegalPage } from '@/components/LegalPage';
 import AuthModal from '@/components/AuthModal';
+import PixelAvatar from '@/components/PixelAvatar';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 type Group = { id: string; name: string; fandom_name: string | null; image_url: string | null };
@@ -21,6 +23,11 @@ export default function PerfilPage() {
   const [votes, setVotes] = useState<VoteRow[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loadingData, setLoadingData] = useState(true);
+  const [username, setUsername] = useState<string | null>(null);
+  const [editingUsername, setEditingUsername] = useState(false);
+  const [usernameInput, setUsernameInput] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [savingUsername, setSavingUsername] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -37,12 +44,14 @@ export default function PerfilPage() {
     if (!user) return;
     async function loadData() {
       setLoadingData(true);
-      const [{ data: voteRows }, { data: groupRows }] = await Promise.all([
+      const [{ data: voteRows }, { data: groupRows }, { data: profileRow }] = await Promise.all([
         supabase.from('votes').select('group_id, created_at').eq('user_id', user!.id),
         supabase.from('groups').select('id, name, fandom_name, image_url'),
+        supabase.from('profiles').select('username').eq('id', user!.id).maybeSingle(),
       ]);
       setVotes(voteRows ?? []);
       setGroups(groupRows ?? []);
+      setUsername(profileRow?.username ?? null);
       setLoadingData(false);
     }
     loadData();
@@ -51,6 +60,29 @@ export default function PerfilPage() {
   async function signOut() {
     await supabase.auth.signOut();
     router.replace('/');
+  }
+
+  async function saveUsername() {
+    setUsernameError('');
+    setSavingUsername(true);
+    try {
+      const res = await authFetch('/api/username', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: usernameInput }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUsernameError(data.error || 'Algo salió mal');
+        return;
+      }
+      setUsername(data.username);
+      setEditingUsername(false);
+    } catch {
+      setUsernameError('Error de conexión, intenta de nuevo');
+    } finally {
+      setSavingUsername(false);
+    }
   }
 
   if (!authLoaded) {
@@ -93,10 +125,49 @@ export default function PerfilPage() {
     <LegalPage title="Mi perfil" subtitle={`Miembro desde ${memberSince}.`}>
       <div className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-950 flex items-center justify-center shrink-0">
-            <User className="w-5 h-5 text-pink-500" />
+          <PixelAvatar seed={user.id} size={44} />
+          <div className="min-w-0">
+            {editingUsername ? (
+              <div className="space-y-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm text-neutral-500">@</span>
+                  <input
+                    type="text"
+                    value={usernameInput}
+                    onChange={(e) => setUsernameInput(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 20))}
+                    onKeyDown={(e) => e.key === 'Enter' && saveUsername()}
+                    placeholder="tunombre"
+                    autoFocus
+                    className="bg-white dark:bg-neutral-800 border border-neutral-300 dark:border-neutral-700 rounded-md px-2 py-1 text-sm w-32"
+                  />
+                  <button
+                    onClick={saveUsername}
+                    disabled={savingUsername || usernameInput.length < 3}
+                    className="text-xs bg-pink-600 hover:bg-pink-500 text-white rounded-md px-2 py-1 disabled:opacity-50"
+                  >
+                    {savingUsername ? '...' : 'Guardar'}
+                  </button>
+                  <button
+                    onClick={() => { setEditingUsername(false); setUsernameError(''); }}
+                    className="text-xs text-neutral-500 px-1"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+                {usernameError && <p className="text-xs text-red-500">{usernameError}</p>}
+                <p className="text-[10px] text-neutral-500">3-20 caracteres: letras, números, _ y -</p>
+              </div>
+            ) : (
+              <button
+                onClick={() => { setUsernameInput(username ?? ''); setEditingUsername(true); }}
+                className="flex items-center gap-1.5 text-sm font-semibold hover:text-pink-500"
+              >
+                {username ? `@${username}` : 'Elige un nombre de usuario'}
+                <Pencil className="w-3 h-3 text-neutral-400" />
+              </button>
+            )}
+            <p className="text-xs text-neutral-500 truncate mt-0.5">{user.email}</p>
           </div>
-          <p className="text-sm font-semibold truncate">{user.email}</p>
         </div>
         <button
           onClick={signOut}

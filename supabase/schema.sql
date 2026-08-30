@@ -195,6 +195,24 @@ order by v.created_at desc
 limit 50;
 
 -- ------------------------------------------------------------
+-- Tabla: profiles — nombre de usuario único y opcional por cuenta.
+-- Se guarda siempre en minúsculas (normalizado en /api/username) para que
+-- el unique constraint funcione sin distinguir mayúsculas/minúsculas.
+-- ------------------------------------------------------------
+create table if not exists profiles (
+  id uuid primary key references auth.users(id) on delete cascade,
+  username text not null unique,
+  created_at timestamptz default now()
+);
+
+alter table profiles enable row level security;
+drop policy if exists "profiles_public_read" on profiles;
+create policy "profiles_public_read" on profiles for select using (true);
+-- Sin policy de insert/update para anon/authenticated: pasa por
+-- /api/username, que verifica el token real de sesión y escribe con el
+-- service role.
+
+-- ------------------------------------------------------------
 -- Contador de visitas totales del sitio (para la barra "X visitas
 -- desde el lanzamiento", estilo outbid.lol). Fila única, incrementada
 -- de forma atómica en cada carga de la página vía RPC.
