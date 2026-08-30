@@ -16,6 +16,7 @@ export default function AuthModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [checkEmail, setCheckEmail] = useState(false);
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -39,7 +40,16 @@ export default function AuthModal({
     setLoading(true);
     try {
       if (mode === 'register') {
-        const { data, error: signUpError } = await supabase.auth.signUp({ email: email.trim(), password });
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email: email.trim(),
+          password,
+          options: {
+            data: {
+              marketing_opt_in: marketingOptIn,
+              marketing_opt_in_at: marketingOptIn ? new Date().toISOString() : null,
+            },
+          },
+        });
         if (signUpError) throw signUpError;
         if (data.session) {
           onAuthed();
@@ -93,6 +103,20 @@ export default function AuthModal({
               onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
               className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2"
             />
+            {mode === 'register' && (
+              <label className="flex items-start gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                <input
+                  type="checkbox"
+                  checked={marketingOptIn}
+                  onChange={(e) => setMarketingOptIn(e.target.checked)}
+                  className="mt-0.5"
+                />
+                <span>
+                  Quiero recibir correos de K-pop Wars con novedades, nuevos rankings y promociones de nuestros
+                  socios (opcional — puedes cancelarlo cuando quieras desde tu perfil).
+                </span>
+              </label>
+            )}
             {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
             <div className="flex gap-2">
               <button onClick={onClose} className="flex-1 py-2 rounded-lg bg-neutral-200 dark:bg-neutral-700">

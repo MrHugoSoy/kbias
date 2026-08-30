@@ -49,18 +49,34 @@ export default function PerfilPage() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [avatarError, setAvatarError] = useState('');
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [savingMarketing, setSavingMarketing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setUser(data.session?.user ?? null);
+      setMarketingOptIn(!!data.session?.user?.user_metadata?.marketing_opt_in);
       setAuthLoaded(true);
     });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       setUser(session?.user ?? null);
+      setMarketingOptIn(!!session?.user?.user_metadata?.marketing_opt_in);
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  async function toggleMarketing(next: boolean) {
+    setSavingMarketing(true);
+    const { data, error } = await supabase.auth.updateUser({
+      data: { marketing_opt_in: next, marketing_opt_in_at: next ? new Date().toISOString() : null },
+    });
+    if (!error && data.user) {
+      setUser(data.user);
+      setMarketingOptIn(next);
+    }
+    setSavingMarketing(false);
+  }
 
   useEffect(() => {
     if (!user) return;
@@ -419,6 +435,22 @@ export default function PerfilPage() {
             ))}
           </div>
         )}
+      </div>
+
+      <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 flex items-start gap-3">
+        <input
+          type="checkbox"
+          checked={marketingOptIn}
+          disabled={savingMarketing}
+          onChange={(e) => toggleMarketing(e.target.checked)}
+          className="mt-0.5 shrink-0"
+        />
+        <div>
+          <p className="text-sm font-semibold">Correos de novedades</p>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Novedades, nuevos rankings y promociones de nuestros socios. Opcional — puedes cambiarlo cuando quieras.
+          </p>
+        </div>
       </div>
     </LegalPage>
   );
