@@ -9,6 +9,7 @@ import DonorSidebar from '@/components/DonorSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
 import HistorialLink from '@/components/HistorialLink';
 import MobileNavMenu from '@/components/MobileNavMenu';
+import ProfileAvatarIcon from '@/components/ProfileAvatarIcon';
 import { FooterLinks } from '@/components/LegalPage';
 import LogoKW from '@/components/icons/LogoKW';
 
@@ -252,7 +253,9 @@ export default async function Home() {
             <a href="#como-funciona">CÓMO FUNCIONA</a>
             <HistorialLink />
             <a href="#faq">FAQ</a>
-            <Link href="/perfil">MI PERFIL</Link>
+            <Link href="/perfil" title="Mi perfil" className="flex items-center">
+              <ProfileAvatarIcon size={26} />
+            </Link>
           </nav>
           <ThemeToggle />
           <MobileNavMenu />
@@ -375,6 +378,14 @@ export default async function Home() {
           <ActivityFeed initialItems={feed ?? []} />
         </div>
 
+        {/* Total de votos */}
+        <div className="text-center py-2">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Esta comunidad ha lanzado</p>
+          <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
+            {totalVotes.toLocaleString('es-MX')} votos
+          </p>
+        </div>
+
         {/* Cómo funciona */}
         <section id="como-funciona" className="space-y-4">
           <h2 className="text-lg font-bold flex items-center gap-2">
@@ -403,14 +414,6 @@ export default async function Home() {
             </div>
           </div>
         </section>
-
-        {/* Total de votos */}
-        <div className="text-center py-2">
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">Esta comunidad ha lanzado</p>
-          <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
-            {totalVotes.toLocaleString('es-MX')} votos
-          </p>
-        </div>
 
         {/* FAQ */}
         <section id="faq" className="space-y-3">
