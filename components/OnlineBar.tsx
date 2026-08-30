@@ -1,17 +1,14 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 
 export default function OnlineBar({ totalVisits }: { totalVisits: number }) {
   const [onlineCount, setOnlineCount] = useState(1);
 
   useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
+    // Reutiliza el cliente compartido de lib/supabase.ts — ver nota en
+    // ActivityFeed.tsx sobre por qué crear uno nuevo aquí rompía el login.
     const key = Math.random().toString(36).slice(2);
     const channel = supabase.channel('online-users', {
       config: { presence: { key } },

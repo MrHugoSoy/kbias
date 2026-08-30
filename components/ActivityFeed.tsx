@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import PixelAvatar from './PixelAvatar';
 
 type FeedItem = {
@@ -20,12 +20,12 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
   const [items, setItems] = useState<FeedItem[]>(initialItems);
 
   useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
     // Escucha nuevos votos en tiempo real y los mete arriba del feed.
+    // Reutiliza el cliente compartido de lib/supabase.ts — crear una
+    // instancia nueva aquí (como antes) generaba múltiples GoTrueClient
+    // sobre el mismo storage key, lo que Supabase documenta como causa de
+    // comportamiento indefinido en el manejo de la sesión (login que deja
+    // de funcionar de forma intermitente hasta volver a iniciar sesión).
     const channel = supabase
       .channel('votes-feed')
       .on(

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import PixelAvatar from './PixelAvatar';
 
 type FeedItem = {
@@ -20,11 +20,8 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
   const [items, setItems] = useState<FeedItem[]>(initialItems);
 
   useEffect(() => {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    );
-
+    // Reutiliza el cliente compartido de lib/supabase.ts — ver nota en
+    // ActivityFeed.tsx sobre por qué crear uno nuevo aquí rompía el login.
     const channel = supabase
       .channel('votes-sidebar')
       .on(

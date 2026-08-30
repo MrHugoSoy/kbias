@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { ChevronDown } from 'lucide-react';
 
 type Group = { id: string; name: string; fandom_name: string | null };
@@ -34,10 +34,6 @@ export default function ClaimForm({ groups }: { groups: Group[] }) {
 
     setLoading(true);
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
       const { error: insertError } = await supabase.from('claim_requests').insert({
         group_id: groupId,
         contact_name: contactName.trim(),
