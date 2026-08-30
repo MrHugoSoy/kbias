@@ -88,14 +88,8 @@ export default function BidButton({
       </button>
 
       {open && (
-        <div
-          className="fixed inset-0 bg-black/70 flex items-center justify-center z-50"
-          onClick={() => setOpen(false)}
-        >
-          <div
-            className="bg-white dark:bg-neutral-900 p-6 rounded-xl w-full max-w-sm space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl w-full max-w-sm space-y-4">
             <h3 className="text-xl font-bold">Apoya a {groupName}</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Cada puja se suma al total de tu grupo. No hay un mínimo para "tomar la delantera" — entre más done tu
