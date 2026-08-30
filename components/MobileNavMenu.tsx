@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Menu, X } from 'lucide-react';
 
 // Nav de escritorio vive oculta en celular (md:hidden en el <nav> del
@@ -39,6 +40,9 @@ export default function MobileNavMenu() {
             <a href="#faq" onClick={() => setOpen(false)} className="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               FAQ
             </a>
+            <Link href="/perfil" onClick={() => setOpen(false)} className="px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              MI PERFIL
+            </Link>
           </nav>
         </>
       )}

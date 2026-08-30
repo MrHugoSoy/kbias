@@ -252,6 +252,7 @@ export default async function Home() {
             <a href="#como-funciona">CÓMO FUNCIONA</a>
             <HistorialLink />
             <a href="#faq">FAQ</a>
+            <Link href="/perfil">MI PERFIL</Link>
           </nav>
           <ThemeToggle />
           <MobileNavMenu />
