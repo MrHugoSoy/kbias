@@ -52,7 +52,7 @@ type RankingRow = {
   slug: string;
   bio: string | null;
   official_url: string | null;
-  total_donated_cents: number;
+  total_points: number;
   top_supporter_name: string | null;
   top_is_anonymous: boolean | null;
   top_social_url: string | null;
@@ -71,7 +71,7 @@ function RankCard({
   group: RankingRow;
   size: 'lg' | 'md' | 'sm';
   emphasize?: boolean;
-  topDonor?: { supporter_name: string | null; total_donated_cents: number } | null;
+  topDonor?: { supporter_name: string | null; total_points: number } | null;
   orderClassName?: string;
 }) {
   const isThrone = size === 'lg';
@@ -156,12 +156,12 @@ function RankCard({
               : 'text-xl font-bold text-amber-400 font-mono'
         }
       >
-        ${(group.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+        {group.total_points.toLocaleString('es-MX')} pts
       </p>
       {!isCompact && (
         <p className="text-xs text-neutral-500">
-          {group.total_donated_cents === 0 ? (
-            'Nadie ha pujado aún'
+          {group.total_points === 0 ? (
+            'Nadie ha impulsado aún'
           ) : (
             <>
               liderado por{' '}
@@ -174,15 +174,15 @@ function RankCard({
           )}
         </p>
       )}
-      {!isCompact && group.total_donated_cents > 0 && (
+      {!isCompact && group.total_points > 0 && (
         <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
-          Para quitarle el puesto: +${(group.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          Para quitarle el puesto: +{group.total_points.toLocaleString('es-MX')} pts
         </p>
       )}
       {isThrone && topDonor?.supporter_name && (
         <p className="text-xs text-neutral-600">
-          Mayor fan: <span className="text-pink-300 font-semibold">{topDonor.supporter_name}</span> — $
-          {(topDonor.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          Mayor fan: <span className="text-pink-300 font-semibold">{topDonor.supporter_name}</span> —{' '}
+          {topDonor.total_points.toLocaleString('es-MX')} pts
         </p>
       )}
       <div className={isCompact ? 'pt-0.5' : 'pt-1'}>
@@ -264,16 +264,16 @@ export default async function Home() {
   const { data: rankings, error: rankingsError } = await supabase
     .from('group_rankings')
     .select('*')
-    .order('total_donated_cents', { ascending: false });
+    .order('total_points', { ascending: false });
 
   if (feedError || groupsError || rankingsError) {
     console.error('Error cargando datos de Supabase:', { feedError, groupsError, rankingsError });
   }
 
-  // Solo los grupos que ya recibieron al menos una puja ocupan un puesto en el podio.
-  // Sin eso, se llenaría el top 8 con grupos en $0.00 solo por orden alfabético.
-  const bidded = (rankings ?? []).filter((r) => r.total_donated_cents > 0);
-  const unbidded = (rankings ?? []).filter((r) => r.total_donated_cents === 0);
+  // Solo los grupos que ya recibieron al menos un impulso ocupan un puesto en el podio.
+  // Sin eso, se llenaría el top 8 con grupos en 0 puntos solo por orden alfabético.
+  const bidded = (rankings ?? []).filter((r) => r.total_points > 0);
+  const unbidded = (rankings ?? []).filter((r) => r.total_points === 0);
 
   // Mayor donador (no anónimo) del grupo que tiene el trono ahora mismo (el #1 del ranking).
   const { data: topDonor } = bidded[0]
@@ -409,15 +409,13 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="text-right hidden sm:block">
-                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Total donado</p>
+                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Puntos acumulados</p>
                       <p className="text-pink-400 font-mono text-sm">
-                        {r.total_donated_cents > 0
-                          ? `$${(r.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`
-                          : 'Sin pujas'}
+                        {r.total_points > 0 ? `${r.total_points.toLocaleString('es-MX')} pts` : 'Sin impulsos'}
                       </p>
-                      {r.total_donated_cents > 0 && (
+                      {r.total_points > 0 && (
                         <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
-                          Quítaselo: +${(r.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                          Quítaselo: +{r.total_points.toLocaleString('es-MX')} pts
                         </p>
                       )}
                     </div>
@@ -441,17 +439,17 @@ export default async function Home() {
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">01</p>
               <p className="font-semibold">Elige tu grupo</p>
-              <p className="text-sm text-neutral-500">Escoge al grupo por el que quieres pujar en la lista de competidores.</p>
+              <p className="text-sm text-neutral-500">Escoge al grupo por el que quieres impulsar en la lista de competidores.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">02</p>
-              <p className="font-semibold">Dona lo que quieras</p>
-              <p className="text-sm text-neutral-500">No hay mínimo para "tomar la delantera". Cada puja, sin importar el monto, se suma al total de tu grupo.</p>
+              <p className="font-semibold">Elige tu paquete de puntos</p>
+              <p className="text-sm text-neutral-500">Paquetes desde $1. Cada impulso suma sus puntos al total acumulado de tu grupo.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">03</p>
               <p className="font-semibold">Paga de forma segura</p>
-              <p className="text-sm text-neutral-500">El pago se procesa con Stripe. Tu puja solo cuenta si el cobro se confirma.</p>
+              <p className="text-sm text-neutral-500">El pago se procesa con Stripe. Tu impulso solo cuenta si el cobro se confirma.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">04</p>
@@ -468,7 +466,7 @@ export default async function Home() {
             ${((totalRaised?.total_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
           </p>
           <p className="text-xs text-pink-400 mt-2 flex items-center justify-center gap-1">
-            <HeartHandshake className="w-4 h-4" /> El 5% de cada puja se dona a fundaciones caritativas
+            <HeartHandshake className="w-4 h-4" /> El 5% de cada impulso se dona a fundaciones caritativas
           </p>
         </div>
 
@@ -485,15 +483,15 @@ export default async function Home() {
           <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 rounded-xl overflow-hidden">
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Esto es una apuesta?</p>
-              <p className="text-sm text-neutral-500">No. Es un apoyo/tip a tu grupo favorito. No hay premio ni retorno económico para quien paga.</p>
+              <p className="text-sm text-neutral-500">No. Es la compra de un impulso de posición (puntos) para tu grupo favorito en un ranking de entretenimiento. No hay premio en efectivo, azar ni retorno económico para quien paga.</p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Puedo recuperar mi dinero?</p>
-              <p className="text-sm text-neutral-500">Las pujas no son reembolsables, salvo error técnico comprobado.</p>
+              <p className="text-sm text-neutral-500">Los impulsos no son reembolsables, salvo error técnico comprobado.</p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Cómo se decide quién tiene el #1?</p>
-              <p className="text-sm text-neutral-500">Gana el grupo cuya comunidad haya donado más EN TOTAL — se suman todas las pujas exitosas que ha recibido ese grupo, no solo la más grande.</p>
+              <p className="text-sm text-neutral-500">Gana el grupo cuya comunidad haya impulsado más EN TOTAL — se suman todos los impulsos exitosos que ha recibido ese grupo, no solo el más grande.</p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">Represento a un grupo, ¿puedo reclamar su perfil?</p>
@@ -518,7 +516,7 @@ export default async function Home() {
           <div>
             <Zap className="w-6 h-6 mx-auto mb-1 text-pink-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">SIN RESETS</p>
-            <p>El #1 se mantiene hasta que otro grupo done más en total.</p>
+            <p>El #1 se mantiene hasta que otro grupo impulse más en total.</p>
           </div>
           <div>
             <Trophy className="w-6 h-6 mx-auto mb-1 text-pink-500" />

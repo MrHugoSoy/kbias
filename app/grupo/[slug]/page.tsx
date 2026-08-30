@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: Props) {
     title: group.name,
     description:
       group.bio ||
-      `Apoya a ${group.name}${group.fandom_name ? ` (${group.fandom_name})` : ''} en K-pop Wars — cada puja suma al total de tu grupo.`,
+      `Impulsa a ${group.name}${group.fandom_name ? ` (${group.fandom_name})` : ''} en K-pop Wars — cada impulso suma al total de tu grupo.`,
   };
 }
 
@@ -32,7 +32,7 @@ export default async function GroupDetailPage({ params }: Props) {
   const { data: rankings } = await supabase
     .from('group_rankings')
     .select('*')
-    .order('total_donated_cents', { ascending: false });
+    .order('total_points', { ascending: false });
 
   const list = rankings ?? [];
   const index = list.findIndex((r) => r.slug === params.slug);
@@ -40,7 +40,7 @@ export default async function GroupDetailPage({ params }: Props) {
 
   const group = list[index];
   const rank = index + 1;
-  const hasBids = group.total_donated_cents > 0;
+  const hasBids = group.total_points > 0;
 
   return (
     <LegalPage
@@ -61,15 +61,14 @@ export default async function GroupDetailPage({ params }: Props) {
         {group.fandom_name && <p className="text-pink-400 font-semibold">♥ {group.fandom_name} ♥</p>}
         {group.bio && <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mx-auto text-pretty">{group.bio}</p>}
 
-        <p className="text-xs text-neutral-500 tracking-widest uppercase pt-2">Total donado</p>
+        <p className="text-xs text-neutral-500 tracking-widest uppercase pt-2">Puntos acumulados</p>
         <p className="text-5xl font-black text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)] font-mono">
-          ${(group.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+          {group.total_points.toLocaleString('es-MX')} pts
         </p>
 
         {hasBids && (
           <p className="text-sm text-neutral-500">
-            Para quitarle este puesto: más de $
-            {(group.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })} en total.
+            Para quitarle este puesto: más de {group.total_points.toLocaleString('es-MX')} pts en total.
           </p>
         )}
 

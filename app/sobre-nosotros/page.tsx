@@ -26,7 +26,7 @@ export default async function SobreNosotrosPage() {
         </p>
         <p>
           Aquí no hay categorías ni ciclos que resetean cada día. Hay un solo trono, y lo tiene el grupo cuya
-          comunidad haya donado más en total. Cada puja —chica o grande— se suma al total de tu grupo, y eso es lo
+          comunidad haya impulsado más en total. Cada impulso —chico o grande— se suma al total de tu grupo, y eso es lo
           único que decide quién manda.
         </p>
       </LegalSection>
@@ -55,7 +55,7 @@ export default async function SobreNosotrosPage() {
 
       <LegalSection title="El 5% que no es nuestro">
         <p>
-          De cada puja exitosa, el 5% está reservado para fundaciones caritativas — no para nosotros. Puedes ver el
+          De cada impulso exitoso, el 5% está reservado para fundaciones caritativas — no para nosotros. Puedes ver el
           cálculo exacto, actualizado en tiempo real, en{' '}
           <a href="/estadisticas" className="underline hover:text-pink-500 dark:hover:text-pink-400">
             Estadísticas en vivo

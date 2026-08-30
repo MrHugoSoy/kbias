@@ -1,10 +1,10 @@
-import { BID_LIMITS } from '@/lib/bidLimits';
+import { POINT_PACKAGES, formatPoints } from '@/lib/pointPackages';
 import { LegalPage, LegalSection } from '@/components/LegalPage';
 import { CONTACT_EMAIL } from '@/lib/contact';
 
 export const metadata = {
   title: 'Términos de servicio',
-  description: 'Términos de servicio de K-pop Wars: qué es el sitio, cómo funcionan las pujas y qué aceptas al usarlo.',
+  description: 'Términos de servicio de K-pop Wars: qué es el sitio, cómo funcionan los impulsos y qué aceptas al usarlo.',
 };
 
 const LEGAL_ENTITY_TYPE = 'un operador individual con actividad empresarial en México';
@@ -34,7 +34,7 @@ export default function TerminosPage() {
       <LegalSection title="1. Qué es K-pop Wars">
         <p>
           K-pop Wars es un ranking público donde cualquier persona puede hacer una aportación económica voluntaria
-          ("puja") para que un grupo de K-pop suba en el total acumulado de aportaciones y, con eso, en el puesto
+          ("impulso") para que un grupo de K-pop suba en el total acumulado de aportaciones y, con eso, en el puesto
           que ocupa en el ranking. Al usar el sitio o completar un pago, aceptas estos Términos y nuestra{' '}
           <a href="/privacidad" className="underline hover:text-pink-500 dark:hover:text-pink-400">
             Política de Privacidad
@@ -50,29 +50,33 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="2. Naturaleza de la aportación — no es apuesta, no es inversión, no es compra">
+      <LegalSection title="2. Naturaleza del pago — no es apuesta, no es inversión, no es donación caritativa">
         <p>
-          Tu aportación es una donación/apoyo voluntario e irrevocable a favor de un grupo, sin contraprestación
-          económica de ningún tipo. Específicamente, al pagar entiendes y aceptas que:
+          Tu pago es la compra voluntaria e irrevocable de un impulso digital de posición ("puntos") a favor de un
+          grupo. La contraprestación que recibes es el reflejo inmediato de ese impulso en el total acumulado de ese
+          grupo dentro del ranking público — es un servicio de entretenimiento que se presta al momento de
+          confirmarse el pago, no un acto de beneficencia. Específicamente, al pagar entiendes y aceptas que:
         </p>
         <ul className="list-disc pl-5 space-y-1">
           <li>
             No participas en ningún juego de azar, sorteo, rifa ni apuesta. El resultado (posición en el ranking) no
-            depende del azar sino exclusivamente de la suma acumulada de aportaciones de todos los usuarios,
-            información que es pública en todo momento antes de pagar.
+            depende del azar sino exclusivamente de la suma acumulada de impulsos de todos los usuarios, información
+            que es pública en todo momento antes de pagar.
           </li>
           <li>
             No adquieres ninguna acción, participación societaria, token, activo digital, ni derecho de retorno
-            económico presente o futuro.
+            económico presente o futuro. La única contraprestación es el efecto de tu impulso en el ranking descrito
+            arriba.
           </li>
           <li>
             No compras exclusividad, un puesto garantizado, ni un puesto por un tiempo determinado. Otro usuario
-            puede aportar más en cualquier momento y tu grupo puede bajar de posición inmediatamente después de tu
+            puede impulsar más en cualquier momento y tu grupo puede bajar de posición inmediatamente después de tu
             pago.
           </li>
           <li>
-            Tu aportación no constituye una compra de bien o servicio digital entregable; es una contribución a un
-            marcador público de comunidad de fans (fandom).
+            Aunque el 5% de cada impulso se destina a fundaciones caritativas como práctica propia de K-pop Wars
+            (ver Reglas), tu pago en sí mismo no es una donación tuya a esas fundaciones ni a ningún grupo: es la
+            compra del impulso de posición descrito arriba.
           </li>
         </ul>
       </LegalSection>
@@ -100,8 +104,15 @@ export default function TerminosPage() {
           PCI-DSS. Los términos y política de privacidad de Stripe también aplican al procesamiento del pago.
         </p>
         <ul className="list-disc pl-5 space-y-1">
-          <li>Monto mínimo por aportación: ${(BID_LIMITS.MIN_CENTS / 100).toFixed(2)} USD.</li>
-          <li>Monto máximo por transacción individual: ${(BID_LIMITS.MAX_PER_TX_CENTS / 100).toLocaleString('es-MX')} USD.</li>
+          <li>
+            El impulso se compra en paquetes de precio fijo, elegidos al momento de pagar:{' '}
+            {POINT_PACKAGES.map((pkg, i) => (
+              <span key={pkg.id}>
+                ${(pkg.priceCents / 100).toFixed(2)} USD por {formatPoints(pkg.points)} puntos
+                {i < POINT_PACKAGES.length - 1 ? ', ' : '.'}
+              </span>
+            ))}
+          </li>
           <li>
             Nos reservamos el derecho de solicitar verificación adicional de identidad para aportaciones que,
             individualmente o de forma acumulada, superen montos que consideremos atípicos, o de rechazar/reembolsar
@@ -109,7 +120,7 @@ export default function TerminosPage() {
             procesador de pagos.
           </li>
           <li>
-            El monto de tu aportación se refleja en el total acumulado de tu grupo una vez que el pago es confirmado
+            Los puntos de tu paquete se reflejan en el total acumulado de tu grupo una vez que el pago es confirmado
             por Stripe.
           </li>
         </ul>
@@ -173,7 +184,7 @@ export default function TerminosPage() {
           incluyendo: (1) tu nombre y datos de contacto; (2) la URL exacta de la página o tarjeta en cuestión; (3)
           una descripción de qué contenido quieres que se retire o corrija y por qué; y (4) una declaración de que
           eres el titular de esos derechos o estás autorizado para actuar en su nombre. Revisamos y respondemos
-          estas solicitudes a la brevedad. Retirar contenido no revierte pujas ya confirmadas — el total acumulado
+          estas solicitudes a la brevedad. Retirar contenido no revierte impulsos ya confirmados — el total acumulado
           de ese grupo permanece igual.
         </p>
       </LegalSection>

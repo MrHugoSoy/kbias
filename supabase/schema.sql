@@ -1,10 +1,12 @@
 -- ============================================================
 -- Esquema base del proyecto "outbid para K-pop"
--- Mecánica: el trono lo tiene el grupo cuya comunidad haya donado
--- MÁS EN TOTAL (suma de todas sus pujas exitosas), no quien haga
--- la puja individual más grande. Cada puja, sin importar el monto,
--- se suma al total acumulado de su grupo. No hay ciclos ni reset —
--- el trono es permanente hasta que otro grupo acumule más.
+-- Mecánica: el trono lo tiene el grupo cuya comunidad haya acumulado
+-- MÁS PUNTOS EN TOTAL (suma de todos sus impulsos exitosos), no quien
+-- haga el impulso individual más grande. Los puntos se compran en
+-- paquetes de precio fijo (ver lib/pointPackages.ts), siempre atados a
+-- UN grupo en el momento de la compra, y se suman de inmediato al total
+-- acumulado de ese grupo. No hay ciclos ni reset — el trono es
+-- permanente hasta que otro grupo acumule más puntos.
 -- ============================================================
 
 -- Extensión para UUIDs
@@ -38,7 +40,9 @@ alter table groups add column if not exists official_url text;
 create table if not exists bids (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references groups(id) on delete cascade,
-  amount_cents integer not null,         -- monto en centavos (evita floats)
+  amount_cents integer not null,         -- monto en centavos (evita floats) — precio real cobrado
+  points integer not null default 0,     -- puntos otorgados por el paquete comprado (ver lib/pointPackages.ts)
+  package_id text,                       -- id del paquete elegido, para referencia/analítica
   currency text not null default 'usd',
   supporter_name text,                   -- nombre público del fan (opcional/anónimo)
   is_anonymous boolean default false,
@@ -54,9 +58,13 @@ create table if not exists bids (
 alter table bids add column if not exists social_url text;
 alter table bids add column if not exists ip_address text;
 alter table bids add column if not exists message text;
+alter table bids add column if not exists points integer not null default 0;
+alter table bids add column if not exists package_id text;
 
--- Índice para encontrar rápido la puja más alta vigente
-create index if not exists idx_bids_amount on bids (amount_cents desc) where status = 'succeeded';
+-- Índice para encontrar rápido el impulso con más puntos vigente
+-- (reemplaza al índice viejo por amount_cents, ya no es el criterio de ranking)
+drop index if exists idx_bids_amount;
+create index if not exists idx_bids_points on bids (points desc) where status = 'succeeded';
 create index if not exists idx_bids_group on bids (group_id);
 -- Acelera la suma del tope diario por IP en /api/bid (pujas confirmadas
 -- de las últimas 24h, y reservas 'pending' de los últimos 30 min).
@@ -74,6 +82,7 @@ select
   g.name as group_name,
   g.fandom_name,
   b.amount_cents,
+  b.points,
   b.supporter_name,
   b.is_anonymous,
   b.created_at,
@@ -87,8 +96,8 @@ limit 50;
 
 -- ------------------------------------------------------------
 -- Vista: top_donor_per_group — por cada grupo, el supporter_name con
--- la suma más alta de todas sus donaciones a ESE grupo específico.
--- Las donaciones anónimas quedan fuera: no hay identidad que reconocer,
+-- la suma más alta de PUNTOS acumulados a ESE grupo específico.
+-- Los impulsos anónimos quedan fuera: no hay identidad que reconocer,
 -- y no tendría sentido acumularlas todas bajo un solo "fan anónimo".
 -- ------------------------------------------------------------
 drop view if exists top_donor_per_group;
@@ -97,21 +106,21 @@ select distinct on (group_id)
   group_id,
   supporter_name,
   is_anonymous,
-  sum(amount_cents) over (partition by group_id, supporter_name) as total_donated_cents
+  sum(points) over (partition by group_id, supporter_name) as total_points
 from bids
 where status = 'succeeded' and is_anonymous = false and supporter_name is not null
-order by group_id, total_donated_cents desc;
+order by group_id, total_points desc;
 
 -- Acelera el group by implícito de la ventana en top_donor_per_group
 create index if not exists idx_bids_supporter on bids (group_id, supporter_name)
   where status = 'succeeded' and is_anonymous = false;
 
 -- ------------------------------------------------------------
--- Vista: group_rankings — cada grupo con el TOTAL acumulado de todas
--- sus pujas exitosas (no la puja más grande individual), para el
--- podio de top 3 + siguientes 5. top_supporter_* sigue mostrando quién
--- hizo la puja individual más grande a ese grupo, solo como referencia
--- de "quién va liderando".
+-- Vista: group_rankings — cada grupo con el TOTAL de PUNTOS acumulados
+-- de todos sus impulsos exitosos (no el paquete individual más grande),
+-- para el podio de top 3 + siguientes 5. top_supporter_* sigue mostrando
+-- quién hizo el impulso individual con más puntos a ese grupo, solo como
+-- referencia de "quién va liderando".
 -- ------------------------------------------------------------
 drop view if exists group_rankings;
 create view group_rankings as
@@ -123,14 +132,14 @@ select
   g.slug,
   g.bio,
   g.official_url,
-  coalesce(sum(b.amount_cents), 0) as total_donated_cents,
-  (array_agg(b.supporter_name order by b.amount_cents desc nulls last))[1] as top_supporter_name,
-  (array_agg(b.is_anonymous order by b.amount_cents desc nulls last))[1] as top_is_anonymous,
-  (array_agg(b.social_url order by b.amount_cents desc nulls last))[1] as top_social_url
+  coalesce(sum(b.points), 0) as total_points,
+  (array_agg(b.supporter_name order by b.points desc nulls last))[1] as top_supporter_name,
+  (array_agg(b.is_anonymous order by b.points desc nulls last))[1] as top_is_anonymous,
+  (array_agg(b.social_url order by b.points desc nulls last))[1] as top_social_url
 from groups g
 left join bids b on b.group_id = g.id and b.status = 'succeeded'
 group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url
-order by total_donated_cents desc, g.name asc;
+order by total_points desc, g.name asc;
 
 -- ------------------------------------------------------------
 -- Contador de visitas totales del sitio (para la barra "X visitas

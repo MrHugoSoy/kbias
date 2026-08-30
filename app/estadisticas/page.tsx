@@ -32,9 +32,9 @@ export default async function EstadisticasPage() {
   const { data: rankings } = await supabase
     .from('group_rankings')
     .select('*')
-    .order('total_donated_cents', { ascending: false });
+    .order('total_points', { ascending: false });
 
-  const groupsWithDonations = (rankings ?? []).filter((r) => r.total_donated_cents > 0).length;
+  const groupsWithPoints = (rankings ?? []).filter((r) => r.total_points > 0).length;
 
   return (
     <LegalPage title="Estadísticas en vivo" subtitle="Los números reales detrás de K-pop Wars, actualizados al cargar la página." wide>
@@ -43,8 +43,8 @@ export default async function EstadisticasPage() {
           label="Recaudado en total"
           value={`$${((totalRaised?.total_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`}
         />
-        <StatCard label="Pujas exitosas" value={(bidCount ?? 0).toLocaleString('es-MX')} />
-        <StatCard label="Grupos con donaciones" value={groupsWithDonations.toLocaleString('es-MX')} />
+        <StatCard label="Impulsos exitosos" value={(bidCount ?? 0).toLocaleString('es-MX')} />
+        <StatCard label="Grupos con impulsos" value={groupsWithPoints.toLocaleString('es-MX')} />
         <StatCard label="Visitas desde el lanzamiento" value={(siteStats?.total_visits ?? 0).toLocaleString('es-MX')} />
       </div>
 
@@ -81,7 +81,7 @@ export default async function EstadisticasPage() {
                   <p className="text-xs text-pink-400 truncate">{r.fandom_name}</p>
                 </div>
                 <span className="font-mono text-amber-600 dark:text-amber-400 shrink-0">
-                  ${(r.total_donated_cents / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+                  {r.total_points.toLocaleString('es-MX')} pts
                 </span>
               </div>
             ))}

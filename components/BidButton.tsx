@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { validateBid, MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
+import { POINT_PACKAGES, formatPoints } from '@/lib/pointPackages';
 
 export default function BidButton({
   groupId,
@@ -13,7 +14,7 @@ export default function BidButton({
   compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
-  const [amount, setAmount] = useState('');
+  const [packageId, setPackageId] = useState(POINT_PACKAGES[0].id);
   const [name, setName] = useState('');
   const [socialUrl, setSocialUrl] = useState('');
   const [message, setMessage] = useState('');
@@ -32,9 +33,8 @@ export default function BidButton({
 
   async function handleSubmit() {
     setError('');
-    const amountCents = Math.round(parseFloat(amount) * 100);
 
-    const validationError = validateBid({ amountCents, anonymous, socialUrl, message });
+    const validationError = validateBid({ packageId, anonymous, socialUrl, message });
     if (validationError) {
       setError(validationError);
       return;
@@ -47,7 +47,7 @@ export default function BidButton({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groupId,
-          amountCents,
+          packageId,
           supporterName: name,
           isAnonymous: anonymous,
           socialUrl: anonymous ? '' : socialUrl,
@@ -78,30 +78,43 @@ export default function BidButton({
         }
       >
         {compact ? (
-          'Apoyar'
+          'Impulsar'
         ) : (
           <>
-            <span className="sm:hidden">Apoyar</span>
-            <span className="hidden sm:inline">Apoya a {groupName}</span>
+            <span className="sm:hidden">Impulsar</span>
+            <span className="hidden sm:inline">Impulsa a {groupName}</span>
           </>
         )}
       </button>
 
       {open && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl w-full max-w-sm space-y-4">
-            <h3 className="text-xl font-bold">Apoya a {groupName}</h3>
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl w-full max-w-sm space-y-4 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-bold">Impulsa a {groupName}</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Cada puja se suma al total de tu grupo. No hay un mínimo para "tomar la delantera" — entre más done tu
+              Cada impulso se suma al total de tu grupo. No hay un mínimo para "tomar la delantera" — entre más impulse tu
               comunidad, más arriba queda.
             </p>
-            <input
-              type="number"
-              placeholder="Monto en USD"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2"
-            />
+
+            <div className="grid grid-cols-2 gap-2">
+              {POINT_PACKAGES.map((pkg) => (
+                <button
+                  key={pkg.id}
+                  type="button"
+                  onClick={() => setPackageId(pkg.id)}
+                  className={
+                    'rounded-lg border-2 px-2 py-2 text-center transition ' +
+                    (packageId === pkg.id
+                      ? 'border-pink-600 bg-pink-50 dark:bg-pink-950/40'
+                      : 'border-neutral-200 dark:border-neutral-700 hover:border-pink-400')
+                  }
+                >
+                  <p className="font-bold text-sm">${(pkg.priceCents / 100).toFixed(2)}</p>
+                  <p className="text-[10px] text-pink-500 dark:text-pink-400">{formatPoints(pkg.points)} pts</p>
+                </button>
+              ))}
+            </div>
+
             <input
               type="text"
               placeholder="Tu nombre o el de tu fandom (opcional)"
@@ -132,7 +145,7 @@ export default function BidButton({
             </div>
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
-              Pujar de forma anónima
+              Impulsar de forma anónima
             </label>
             {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
             <div className="flex gap-2">

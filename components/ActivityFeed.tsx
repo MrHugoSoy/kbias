@@ -9,6 +9,7 @@ type FeedItem = {
   group_name: string;
   fandom_name: string | null;
   amount_cents: number;
+  points: number;
   supporter_name: string | null;
   is_anonymous: boolean;
   social_url: string | null;
@@ -41,6 +42,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             id: string;
             group_id: string;
             amount_cents: number;
+            points: number;
             supporter_name: string | null;
             is_anonymous: boolean;
             social_url: string | null;
@@ -59,6 +61,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             group_name: group?.name ?? 'Grupo desconocido',
             fandom_name: group?.fandom_name ?? null,
             amount_cents: newBid.amount_cents,
+            points: newBid.points,
             supporter_name: newBid.supporter_name,
             is_anonymous: newBid.is_anonymous,
             social_url: newBid.social_url,
@@ -120,9 +123,9 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
                 ) : (
                   item.supporter_name || 'un fan'
                 )}{' '}
-                apoyó a <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
+                impulsó a <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
               </span>
-              <span className="font-mono text-amber-600 dark:text-amber-400">${(item.amount_cents / 100).toFixed(2)}</span>
+              <span className="font-mono text-amber-600 dark:text-amber-400">+{item.points.toLocaleString('es-MX')} pts</span>
             </div>
             {item.message && (
               <p className="pl-[calc(4rem+1.75rem)] text-neutral-500 dark:text-neutral-400 italic break-words">

@@ -1,4 +1,4 @@
-import { BID_LIMITS } from '@/lib/bidLimits';
+import { getPointPackage } from '@/lib/pointPackages';
 
 export const MESSAGE_MAX_LENGTH = 140;
 
@@ -9,21 +9,18 @@ export const MESSAGE_MAX_LENGTH = 140;
 // siendo la única que realmente importa contra fraude); es solo para dar
 // feedback inmediato en el formulario.
 export function validateBid({
-  amountCents,
+  packageId,
   anonymous,
   socialUrl,
   message,
 }: {
-  amountCents: number;
+  packageId: string;
   anonymous: boolean;
   socialUrl: string;
   message?: string;
 }): string | null {
-  if (!amountCents || amountCents < BID_LIMITS.MIN_CENTS) {
-    return `El monto mínimo es $${(BID_LIMITS.MIN_CENTS / 100).toFixed(2)}`;
-  }
-  if (amountCents > BID_LIMITS.MAX_PER_TX_CENTS) {
-    return `El monto máximo por transacción es $${(BID_LIMITS.MAX_PER_TX_CENTS / 100).toLocaleString('es-MX')}`;
+  if (!packageId || !getPointPackage(packageId)) {
+    return 'Elige un paquete de puntos';
   }
   if (!anonymous && socialUrl && !/^https?:\/\/.+/.test(socialUrl)) {
     return 'El link de red social debe empezar con http:// o https://';

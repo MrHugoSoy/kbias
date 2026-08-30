@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { ChevronDown, Gavel, VenetianMask, Zap } from 'lucide-react';
 import { validateBid, MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
+import { POINT_PACKAGES, formatPoints } from '@/lib/pointPackages';
 
 type Group = { id: string; name: string; fandom_name: string | null };
 
 export default function BidForm({ groups }: { groups: Group[] }) {
   const [groupId, setGroupId] = useState(groups[0]?.id ?? '');
-  const [amount, setAmount] = useState('');
+  const [packageId, setPackageId] = useState(POINT_PACKAGES[0].id);
   const [name, setName] = useState('');
   const [socialUrl, setSocialUrl] = useState('');
   const [message, setMessage] = useState('');
@@ -18,13 +19,12 @@ export default function BidForm({ groups }: { groups: Group[] }) {
 
   async function handleSubmit() {
     setError('');
-    const amountCents = Math.round(parseFloat(amount) * 100);
 
     if (!groupId) {
       setError('Elige un grupo');
       return;
     }
-    const validationError = validateBid({ amountCents, anonymous, socialUrl, message });
+    const validationError = validateBid({ packageId, anonymous, socialUrl, message });
     if (validationError) {
       setError(validationError);
       return;
@@ -37,7 +37,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           groupId,
-          amountCents,
+          packageId,
           supporterName: name,
           isAnonymous: anonymous,
           socialUrl: anonymous ? '' : socialUrl,
@@ -62,42 +62,48 @@ export default function BidForm({ groups }: { groups: Group[] }) {
       <div className="flex items-center gap-2">
         <Gavel className="w-6 h-6 text-pink-500" />
         <div>
-          <h2 className="font-bold">HAZ TU PUJA</h2>
-          <p className="text-xs text-neutral-500">Apoya a tu grupo favorito — cada puja suma a su total</p>
+          <h2 className="font-bold">HAZ TU IMPULSO</h2>
+          <p className="text-xs text-neutral-500">Impulsa a tu grupo favorito — cada impulso suma a su total</p>
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div>
-          <label className="text-xs text-neutral-500 uppercase tracking-wide">Grupo</label>
-          <div className="relative mt-1">
-            <select
-              value={groupId}
-              onChange={(e) => setGroupId(e.target.value)}
-              className="w-full appearance-none bg-neutral-100 dark:bg-neutral-900 rounded-lg pl-3 pr-9 py-2"
-            >
-              {groups.map((g) => (
-                <option key={g.id} value={g.id}>
-                  {g.name} {g.fandom_name ? `(${g.fandom_name})` : ''}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="w-4 h-4 text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-          </div>
+      <div>
+        <label className="text-xs text-neutral-500 uppercase tracking-wide">Grupo</label>
+        <div className="relative mt-1">
+          <select
+            value={groupId}
+            onChange={(e) => setGroupId(e.target.value)}
+            className="w-full appearance-none bg-neutral-100 dark:bg-neutral-900 rounded-lg pl-3 pr-9 py-2"
+          >
+            {groups.map((g) => (
+              <option key={g.id} value={g.id}>
+                {g.name} {g.fandom_name ? `(${g.fandom_name})` : ''}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="w-4 h-4 text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
         </div>
-        <div>
-          <label className="text-xs text-neutral-500 uppercase tracking-wide">Monto de tu puja (USD)</label>
-          <div className="flex items-center bg-neutral-100 dark:bg-neutral-900 rounded-lg mt-1 px-3">
-            <span className="text-neutral-500">$</span>
-            <input
-              type="number"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="0.00"
-              className="w-full bg-transparent px-2 py-2 outline-none"
-            />
-            <span className="text-neutral-500 text-xs">USD</span>
-          </div>
+      </div>
+
+      <div>
+        <label className="text-xs text-neutral-500 uppercase tracking-wide">Elige tu paquete de puntos</label>
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-1">
+          {POINT_PACKAGES.map((pkg) => (
+            <button
+              key={pkg.id}
+              type="button"
+              onClick={() => setPackageId(pkg.id)}
+              className={
+                'rounded-lg border-2 px-2 py-2 text-center transition ' +
+                (packageId === pkg.id
+                  ? 'border-pink-600 bg-pink-50 dark:bg-pink-950/40'
+                  : 'border-neutral-200 dark:border-neutral-700 hover:border-pink-400')
+              }
+            >
+              <p className="font-bold text-sm">${(pkg.priceCents / 100).toFixed(2)}</p>
+              <p className="text-[10px] text-pink-500 dark:text-pink-400">{formatPoints(pkg.points)} pts</p>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -142,12 +148,12 @@ export default function BidForm({ groups }: { groups: Group[] }) {
       </div>
 
       <p className="text-xs text-neutral-500">
-        Monto mínimo: <span className="text-amber-600 dark:text-amber-400 font-semibold">$1.00</span> — no hay tope para "tomar la delantera", cada donación cuenta.
+        Paquetes desde <span className="text-amber-600 dark:text-amber-400 font-semibold">$1.00</span> — no hay tope para "tomar la delantera", cada impulso cuenta.
       </p>
 
       <label className="flex items-center gap-2 text-sm text-neutral-500 dark:text-neutral-400">
         <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
-        Pujar de forma anónima <VenetianMask className="w-4 h-4" />
+        Impulsar de forma anónima <VenetianMask className="w-4 h-4" />
       </label>
 
       {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
@@ -155,7 +161,6 @@ export default function BidForm({ groups }: { groups: Group[] }) {
       <div className="flex gap-3">
         <button
           onClick={() => {
-            setAmount('');
             setName('');
             setMessage('');
             setError('');

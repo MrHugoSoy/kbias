@@ -9,6 +9,7 @@ type FeedItem = {
   group_name: string;
   fandom_name: string | null;
   amount_cents: number;
+  points: number;
   supporter_name: string | null;
   is_anonymous: boolean;
   social_url: string | null;
@@ -37,6 +38,7 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             id: string;
             group_id: string;
             amount_cents: number;
+            points: number;
             supporter_name: string | null;
             is_anonymous: boolean;
             social_url: string | null;
@@ -55,6 +57,7 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             group_name: group?.name ?? 'Grupo desconocido',
             fandom_name: group?.fandom_name ?? null,
             amount_cents: newBid.amount_cents,
+            points: newBid.points,
             supporter_name: newBid.supporter_name,
             is_anonymous: newBid.is_anonymous,
             social_url: newBid.social_url,
@@ -76,11 +79,11 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
     <aside className="space-y-3">
       <div className="flex items-center gap-2">
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-        <h2 className="text-xs font-bold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase">Donadores en vivo</h2>
+        <h2 className="text-xs font-bold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase">Impulsores en vivo</h2>
       </div>
       <div className="space-y-2 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1">
         {items.length === 0 && (
-          <p className="text-xs text-neutral-500 dark:text-neutral-600">Aún no hay donaciones — ¡sé el primero!</p>
+          <p className="text-xs text-neutral-500 dark:text-neutral-600">Aún no hay impulsos — ¡sé el primero!</p>
         )}
         {items.map((item) => (
           <div key={item.id} className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-lg p-3 text-xs space-y-1">
@@ -103,10 +106,10 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
                   item.supporter_name || 'un fan'
                 )}
               </span>
-              <span className="text-amber-600 dark:text-amber-400 font-mono shrink-0">${(item.amount_cents / 100).toFixed(2)}</span>
+              <span className="text-amber-600 dark:text-amber-400 font-mono shrink-0">+{item.points.toLocaleString('es-MX')} pts</span>
             </div>
             <p className="text-neutral-500">
-              apoyó a <span className="text-pink-600 dark:text-pink-400">{item.group_name}</span>
+              impulsó a <span className="text-pink-600 dark:text-pink-400">{item.group_name}</span>
             </p>
             {item.message && <p className="text-neutral-500 dark:text-neutral-400 italic break-words">"{item.message}"</p>}
           </div>
