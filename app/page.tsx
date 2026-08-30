@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Crown, Mic2, Plus, Zap, ShieldCheck, Trophy, Handshake, HelpCircle, Heart, HeartHandshake, VenetianMask } from 'lucide-react';
+import { Crown, Mic2, Plus, Zap, ShieldCheck, Trophy, Handshake, HelpCircle, Heart, VenetianMask } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import BidButton from '@/components/BidButton';
 import ActivityFeed from '@/components/ActivityFeed';
@@ -459,14 +459,11 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Total recaudado + mensaje de caridad */}
+        {/* Total recaudado */}
         <div className="text-center py-2">
           <p className="text-sm text-neutral-500 dark:text-neutral-400">Este proyecto ha recaudado</p>
           <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
             ${((totalRaised?.total_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
-          </p>
-          <p className="text-xs text-pink-400 mt-2 flex items-center justify-center gap-1">
-            <HeartHandshake className="w-4 h-4" /> El 5% de cada impulso se dona a fundaciones caritativas
           </p>
         </div>
 

@@ -163,27 +163,16 @@ create policy "site_stats_public_read" on site_stats for select using (true);
 
 -- ------------------------------------------------------------
 -- Vista: total_raised — suma de todas las pujas exitosas de
--- siempre (para el banner "esto ha recaudado $X, el 5% va a
--- fundaciones caritativas").
+-- siempre (para el banner "esto ha recaudado $X").
 -- ------------------------------------------------------------
+-- charity_fund (5% de reserva para fundaciones caritativas) se eliminó:
+-- ya no es parte del producto, ver Reglas/Términos.
 drop view if exists charity_fund;
 drop view if exists total_raised;
 create view total_raised as
 select coalesce(sum(amount_cents), 0) as total_cents
 from bids
 where status = 'succeeded';
-
--- ------------------------------------------------------------
--- Vista: charity_fund — cuánto le corresponde a fundaciones
--- caritativas (5% de total_raised). Esto NO transfiere dinero solo,
--- es un cálculo de referencia para que sepas cuánto donar cuando
--- elijas la fundación — la transferencia sigue siendo manual.
--- ------------------------------------------------------------
-create view charity_fund as
-select
-  total_cents,
-  round(total_cents * 0.05) as charity_cents
-from total_raised;
 
 -- ------------------------------------------------------------
 -- Tabla: claim_requests — solicitudes de artistas/management para

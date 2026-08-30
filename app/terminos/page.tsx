@@ -74,11 +74,6 @@ export default function TerminosPage() {
             puede impulsar más en cualquier momento y tu grupo puede bajar de posición inmediatamente después de tu
             pago.
           </li>
-          <li>
-            Aunque el 5% de cada impulso se destina a fundaciones caritativas como práctica propia de K-pop Wars
-            (ver Reglas), tu pago en sí mismo no es una donación tuya a esas fundaciones ni a ningún grupo: es la
-            compra del impulso de posición descrito arriba.
-          </li>
         </ul>
       </LegalSection>
 

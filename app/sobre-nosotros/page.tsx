@@ -53,17 +53,6 @@ export default async function SobreNosotrosPage() {
         </div>
       </LegalSection>
 
-      <LegalSection title="El 5% que no es nuestro">
-        <p>
-          De cada impulso exitoso, el 5% está reservado para fundaciones caritativas — no para nosotros. Puedes ver el
-          cálculo exacto, actualizado en tiempo real, en{' '}
-          <a href="/estadisticas" className="underline hover:text-pink-500 dark:hover:text-pink-400">
-            Estadísticas en vivo
-          </a>
-          .
-        </p>
-      </LegalSection>
-
       <LegalSection title="Cómo lo construimos">
         <p>
           K-pop Wars es un proyecto chico, sin inversión ni equipo grande detrás — solo la idea de que el poder de

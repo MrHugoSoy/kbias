@@ -86,10 +86,6 @@ export default function ReglasPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="8. Donación a fundaciones">
-        <p>El 5% de cada impulso exitoso se dona a fundaciones caritativas.</p>
-      </LegalSection>
-
       <p className="text-xs text-neutral-500 dark:text-neutral-600 pt-4">
         ¿Tienes dudas? Revisa el{' '}
         <Link href="/#faq" className="underline hover:text-pink-500 dark:hover:text-pink-400">
