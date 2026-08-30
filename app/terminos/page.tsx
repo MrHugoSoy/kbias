@@ -1,24 +1,22 @@
-import { POINT_PACKAGES, formatPoints } from '@/lib/pointPackages';
 import { LegalPage, LegalSection } from '@/components/LegalPage';
 import { CONTACT_EMAIL } from '@/lib/contact';
 
 export const metadata = {
   title: 'Términos de servicio',
-  description: 'Términos de servicio de K-pop Wars: qué es el sitio, cómo funcionan los impulsos y qué aceptas al usarlo.',
+  description: 'Términos de servicio de K-pop Wars: qué es el sitio, cómo funciona el voto gratuito y qué aceptas al usarlo.',
 };
 
 const LEGAL_ENTITY_TYPE = 'un operador individual con actividad empresarial en México';
 const GOVERNING_LAW = 'México';
 const CHANGE_NOTICE_DAYS = 15;
-const LAST_UPDATED = '29 de agosto de 2026';
+const LAST_UPDATED = '30 de agosto de 2026';
 
 export default function TerminosPage() {
   return (
     <LegalPage title="Términos de servicio" subtitle={`Última actualización: ${LAST_UPDATED}.`}>
       <div className="text-xs bg-amber-100 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-300 dark:border-amber-800/60 rounded-lg p-3">
         Este documento es más completo que una plantilla básica, pero sigue sin ser una revisión de un abogado.
-        Ahora que el sitio procesa pagos reales, hazlo revisar por alguien con conocimiento legal en tu jurisdicción
-        antes de tratarlo como definitivo.
+        Hazlo revisar por alguien con conocimiento legal en tu jurisdicción antes de tratarlo como definitivo.
       </div>
 
       <p className="text-sm text-neutral-600 dark:text-neutral-400">
@@ -33,14 +31,14 @@ export default function TerminosPage() {
 
       <LegalSection title="1. Qué es K-pop Wars">
         <p>
-          K-pop Wars es un ranking público donde cualquier persona puede comprar un paquete de puntos de precio fijo
-          (ver Sección 4) para un grupo de K-pop ("impulso"), sumando esos puntos al total acumulado de ese grupo y,
-          con eso, al puesto que ocupa en el ranking. Al usar el sitio o completar un pago, aceptas estos Términos y
-          nuestra{' '}
+          K-pop Wars es un ranking público y gratuito donde cualquier persona con una cuenta puede votar por un grupo
+          de K-pop una vez al día. Cada voto se suma al total acumulado de ese grupo y, con eso, al puesto que ocupa
+          en el ranking. K-pop Wars no cobra dinero por votar ni por ninguna otra función del sitio. Al usar el sitio
+          o crear una cuenta, aceptas estos Términos y nuestra{' '}
           <a href="/privacidad" className="underline hover:text-pink-500 dark:hover:text-pink-400">
             Política de Privacidad
           </a>
-          . Si no estás de acuerdo, no uses el sitio ni hagas pagos.
+          . Si no estás de acuerdo, no uses el sitio.
         </p>
         <p>
           Estos Términos se complementan con las{' '}
@@ -51,117 +49,62 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="2. Naturaleza del pago — no es apuesta, no es inversión, no es donación caritativa">
-        <p>
-          Tu pago es la compra voluntaria e irrevocable de un impulso digital de posición ("puntos") a favor de un
-          grupo. La contraprestación que recibes es el reflejo inmediato de ese impulso en el total acumulado de ese
-          grupo dentro del ranking público — es un servicio de entretenimiento que se presta al momento de
-          confirmarse el pago, no un acto de beneficencia. Específicamente, al pagar entiendes y aceptas que:
-        </p>
+      <LegalSection title="2. Naturaleza del voto — no es apuesta, no es inversión, no cuesta dinero">
+        <p>Al votar entiendes y aceptas que:</p>
         <ul className="list-disc pl-5 space-y-1">
           <li>
             No participas en ningún juego de azar, sorteo, rifa ni apuesta. El resultado (posición en el ranking) no
-            depende del azar sino exclusivamente de la suma acumulada de impulsos de todos los usuarios, información
-            que es pública en todo momento antes de pagar.
+            depende del azar sino exclusivamente de la suma de votos de todos los usuarios, información que es
+            pública en todo momento.
           </li>
+          <li>No pagas nada por votar, ni recibes ni adquieres ningún bien, servicio, acción, token o activo digital.</li>
           <li>
-            No adquieres ninguna acción, participación societaria, token, activo digital, ni derecho de retorno
-            económico presente o futuro. La única contraprestación es el efecto de tu impulso en el ranking descrito
-            arriba.
-          </li>
-          <li>
-            No compras exclusividad, un puesto garantizado, ni un puesto por un tiempo determinado. Otro usuario
-            puede impulsar más en cualquier momento y tu grupo puede bajar de posición inmediatamente después de tu
-            pago.
+            No compras exclusividad, un puesto garantizado, ni un puesto por un tiempo determinado. Otro grupo puede
+            recibir más votos en cualquier momento y tu grupo favorito puede bajar de posición inmediatamente.
           </li>
         </ul>
       </LegalSection>
 
-      <LegalSection title="3. Elegibilidad">
+      <LegalSection title="3. Cuentas">
         <p>
-          Debes tener capacidad legal para celebrar contratos en tu jurisdicción de residencia (generalmente 18
-          años o la mayoría de edad local). K-pop Wars no verifica edad ni identidad de los usuarios. Si eres menor
-          de edad, no debes usar un método de pago sin la autorización expresa del titular de dicho método, y el
-          titular asume toda responsabilidad por su uso. K-pop Wars no asume responsabilidad por el uso no
-          autorizado de métodos de pago por parte de terceros, sin perjuicio de los derechos que la ley otorgue al
-          titular del método de pago frente a su banco o procesador.
+          Necesitas una cuenta (correo y contraseña) para votar. Eres responsable de mantener la confidencialidad de
+          tu contraseña y de toda actividad que ocurra en tu cuenta. Avísanos de inmediato si sospechas un uso no
+          autorizado, escribiendo a{' '}
+          <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
+            {CONTACT_EMAIL}
+          </a>
+          .
+        </p>
+        <p>
+          No está permitido crear varias cuentas para votar más de una vez al día por el mismo o distinto grupo, ni
+          usar bots, scripts o cualquier medio automatizado para votar. Nos reservamos el derecho de eliminar votos y
+          suspender o cerrar cuentas que incumplan esto, sin previo aviso.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="4. Elegibilidad">
+        <p>
+          Debes tener al menos 18 años, o la mayoría de edad en tu jurisdicción de residencia, para crear una cuenta.
+          K-pop Wars no verifica edad ni identidad de los usuarios más allá del correo usado para registrarse.
         </p>
         <p>
           No puedes usar el sitio si resides en un país o territorio sujeto a sanciones comerciales aplicables
-          (incluyendo, sin limitarse a, las listas de sanciones de OFAC/EE. UU., UE, Reino Unido y Naciones Unidas),
-          ni si las leyes de tu país prohíben este tipo de aportaciones.
+          (incluyendo, sin limitarse a, las listas de sanciones de OFAC/EE. UU., UE, Reino Unido y Naciones Unidas).
         </p>
       </LegalSection>
 
-      <LegalSection title="4. Pagos">
+      <LegalSection title="5. Contenido y conducta">
         <p>
-          Los pagos se procesan a través de Stripe, Inc. Nosotros nunca recibimos ni almacenamos el número completo
-          de tu tarjeta ni datos financieros sensibles — eso lo maneja Stripe directamente conforme a estándares
-          PCI-DSS. Los términos y política de privacidad de Stripe también aplican al procesamiento del pago.
-        </p>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>
-            El impulso se compra en paquetes de precio fijo, elegidos al momento de pagar:{' '}
-            {POINT_PACKAGES.map((pkg, i) => (
-              <span key={pkg.id}>
-                ${(pkg.priceCents / 100).toFixed(2)} USD por {formatPoints(pkg.points)} puntos
-                {i < POINT_PACKAGES.length - 1 ? ', ' : '.'}
-              </span>
-            ))}
-          </li>
-          <li>
-            Nos reservamos el derecho de solicitar verificación adicional de identidad para aportaciones que,
-            individualmente o de forma acumulada, superen montos que consideremos atípicos, o de rechazar/reembolsar
-            transacciones que no puedan verificarse, conforme a nuestras obligaciones legales y las de nuestro
-            procesador de pagos.
-          </li>
-          <li>
-            Los puntos de tu paquete se reflejan en el total acumulado de tu grupo una vez que el pago es confirmado
-            por Stripe.
-          </li>
-        </ul>
-      </LegalSection>
-
-      <LegalSection title="5. Reembolsos">
-        <p>
-          Como regla general, las aportaciones son finales y no reembolsables una vez confirmado el pago, dado que
-          el servicio (reflejar tu aportación en el ranking público) se presta de forma inmediata y completa en ese
-          momento.
-        </p>
-        <p className="font-semibold">Excepciones:</p>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>Evaluamos reembolsos ante errores técnicos comprobables de nuestro lado (ej. cobro duplicado, monto incorrecto).</li>
-          <li>
-            Si resides en una jurisdicción donde la ley te otorga un derecho de desistimiento u otro derecho
-            irrenunciable sobre compras digitales (por ejemplo, normativa de protección al consumidor de la Unión
-            Europea), dicho derecho aplica en la medida en que la ley lo exija, y prevalece sobre esta sección.
-            Puedes ejercerlo escribiendo a{' '}
-            <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
-              {CONTACT_EMAIL}
-            </a>
-            .
-          </li>
-          <li>
-            Nos reservamos el derecho de revertir o anular aportaciones asociadas a fraude, uso no autorizado de un
-            método de pago, o contracargo (chargeback) confirmado, incluyendo el ajuste correspondiente del ranking.
-          </li>
-        </ul>
-      </LegalSection>
-
-      <LegalSection title="6. Contenido y conducta">
-        <p>
-          No está permitido usar nombres, imágenes o enlaces que sean ofensivos, ilegales, difamatorios, que
-          infrinjan derechos de propiedad intelectual, o que suplanten la identidad de un tercero (incluyendo grupos
-          de K-pop, sus miembros o sus agencias) sin autorización, ni enlaces a contenido ilegal o malicioso.
+          No está permitido usar el sitio para actividades ilegales, difamatorias, o que infrinjan derechos de
+          propiedad intelectual, ni intentar manipular el ranking por fuera de las reglas descritas arriba
+          (múltiples cuentas, bots, o explotar errores del sitio).
         </p>
         <p>
-          Nos reservamos el derecho de ocultar, editar o eliminar cualquier aportación, nombre, imagen o enlace que
-          viole esto, sin obligación de reembolso, y de suspender o bloquear el acceso de quien lo haga de forma
-          repetida o grave.
+          Nos reservamos el derecho de suspender o bloquear el acceso de quien viole esto de forma repetida o grave.
         </p>
       </LegalSection>
 
-      <LegalSection title="7. Propiedad intelectual de terceros">
+      <LegalSection title="6. Propiedad intelectual de terceros">
         <p>
           K-pop Wars no está afiliado, patrocinado ni respaldado por ningún grupo de K-pop, agencia de
           entretenimiento, o sello discográfico mencionado en el sitio. Usamos nombres, fotos y logotipos de grupos
@@ -180,12 +123,12 @@ export default function TerminosPage() {
           incluyendo: (1) tu nombre y datos de contacto; (2) la URL exacta de la página o tarjeta en cuestión; (3)
           una descripción de qué contenido quieres que se retire o corrija y por qué; y (4) una declaración de que
           eres el titular de esos derechos o estás autorizado para actuar en su nombre. Revisamos y respondemos
-          estas solicitudes a la brevedad. Retirar contenido no revierte impulsos ya confirmados — el total acumulado
-          de ese grupo permanece igual.
+          estas solicitudes a la brevedad. Retirar contenido no revierte votos ya emitidos — el total acumulado de
+          ese grupo permanece igual.
         </p>
       </LegalSection>
 
-      <LegalSection title={'8. El servicio se ofrece "tal cual"'}>
+      <LegalSection title={'7. El servicio se ofrece "tal cual"'}>
         <p>
           K-pop Wars se ofrece "tal cual" y "según disponibilidad", sin garantías de ningún tipo, expresas o
           implícitas, incluyendo garantías implícitas de comerciabilidad, idoneidad para un fin particular, o no
@@ -194,26 +137,25 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="9. Límite de responsabilidad">
+      <LegalSection title="8. Límite de responsabilidad">
         <p>
           En la máxima medida que permita la ley aplicable, no seremos responsables por daños indirectos,
           incidentales, especiales, consecuentes o punitivos derivados del uso del sitio, incluso si se nos advirtió
-          de su posibilidad. Nuestra responsabilidad total agregada frente a ti, por cualquier causa, no superará el
-          monto que hayas pagado a través del sitio en los últimos 3 meses. Nada en esta sección limita
-          responsabilidad por dolo, negligencia grave, o cualquier otra responsabilidad que no pueda excluirse
-          conforme a la ley aplicable.
+          de su posibilidad. Dado que el servicio es gratuito, nuestra responsabilidad total agregada frente a ti,
+          por cualquier causa, no superará $100 USD. Nada en esta sección limita responsabilidad por dolo,
+          negligencia grave, o cualquier otra responsabilidad que no pueda excluirse conforme a la ley aplicable.
         </p>
       </LegalSection>
 
-      <LegalSection title="10. Indemnización">
+      <LegalSection title="9. Indemnización">
         <p>
           Aceptas mantener indemne a K-pop Wars, sus operadores y colaboradores frente a cualquier reclamo de
-          terceros derivado de: (a) tu incumplimiento de estos Términos, (b) contenido, nombres o enlaces que hayas
-          publicado, o (c) tu uso no autorizado de un método de pago.
+          terceros derivado de: (a) tu incumplimiento de estos Términos, (b) contenido que hayas publicado, o (c) tu
+          uso no autorizado de una cuenta.
         </p>
       </LegalSection>
 
-      <LegalSection title="11. Cambios a estos Términos">
+      <LegalSection title="10. Cambios a estos Términos">
         <p>
           Podemos actualizar estos Términos en cualquier momento. Si el cambio es significativo, lo anunciaremos en
           el sitio con al menos {CHANGE_NOTICE_DAYS} días de anticipación cuando sea razonablemente posible. Seguir
@@ -221,7 +163,7 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="12. Ley aplicable y resolución de disputas">
+      <LegalSection title="11. Ley aplicable y resolución de disputas">
         <p>
           Estos Términos se rigen por las leyes de {GOVERNING_LAW}, sin dar efecto a sus normas de conflicto de
           leyes.
@@ -241,7 +183,7 @@ export default function TerminosPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="13. Disposiciones generales">
+      <LegalSection title="12. Disposiciones generales">
         <ul className="list-disc pl-5 space-y-1">
           <li>
             Si alguna parte de estos Términos resulta inválida o inaplicable, el resto sigue teniendo efecto
@@ -259,7 +201,7 @@ export default function TerminosPage() {
         </ul>
       </LegalSection>
 
-      <LegalSection title="14. Contacto">
+      <LegalSection title="13. Contacto">
         <p>
           ¿Dudas sobre estos Términos? Escríbenos a{' '}
           <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">

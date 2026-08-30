@@ -1,12 +1,14 @@
 -- ============================================================
 -- Esquema base del proyecto "outbid para K-pop"
--- Mecánica: el trono lo tiene el grupo cuya comunidad haya acumulado
--- MÁS PUNTOS EN TOTAL (suma de todos sus impulsos exitosos), no quien
--- haga el impulso individual más grande. Los puntos se compran en
--- paquetes de precio fijo (ver lib/pointPackages.ts), siempre atados a
--- UN grupo en el momento de la compra, y se suman de inmediato al total
--- acumulado de ese grupo. No hay ciclos ni reset — el trono es
--- permanente hasta que otro grupo acumule más puntos.
+-- Mecánica actual: el trono lo tiene el grupo con MÁS VOTOS EN TOTAL.
+-- El voto es GRATIS: requiere cuenta registrada (ver `votes`) y cada
+-- cuenta puede votar una vez por día calendario (UTC), para el grupo
+-- que elija. No hay ciclos ni reset — el trono es permanente hasta que
+-- otro grupo acumule más votos.
+--
+-- El cobro con Stripe (`bids`, `lib/pointPackages.ts`) está desactivado
+-- por el momento — el código y las tablas se dejan intactos por si se
+-- reactiva más adelante, pero el ranking ya no depende de `bids`.
 -- ============================================================
 
 -- Extensión para UUIDs
@@ -116,11 +118,47 @@ create index if not exists idx_bids_supporter on bids (group_id, supporter_name)
   where status = 'succeeded' and is_anonymous = false;
 
 -- ------------------------------------------------------------
--- Vista: group_rankings — cada grupo con el TOTAL de PUNTOS acumulados
--- de todos sus impulsos exitosos (no el paquete individual más grande),
--- para el podio de top 3 + siguientes 5. top_supporter_* sigue mostrando
--- quién hizo el impulso individual con más puntos a ese grupo, solo como
--- referencia de "quién va liderando".
+-- Tabla: votes — un voto GRATIS por cuenta registrada por día
+-- calendario (UTC), a un grupo. Reemplaza a `bids`/Stripe como fuente
+-- del ranking mientras el cobro está desactivado (ver nota de arriba
+-- en `bids` — esa tabla y el flujo de Stripe se dejan intactos, sin
+-- usarse, por si se reactiva el cobro más adelante).
+-- ------------------------------------------------------------
+create table if not exists votes (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  group_id uuid not null references groups(id) on delete cascade,
+  created_at timestamptz default now()
+);
+
+-- Un voto por cuenta por día calendario (UTC), sin importar a qué grupo —
+-- esto es lo que hace cumplir "un voto diario" a nivel de base de datos,
+-- no solo en el API (protege contra condiciones de carrera).
+create unique index if not exists idx_votes_one_per_day
+  on votes (user_id, ((created_at at time zone 'utc')::date));
+
+create index if not exists idx_votes_group on votes (group_id);
+
+alter table votes enable row level security;
+drop policy if exists "votes_public_read" on votes;
+create policy "votes_public_read" on votes for select using (true);
+-- Sin policy de insert para anon/authenticated: todo pasa por /api/vote,
+-- que verifica el token real de sesión y escribe con el service role —
+-- igual que bids con Stripe antes.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'votes'
+  ) then
+    alter publication supabase_realtime add table votes;
+  end if;
+end $$;
+
+-- ------------------------------------------------------------
+-- Vista: group_rankings — cada grupo con el TOTAL de votos gratuitos
+-- que ha recibido (1 voto = 1 punto). No depende de bids/Stripe.
 -- ------------------------------------------------------------
 drop view if exists group_rankings;
 create view group_rankings as
@@ -132,14 +170,29 @@ select
   g.slug,
   g.bio,
   g.official_url,
-  coalesce(sum(b.points), 0) as total_points,
-  (array_agg(b.supporter_name order by b.points desc nulls last))[1] as top_supporter_name,
-  (array_agg(b.is_anonymous order by b.points desc nulls last))[1] as top_is_anonymous,
-  (array_agg(b.social_url order by b.points desc nulls last))[1] as top_social_url
+  coalesce(count(v.id), 0) as total_points
 from groups g
-left join bids b on b.group_id = g.id and b.status = 'succeeded'
+left join votes v on v.group_id = g.id
 group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url
 order by total_points desc, g.name asc;
+
+-- ------------------------------------------------------------
+-- Vista: vote_feed — últimos votos (para el feed en vivo). Sin nombre
+-- ni red social: el voto es gratis y anónimo de cara al público, solo
+-- se sabe a qué grupo fue.
+-- ------------------------------------------------------------
+drop view if exists vote_feed;
+create view vote_feed as
+select
+  v.id,
+  v.group_id,
+  g.name as group_name,
+  g.fandom_name,
+  v.created_at
+from votes v
+join groups g on g.id = v.group_id
+order by v.created_at desc
+limit 50;
 
 -- ------------------------------------------------------------
 -- Contador de visitas totales del sitio (para la barra "X visitas

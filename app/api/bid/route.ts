@@ -33,7 +33,21 @@ function isValidHttpUrl(value: string) {
   }
 }
 
+// DESACTIVADO por el momento (ver supabase/schema.sql): el ranking ya no
+// depende de pagos, funciona por voto gratis con cuenta (ver /api/vote).
+// Se deja el código intacto para poder reactivarlo más adelante — pero la
+// ruta debe rechazar cualquier intento real de cobro mientras tanto, para
+// no arriesgar la cuenta de Stripe (compartida con otro proyecto).
+const PAYMENTS_ENABLED = false;
+
 export async function POST(req: NextRequest) {
+  if (!PAYMENTS_ENABLED) {
+    return NextResponse.json(
+      { error: 'El cobro está desactivado. K-pop Wars ahora funciona por voto gratis.' },
+      { status: 410 }
+    );
+  }
+
   let pendingBidId: string | null = null;
 
   try {

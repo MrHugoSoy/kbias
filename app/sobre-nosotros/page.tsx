@@ -10,7 +10,7 @@ export const revalidate = 0;
 
 export default async function SobreNosotrosPage() {
   const supabase = getSupabasePublicClient();
-  const { data: totalRaised } = await supabase.from('total_raised').select('*').maybeSingle();
+  const { count: voteCount } = await supabase.from('votes').select('id', { count: 'exact', head: true });
   const { data: siteStats } = await supabase.from('site_stats').select('*').maybeSingle();
   const { count: groupCount } = await supabase.from('groups').select('id', { count: 'exact', head: true });
 
@@ -25,9 +25,9 @@ export default async function SobreNosotrosPage() {
           más a su grupo, cada quien pudiera demostrarlo con hechos?
         </p>
         <p>
-          Aquí no hay categorías ni ciclos que resetean cada día. Hay un solo trono, y lo tiene el grupo cuya
-          comunidad haya impulsado más en total. Cada impulso —chico o grande— se suma al total de tu grupo, y eso es lo
-          único que decide quién manda.
+          Aquí no hay categorías ni ciclos que resetean cada día. Hay un solo trono, y lo tiene el grupo con más
+          votos en total. Votar es gratis — solo necesitas una cuenta, un voto al día, y eso es lo único que decide
+          quién manda.
         </p>
       </LegalSection>
 
@@ -36,9 +36,9 @@ export default async function SobreNosotrosPage() {
         <div className="grid grid-cols-3 gap-3 not-prose pt-2">
           <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-3 text-center">
             <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">
-              ${((totalRaised?.total_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+              {(voteCount ?? 0).toLocaleString('es-MX')}
             </p>
-            <p className="text-[10px] text-neutral-500 uppercase tracking-wide mt-1">Recaudado</p>
+            <p className="text-[10px] text-neutral-500 uppercase tracking-wide mt-1">Votos</p>
           </div>
           <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-3 text-center">
             <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">{groupCount ?? 0}</p>

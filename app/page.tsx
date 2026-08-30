@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Crown, Mic2, Plus, Zap, ShieldCheck, Trophy, Handshake, HelpCircle, Heart, VenetianMask } from 'lucide-react';
+import { Crown, Mic2, Plus, Zap, ShieldCheck, Trophy, Handshake, HelpCircle, Heart } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import BidButton from '@/components/BidButton';
 import ActivityFeed from '@/components/ActivityFeed';
@@ -14,36 +14,6 @@ import LogoKW from '@/components/icons/LogoKW';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
-type Supporter = {
-  supporter_name: string | null;
-  is_anonymous: boolean | null;
-  social_url: string | null;
-};
-
-// Nombre del donador, como link a su red social si la puso (nunca si es anónimo).
-function renderSupporter(entry: Supporter) {
-  if (entry.is_anonymous) {
-    return (
-      <span className="inline-flex items-center gap-1">
-        <VenetianMask className="w-3.5 h-3.5" /> un fan anónimo
-      </span>
-    );
-  }
-  if (entry.social_url) {
-    return (
-      <a
-        href={entry.social_url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="underline decoration-dotted underline-offset-2 hover:text-pink-400"
-      >
-        {entry.supporter_name || 'un fan'}
-      </a>
-    );
-  }
-  return entry.supporter_name || 'un fan';
-}
-
 type RankingRow = {
   group_id: string;
   group_name: string;
@@ -53,9 +23,6 @@ type RankingRow = {
   bio: string | null;
   official_url: string | null;
   total_points: number;
-  top_supporter_name: string | null;
-  top_is_anonymous: boolean | null;
-  top_social_url: string | null;
 };
 
 // Tarjeta de ranking: 'lg' es el #1, 'md' el #2/#3, 'sm' el #4-8 (compacta, cabe 5 en una fila).
@@ -64,14 +31,12 @@ function RankCard({
   group,
   size,
   emphasize,
-  topDonor,
   orderClassName,
 }: {
   rank: number;
   group: RankingRow;
   size: 'lg' | 'md' | 'sm';
   emphasize?: boolean;
-  topDonor?: { supporter_name: string | null; total_points: number } | null;
   orderClassName?: string;
 }) {
   const isThrone = size === 'lg';
@@ -156,33 +121,16 @@ function RankCard({
               : 'text-xl font-bold text-amber-400 font-mono'
         }
       >
-        {group.total_points.toLocaleString('es-MX')} pts
+        {group.total_points.toLocaleString('es-MX')} {group.total_points === 1 ? 'voto' : 'votos'}
       </p>
       {!isCompact && (
         <p className="text-xs text-neutral-500">
-          {group.total_points === 0 ? (
-            'Nadie ha impulsado aún'
-          ) : (
-            <>
-              liderado por{' '}
-              {renderSupporter({
-                supporter_name: group.top_supporter_name,
-                is_anonymous: group.top_is_anonymous,
-                social_url: group.top_social_url,
-              })}
-            </>
-          )}
+          {group.total_points === 0 ? 'Nadie ha votado aún' : '¡Vótalo para que suba más!'}
         </p>
       )}
       {!isCompact && group.total_points > 0 && (
         <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
-          Para quitarle el puesto: +{group.total_points.toLocaleString('es-MX')} pts
-        </p>
-      )}
-      {isThrone && topDonor?.supporter_name && (
-        <p className="text-xs text-neutral-600">
-          Mayor fan: <span className="text-pink-300 font-semibold">{topDonor.supporter_name}</span> —{' '}
-          {topDonor.total_points.toLocaleString('es-MX')} pts
+          Para quitarle el puesto: +{group.total_points.toLocaleString('es-MX')} votos
         </p>
       )}
       <div className={isCompact ? 'pt-0.5' : 'pt-1'}>
@@ -259,7 +207,7 @@ function EmptySlotCard({
 export default async function Home() {
   const supabase = getSupabasePublicClient();
 
-  const { data: feed, error: feedError } = await supabase.from('activity_feed').select('*');
+  const { data: feed, error: feedError } = await supabase.from('vote_feed').select('*');
   const { data: groups, error: groupsError } = await supabase.from('groups').select('*').order('name');
   const { data: rankings, error: rankingsError } = await supabase
     .from('group_rankings')
@@ -270,29 +218,21 @@ export default async function Home() {
     console.error('Error cargando datos de Supabase:', { feedError, groupsError, rankingsError });
   }
 
-  // Solo los grupos que ya recibieron al menos un impulso ocupan un puesto en el podio.
-  // Sin eso, se llenaría el top 8 con grupos en 0 puntos solo por orden alfabético.
+  // Solo los grupos que ya recibieron al menos un voto ocupan un puesto en el podio.
+  // Sin eso, se llenaría el top 8 con grupos en 0 votos solo por orden alfabético.
   const bidded = (rankings ?? []).filter((r) => r.total_points > 0);
   const unbidded = (rankings ?? []).filter((r) => r.total_points === 0);
 
-  // Mayor donador (no anónimo) del grupo que tiene el trono ahora mismo (el #1 del ranking).
-  const { data: topDonor } = bidded[0]
-    ? await supabase
-        .from('top_donor_per_group')
-        .select('*')
-        .eq('group_id', bidded[0].group_id)
-        .maybeSingle()
-    : { data: null };
   const top3 = bidded.slice(0, 3);
   const midFive = bidded.slice(3, 8);
   const rest = [...bidded.slice(8), ...unbidded];
-  // Solo los primeros `rankedOverflowCount` de `rest` tienen puja real (rank #9+ legítimo);
-  // el resto son bandas sin pujas y no deben mostrar número de puesto.
+  // Solo los primeros `rankedOverflowCount` de `rest` tienen votos reales (rank #9+ legítimo);
+  // el resto son bandas sin votos y no deben mostrar número de puesto.
   const rankedOverflowCount = Math.max(bidded.length - 8, 0);
 
   // Contador de visitas: incrementa y lee el total en una sola llamada atómica (RPC).
   const { data: totalVisits } = await supabase.rpc('increment_site_visits');
-  const { data: totalRaised } = await supabase.from('total_raised').select('*').maybeSingle();
+  const totalVotes = (rankings ?? []).reduce((sum, r) => sum + r.total_points, 0);
 
   return (
     <main className="min-h-screen bg-white text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
@@ -347,7 +287,6 @@ export default async function Home() {
                   rank={i + 1}
                   group={r}
                   size={i === 0 ? 'lg' : 'md'}
-                  topDonor={i === 0 ? topDonor : undefined}
                   orderClassName={orderClassName}
                 />
               );
@@ -409,13 +348,13 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="text-right hidden sm:block">
-                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Puntos acumulados</p>
+                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Votos recibidos</p>
                       <p className="text-pink-400 font-mono text-sm">
-                        {r.total_points > 0 ? `${r.total_points.toLocaleString('es-MX')} pts` : 'Sin impulsos'}
+                        {r.total_points > 0 ? `${r.total_points.toLocaleString('es-MX')} votos` : 'Sin votos aún'}
                       </p>
                       {r.total_points > 0 && (
                         <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
-                          Quítaselo: +{r.total_points.toLocaleString('es-MX')} pts
+                          Quítaselo: +{r.total_points.toLocaleString('es-MX')} votos
                         </p>
                       )}
                     </div>
@@ -427,7 +366,7 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Formulario de puja — pegado al ranking para que no haya que bajar tanto */}
+        {/* Panel de voto — pegado al ranking para que no haya que bajar tanto */}
         <BidForm groups={groups ?? []} />
 
         {/* Cómo funciona */}
@@ -438,32 +377,32 @@ export default async function Home() {
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">01</p>
-              <p className="font-semibold">Elige tu grupo</p>
-              <p className="text-sm text-neutral-500">Escoge al grupo por el que quieres impulsar en la lista de competidores.</p>
+              <p className="font-semibold">Crea tu cuenta gratis</p>
+              <p className="text-sm text-neutral-500">Solo necesitas un correo y una contraseña — sin costo, sin tarjeta.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">02</p>
-              <p className="font-semibold">Elige tu paquete de puntos</p>
-              <p className="text-sm text-neutral-500">Paquetes desde $1. Cada impulso suma sus puntos al total acumulado de tu grupo.</p>
+              <p className="font-semibold">Elige tu grupo</p>
+              <p className="text-sm text-neutral-500">Escoge al grupo por el que quieres votar en la lista de competidores.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">03</p>
-              <p className="font-semibold">Paga de forma segura</p>
-              <p className="text-sm text-neutral-500">El pago se procesa con Stripe. Tu impulso solo cuenta si el cobro se confirma.</p>
+              <p className="font-semibold">Vota — es gratis</p>
+              <p className="text-sm text-neutral-500">Un voto por cuenta, cada día. Tu voto se suma al total de tu grupo al instante.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">04</p>
               <p className="font-semibold">Tu grupo sube en el ranking</p>
-              <p className="text-sm text-neutral-500">El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más en total.</p>
+              <p className="text-sm text-neutral-500">El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más votos.</p>
             </div>
           </div>
         </section>
 
-        {/* Total recaudado */}
+        {/* Total de votos */}
         <div className="text-center py-2">
-          <p className="text-sm text-neutral-500 dark:text-neutral-400">Este proyecto ha recaudado</p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">Esta comunidad ha lanzado</p>
           <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
-            ${((totalRaised?.total_cents ?? 0) / 100).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
+            {totalVotes.toLocaleString('es-MX')} votos
           </p>
         </div>
 
@@ -479,16 +418,20 @@ export default async function Home() {
           </h2>
           <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 rounded-xl overflow-hidden">
             <div className="p-4 space-y-1">
-              <p className="font-semibold text-sm">¿Esto es una apuesta?</p>
-              <p className="text-sm text-neutral-500">No. Es la compra de un impulso de posición (puntos) para tu grupo favorito en un ranking de entretenimiento. No hay premio en efectivo, azar ni retorno económico para quien paga.</p>
+              <p className="font-semibold text-sm">¿Cuesta dinero votar?</p>
+              <p className="text-sm text-neutral-500">No, votar es completamente gratis. Solo necesitas una cuenta para evitar que alguien vote varias veces.</p>
             </div>
             <div className="p-4 space-y-1">
-              <p className="font-semibold text-sm">¿Puedo recuperar mi dinero?</p>
-              <p className="text-sm text-neutral-500">Los impulsos no son reembolsables, salvo error técnico comprobado.</p>
+              <p className="font-semibold text-sm">¿Por qué necesito una cuenta?</p>
+              <p className="text-sm text-neutral-500">Para que el ranking refleje personas reales — sin cuenta, cualquiera podría votar cientos de veces por su grupo.</p>
+            </div>
+            <div className="p-4 space-y-1">
+              <p className="font-semibold text-sm">¿Cuántas veces puedo votar?</p>
+              <p className="text-sm text-neutral-500">Un voto por cuenta, cada día calendario (UTC). Puedes votar por un grupo distinto cada día si quieres.</p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Cómo se decide quién tiene el #1?</p>
-              <p className="text-sm text-neutral-500">Gana el grupo cuya comunidad haya impulsado más EN TOTAL — se suman todos los impulsos exitosos que ha recibido ese grupo, no solo el más grande.</p>
+              <p className="text-sm text-neutral-500">Gana el grupo con más votos acumulados EN TOTAL — se suman todos los votos que ha recibido ese grupo desde siempre, no solo los de hoy.</p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">Represento a un grupo, ¿puedo reclamar su perfil?</p>
@@ -507,13 +450,13 @@ export default async function Home() {
         <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6 border-t border-neutral-200 dark:border-neutral-900">
           <div>
             <ShieldCheck className="w-6 h-6 mx-auto mb-1 text-pink-500" />
-            <p className="font-semibold text-neutral-700 dark:text-neutral-300">PAGO SEGURO</p>
-            <p>Tus transacciones están protegidas y encriptadas.</p>
+            <p className="font-semibold text-neutral-700 dark:text-neutral-300">100% GRATIS</p>
+            <p>Votar no cuesta nada. Solo necesitas una cuenta.</p>
           </div>
           <div>
             <Zap className="w-6 h-6 mx-auto mb-1 text-pink-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">SIN RESETS</p>
-            <p>El #1 se mantiene hasta que otro grupo impulse más en total.</p>
+            <p>El #1 se mantiene hasta que otro grupo acumule más votos.</p>
           </div>
           <div>
             <Trophy className="w-6 h-6 mx-auto mb-1 text-pink-500" />

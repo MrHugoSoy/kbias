@@ -2,18 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { VenetianMask, User } from 'lucide-react';
+import { Heart } from 'lucide-react';
 
 type FeedItem = {
   id: string;
+  group_id: string;
   group_name: string;
   fandom_name: string | null;
-  amount_cents: number;
-  points: number;
-  supporter_name: string | null;
-  is_anonymous: boolean;
-  social_url: string | null;
-  message: string | null;
   created_at: string;
 };
 
@@ -26,47 +21,27 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Escucha nuevas pujas exitosas en tiempo real y las mete arriba del feed.
-    // Esto es lo que le da la sensación "viva" al sitio, igual que el
-    // "latest activity" de outbid.lol.
+    // Escucha nuevos votos en tiempo real y los mete arriba del feed.
     const channel = supabase
-      .channel('bids-feed')
+      .channel('votes-feed')
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'bids', filter: 'status=eq.succeeded' },
+        { event: 'INSERT', schema: 'public', table: 'votes' },
         async (payload) => {
-          // El payload de Realtime trae la fila cruda de `bids`, sin el join
-          // a `groups` (eso solo lo da la vista `activity_feed`). Hacemos un
-          // fetch puntual del grupo para no perder group_name/fandom_name.
-          const newBid = payload.new as {
-            id: string;
-            group_id: string;
-            amount_cents: number;
-            points: number;
-            supporter_name: string | null;
-            is_anonymous: boolean;
-            social_url: string | null;
-            message: string | null;
-            created_at: string;
-          };
+          const newVote = payload.new as { id: string; group_id: string; created_at: string };
 
           const { data: group } = await supabase
             .from('groups')
             .select('name, fandom_name')
-            .eq('id', newBid.group_id)
+            .eq('id', newVote.group_id)
             .single();
 
           const feedItem: FeedItem = {
-            id: newBid.id,
+            id: newVote.id,
+            group_id: newVote.group_id,
             group_name: group?.name ?? 'Grupo desconocido',
             fandom_name: group?.fandom_name ?? null,
-            amount_cents: newBid.amount_cents,
-            points: newBid.points,
-            supporter_name: newBid.supporter_name,
-            is_anonymous: newBid.is_anonymous,
-            social_url: newBid.social_url,
-            message: newBid.message,
-            created_at: newBid.created_at,
+            created_at: newVote.created_at,
           };
 
           setItems((prev) => [feedItem, ...prev].slice(0, 50));
@@ -96,42 +71,15 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
           <h2 className="font-bold">ACTIVIDAD EN VIVO</h2>
           <span className="text-[10px] bg-pink-100 dark:bg-pink-950 text-pink-600 dark:text-pink-400 px-2 py-0.5 rounded-full">EN VIVO</span>
         </div>
-        <span className="text-xs text-pink-500 dark:text-pink-400">VER TODO ›</span>
       </div>
       <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-transparent rounded-xl overflow-hidden">
         {items.map((item) => (
-          <div key={item.id} className="px-4 py-3 text-sm space-y-1">
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-neutral-500 w-16 shrink-0">{timeAgo(item.created_at)}</span>
-              {item.is_anonymous ? (
-                <VenetianMask className="w-4 h-4 text-neutral-500 shrink-0" />
-              ) : (
-                <User className="w-4 h-4 text-neutral-500 shrink-0" />
-              )}
-              <span className="flex-1">
-                {!item.is_anonymous && item.social_url ? (
-                  <a
-                    href={item.social_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="underline decoration-dotted underline-offset-2 hover:text-pink-400"
-                  >
-                    {item.supporter_name || 'un fan'}
-                  </a>
-                ) : item.is_anonymous ? (
-                  'un fan anónimo'
-                ) : (
-                  item.supporter_name || 'un fan'
-                )}{' '}
-                impulsó a <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
-              </span>
-              <span className="font-mono text-amber-600 dark:text-amber-400">+{item.points.toLocaleString('es-MX')} pts</span>
-            </div>
-            {item.message && (
-              <p className="pl-[calc(4rem+1.75rem)] text-neutral-500 dark:text-neutral-400 italic break-words">
-                "{item.message}"
-              </p>
-            )}
+          <div key={item.id} className="px-4 py-3 text-sm flex items-center gap-3">
+            <span className="text-xs text-neutral-500 w-16 shrink-0" suppressHydrationWarning>{timeAgo(item.created_at)}</span>
+            <Heart className="w-4 h-4 text-pink-500 shrink-0 fill-current" />
+            <span className="flex-1">
+              Un fan votó por <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
+            </span>
           </div>
         ))}
         {items.length === 0 && (

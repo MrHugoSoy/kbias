@@ -3,7 +3,7 @@ import { CONTACT_EMAIL } from '@/lib/contact';
 
 export const metadata = {
   title: 'Privacidad',
-  description: 'Qué datos usa K-pop Wars y por qué: no pedimos cuenta ni correo para impulsar.',
+  description: 'Qué datos usa K-pop Wars y por qué: solo tu correo para crear una cuenta y votar.',
 };
 
 export default function PrivacidadPage() {
@@ -26,31 +26,20 @@ export default function PrivacidadPage() {
       </p>
 
       <div className="text-sm bg-pink-50 dark:bg-pink-950/30 text-pink-700 dark:text-pink-300 border border-pink-200 dark:border-pink-900/60 rounded-lg p-4 font-semibold">
-        No pedimos cuenta ni correo para impulsar. Lo único que tú decides compartir es tu nombre y/o tu link de red
-        social, ambos opcionales — y si impulsas de forma anónima, ni siquiera eso se guarda. La única excepción es tu
-        dirección IP, que guardamos por impulso exitoso únicamente para aplicar un tope de gasto diario (ver abajo).
+        Lo único que pedimos es tu correo y una contraseña, para crear tu cuenta y limitar a un voto diario por
+        persona. No pedimos nombre, teléfono, ni ningún dato de pago — votar es gratis.
       </div>
 
       <LegalSection title="1. Qué recopilamos">
         <p>
-          <strong>Datos que tú decides compartir:</strong> tu nombre o el de tu fandom (opcional), un link a tu red
-          social (opcional), y si eliges impulsar de forma anónima, ninguno de los dos se guarda.
+          <strong>Correo y contraseña:</strong> los usa nuestro proveedor de autenticación (Supabase Auth) para
+          crear y verificar tu cuenta. La contraseña se guarda con hash (cifrado de un solo sentido) — nosotros no
+          podemos ver tu contraseña en texto plano.
         </p>
         <p>
-          <strong>Datos de pago:</strong> los procesa Stripe directamente. Nosotros nunca vemos ni guardamos el
-          número completo de tu tarjeta — solo recibimos la confirmación de que el pago se completó y el monto.
-        </p>
-        <p>
-          <strong>Dirección IP por impulso exitoso:</strong> a diferencia de las visitas normales al sitio, sí guardamos
-          la IP asociada a cada impulso que se completa. Es la única forma de aplicar un tope de gasto diario y frenar
-          gasto compulsivo (por ejemplo, de menores usando la tarjeta de sus papás). No la usamos para ningún otro
-          fin, y no la mostramos en el ranking ni en el feed público.
-        </p>
-        <p>
-          <strong>Datos técnicos básicos de cada visita:</strong> nuestro proveedor de hosting (Vercel) y nuestra
-          base de datos (Supabase) procesan automáticamente datos estándar de cada solicitud (como la dirección IP)
-          para operar y proteger el sitio, sin que nosotros los guardemos en nuestra propia base de datos salvo el
-          caso de impulsos exitosos descrito arriba.
+          <strong>Historial de tus votos:</strong> guardamos qué grupo elegiste y cuándo, asociado a tu cuenta, para
+          hacer cumplir el límite de un voto por día y para armar el ranking público. El ranking público solo
+          muestra el total de votos por grupo — nunca tu correo ni tu identidad.
         </p>
         <p>
           <strong>Contador de visitas y "en línea":</strong> llevamos un conteo total de cargas de página y un
@@ -61,18 +50,16 @@ export default function PrivacidadPage() {
 
       <LegalSection title="2. Cookies y almacenamiento local">
         <p>
-          K-pop Wars no usa cookies de rastreo ni de publicidad. Guardamos tu preferencia de tema (claro/oscuro) en el
-          almacenamiento local de tu navegador (localStorage), que se queda en tu dispositivo y nunca se envía a
-          nuestros servidores.
+          K-pop Wars no usa cookies de rastreo ni de publicidad. Guardamos tu sesión (para que no tengas que iniciar
+          sesión cada vez) y tu preferencia de tema (claro/oscuro) en el almacenamiento local de tu navegador
+          (localStorage), que se queda en tu dispositivo.
         </p>
       </LegalSection>
 
       <LegalSection title="3. Con quién compartimos datos">
         <p>Usamos estos proveedores para operar el sitio, cada uno con su propia política de privacidad:</p>
         <p>
-          <strong>Stripe</strong> — procesa los pagos.
-          <br />
-          <strong>Supabase</strong> — nuestra base de datos y el feed en tiempo real.
+          <strong>Supabase</strong> — nuestra base de datos, autenticación, y el feed en tiempo real.
           <br />
           <strong>Vercel</strong> — hospeda el sitio.
         </p>
@@ -81,37 +68,35 @@ export default function PrivacidadPage() {
 
       <LegalSection title="4. Cuánto tiempo guardamos los datos">
         <p>
-          El historial de impulsos exitosos se guarda de forma permanente porque es lo que arma el ranking público y el
-          feed de actividad — es la naturaleza del servicio. Eso incluye la dirección IP asociada a cada impulso
-          descrito en la sección 1: como esa fila nunca se borra, la IP queda ligada a ella de forma permanente, no
-          solo temporalmente. Si impulsaste de forma anónima, nunca guardamos tu nombre ni tu link en primer lugar.
+          Tu cuenta y el historial de tus votos se guardan mientras tu cuenta exista. Si quieres que eliminemos tu
+          cuenta y tus datos, escríbenos (ver Sección 7) — el total de votos ya emitidos permanece en el ranking
+          público (es un número agregado, no identifica tu cuenta), pero eliminamos la asociación con tu correo.
         </p>
       </LegalSection>
 
       <LegalSection title="5. Tus opciones">
         <p>
-          Puedes impulsar sin dar tu nombre ni tu red social usando la opción "impulsar de forma anónima". Si ya impulsaste
-          con tu nombre y quieres que lo quitemos del feed público,{' '}
+          Puedes cerrar sesión en cualquier momento desde el sitio. Para eliminar tu cuenta por completo, escríbenos
+          a{' '}
           <a href={`mailto:${CONTACT_EMAIL}`} className="underline hover:text-pink-500 dark:hover:text-pink-400">
-            escríbenos
-          </a>{' '}
-          y lo evaluamos caso por caso (el monto del impulso se queda, ya que forma parte del ranking público, pero
-          podemos anonimizar el nombre asociado).
+            {CONTACT_EMAIL}
+          </a>
+          .
         </p>
       </LegalSection>
 
       <LegalSection title="6. Menores de edad">
         <p>
-          K-pop Wars no está dirigido a niños. Si eres menor de edad, necesitas la autorización de un adulto
-          responsable del método de pago antes de usar el sitio.
+          K-pop Wars no está dirigido a niños. Debes tener al menos 18 años, o la mayoría de edad en tu país, para
+          crear una cuenta.
         </p>
       </LegalSection>
 
       <LegalSection title="7. Sin importar en qué país estés">
         <p>
-          Al recopilar solo lo mínimo indispensable (y nada si impulsas de forma anónima), buscamos cumplir de forma
-          natural con el espíritu de las leyes de protección de datos más comunes, sin importar desde dónde nos
-          visites — por ejemplo el RGPD en la Unión Europea/Reino Unido, o la CCPA en California, EE. UU.
+          Al recopilar solo lo mínimo indispensable (correo y contraseña), buscamos cumplir de forma natural con el
+          espíritu de las leyes de protección de datos más comunes, sin importar desde dónde nos visites — por
+          ejemplo el RGPD en la Unión Europea/Reino Unido, o la CCPA en California, EE. UU.
         </p>
         <p>
           Si vives en un país cuya ley te da derechos específicos sobre tus datos (acceso, corrección, eliminación,
