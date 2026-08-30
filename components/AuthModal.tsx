@@ -44,6 +44,12 @@ export default function AuthModal({
           email: email.trim(),
           password,
           options: {
+            // Sin esto, Supabase manda el link de confirmación al "Site URL"
+            // configurado en el dashboard — que puede quedarse apuntando a
+            // localhost si no se actualiza al pasar a producción. Con esto
+            // el link siempre regresa al dominio real desde el que se
+            // registró la persona.
+            emailRedirectTo: window.location.origin,
             data: {
               marketing_opt_in: marketingOptIn,
               marketing_opt_in_at: marketingOptIn ? new Date().toISOString() : null,
