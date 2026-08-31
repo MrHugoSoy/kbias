@@ -29,10 +29,12 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ comments: data ?? [] });
 }
 
-// POST /api/comments — body: { groupId: string, body: string }
+// POST /api/comments — body: { groupId: string, body: string, parentId?: string }
 //
 // Requiere sesión real (verificada por token). El comentario se modera con
-// el mismo filtro que los mensajes de voto antes de guardarse.
+// el mismo filtro que los mensajes de voto antes de guardarse. Si viene
+// parentId, se valida que exista y sea del mismo grupo — así nadie puede
+// colgar una respuesta de un comentario ajeno a otro grupo.
 export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabaseServiceClient();
@@ -41,7 +43,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { groupId, body } = await req.json();
+    const { groupId, body, parentId } = await req.json();
     if (!groupId || !body || !body.trim()) {
       return NextResponse.json({ error: 'Escribe un comentario' }, { status: 400 });
     }
@@ -58,10 +60,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 });
     }
 
+    if (parentId) {
+      const { data: parent } = await supabase.from('group_comments').select('group_id').eq('id', parentId).maybeSingle();
+      if (!parent || parent.group_id !== groupId) {
+        return NextResponse.json({ error: 'Comentario original no encontrado' }, { status: 404 });
+      }
+    }
+
     const { data: inserted, error } = await supabase
       .from('group_comments')
-      .insert({ group_id: groupId, user_id: userId, body: trimmed })
-      .select('id, group_id, body, created_at, user_id')
+      .insert({ group_id: groupId, user_id: userId, body: trimmed, parent_id: parentId || null })
+      .select('id, group_id, body, parent_id, created_at, user_id')
       .single();
 
     if (error || !inserted) {

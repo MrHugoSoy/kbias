@@ -329,10 +329,14 @@ create table if not exists group_comments (
   group_id uuid not null references groups(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   body text not null,
+  parent_id uuid references group_comments(id) on delete cascade,
   created_at timestamptz default now()
 );
 
+alter table group_comments add column if not exists parent_id uuid references group_comments(id) on delete cascade;
+
 create index if not exists idx_group_comments_group_created on group_comments (group_id, created_at desc);
+create index if not exists idx_group_comments_parent on group_comments (parent_id);
 
 alter table group_comments enable row level security;
 drop policy if exists "group_comments_public_read" on group_comments;
@@ -358,6 +362,7 @@ select
   c.id,
   c.group_id,
   c.body,
+  c.parent_id,
   c.created_at,
   c.user_id,
   p.username,
