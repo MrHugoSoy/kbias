@@ -115,6 +115,15 @@ export default function PerfilPage() {
       setAvatarSpecies(next.avatarSpecies);
       setAvatarUrl(next.avatarUrl);
       setLoadingData(false);
+
+      // Sincroniza el avatar en el user_metadata de la sesión: así el
+      // icono de perfil en el header (ProfileAvatarIcon) lo lee al instante
+      // desde la sesión guardada en localStorage sin esperar una consulta a
+      // `profiles`, evitando el parpadeo animalito -> foto real al recargar.
+      const meta = user!.user_metadata ?? {};
+      if (meta.avatar_species !== next.avatarSpecies || meta.avatar_url !== next.avatarUrl) {
+        supabase.auth.updateUser({ data: { avatar_species: next.avatarSpecies, avatar_url: next.avatarUrl } });
+      }
     }
     loadData();
   }, [user]);
@@ -169,6 +178,7 @@ export default function PerfilPage() {
     setAvatarUrl(null);
     patchCache({ avatarSpecies: key, avatarUrl: null });
     setShowAvatarPicker(false);
+    supabase.auth.updateUser({ data: { avatar_species: key, avatar_url: null } });
   }
 
   async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -209,6 +219,7 @@ export default function PerfilPage() {
       setAvatarSpecies(null);
       patchCache({ avatarUrl: publicUrl, avatarSpecies: null });
       setShowAvatarPicker(false);
+      supabase.auth.updateUser({ data: { avatar_species: null, avatar_url: publicUrl } });
     } catch (err) {
       setAvatarError(err instanceof Error ? err.message : 'Error al subir la foto');
     } finally {

@@ -16,11 +16,27 @@ export default function ProfileAvatarIcon({ size = 32 }: { size?: number }) {
   const [entry, setEntry] = useState<AvatarEntry>({ avatarSpecies: null, avatarUrl: null });
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null));
+    // El user_metadata viaja con la sesión guardada en localStorage, así que
+    // getSession() lo entrega al instante sin esperar red — a diferencia de
+    // la tabla `profiles`, que sí requiere una consulta. Usarlo como primera
+    // fuente evita el parpadeo animalito-por-defecto -> foto real al recargar.
+    function fromMetadata(meta: Record<string, unknown> | undefined): AvatarEntry {
+      return {
+        avatarSpecies: (meta?.avatar_species as string | null) ?? null,
+        avatarUrl: (meta?.avatar_url as string | null) ?? null,
+      };
+    }
+
+    supabase.auth.getSession().then(({ data }) => {
+      const user = data.session?.user ?? null;
+      setUserId(user?.id ?? null);
+      if (user) setEntry(fromMetadata(user.user_metadata));
+    });
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUserId(session?.user?.id ?? null);
+      if (session?.user) setEntry(fromMetadata(session.user.user_metadata));
     });
     return () => subscription.unsubscribe();
   }, []);
@@ -33,15 +49,20 @@ export default function ProfileAvatarIcon({ size = 32 }: { size?: number }) {
     const cached = avatarCache[userId];
     if (cached) setEntry(cached);
 
+    // Sincroniza en segundo plano por si `profiles` cambió desde otro
+    // dispositivo o el user_metadata todavía no se había respaldado.
     supabase
       .from('profiles')
       .select('avatar_species, avatar_url')
       .eq('id', userId)
       .maybeSingle()
       .then(({ data }) => {
-        const next: AvatarEntry = { avatarSpecies: data?.avatar_species ?? null, avatarUrl: data?.avatar_url ?? null };
+        if (!data) return;
+        const next: AvatarEntry = { avatarSpecies: data.avatar_species ?? null, avatarUrl: data.avatar_url ?? null };
         avatarCache[userId] = next;
-        setEntry(next);
+        setEntry((prev) =>
+          prev.avatarSpecies === next.avatarSpecies && prev.avatarUrl === next.avatarUrl ? prev : next
+        );
       });
   }, [userId]);
 
