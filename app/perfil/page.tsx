@@ -51,6 +51,7 @@ export default function PerfilPage() {
   const [avatarError, setAvatarError] = useState('');
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [savingMarketing, setSavingMarketing] = useState(false);
+  const [marketingError, setMarketingError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -67,15 +68,28 @@ export default function PerfilPage() {
   }, []);
 
   async function toggleMarketing(next: boolean) {
+    setMarketingError('');
     setSavingMarketing(true);
-    const { data, error } = await supabase.auth.updateUser({
-      data: { marketing_opt_in: next, marketing_opt_in_at: next ? new Date().toISOString() : null },
-    });
-    if (!error && data.user) {
+    try {
+      const payload = { marketing_opt_in: next, marketing_opt_in_at: next ? new Date().toISOString() : null };
+      let { data, error } = await supabase.auth.updateUser({ data: payload });
+      if (error) {
+        // Si la sesión quedó desincronizada (ver nota en ActivityFeed sobre
+        // múltiples GoTrueClient), un refresh y un solo reintento resuelve
+        // la mayoría de los casos sin que el usuario tenga que volver a
+        // iniciar sesión.
+        await supabase.auth.refreshSession();
+        ({ data, error } = await supabase.auth.updateUser({ data: payload }));
+      }
+      if (error || !data.user) {
+        setMarketingError('No se pudo guardar. Cierra sesión y vuelve a entrar, luego intenta de nuevo.');
+        return;
+      }
       setUser(data.user);
       setMarketingOptIn(next);
+    } finally {
+      setSavingMarketing(false);
     }
-    setSavingMarketing(false);
   }
 
   useEffect(() => {
@@ -462,6 +476,7 @@ export default function PerfilPage() {
           <p className="text-xs text-neutral-500 mt-0.5">
             Novedades, nuevos rankings y promociones de nuestros socios. Opcional — puedes cambiarlo cuando quieras.
           </p>
+          {marketingError && <p className="text-xs text-red-500 mt-1">{marketingError}</p>}
         </div>
       </div>
     </LegalPage>
