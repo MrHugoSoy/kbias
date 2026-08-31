@@ -2,8 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Trophy, Zap, Clock, HelpCircle } from 'lucide-react';
-import ProfileAvatarIcon from './ProfileAvatarIcon';
+import { Menu, X, Home, Trophy, Zap, Clock, HelpCircle, User } from 'lucide-react';
 
 // Nav de escritorio vive oculta en celular (md:hidden en el <nav> del
 // header) — este botón le da a los mismos links (INICIO/RANKING/CÓMO
@@ -42,7 +41,7 @@ export default function MobileNavMenu() {
               <HelpCircle className="w-4 h-4" /> FAQ
             </a>
             <Link href="/perfil" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              <ProfileAvatarIcon size={20} />
+              <User className="w-4 h-4" /> MI PERFIL
             </Link>
           </nav>
         </>
