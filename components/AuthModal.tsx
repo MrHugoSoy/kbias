@@ -92,7 +92,7 @@ export default function AuthModal({
             <h3 className="text-xl font-bold">{mode === 'register' ? 'Crea tu cuenta gratis' : 'Inicia sesión'}</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
               Necesitas una cuenta para votar — así evitamos que una sola persona vote varias veces. Un voto gratis por
-              cuenta, cada día.
+              cuenta cada 24 horas.
             </p>
             <input
               type="email"

@@ -118,11 +118,13 @@ create index if not exists idx_bids_supporter on bids (group_id, supporter_name)
   where status = 'succeeded' and is_anonymous = false;
 
 -- ------------------------------------------------------------
--- Tabla: votes — un voto GRATIS por cuenta registrada por día
--- calendario (UTC), a un grupo. Reemplaza a `bids`/Stripe como fuente
--- del ranking mientras el cobro está desactivado (ver nota de arriba
--- en `bids` — esa tabla y el flujo de Stripe se dejan intactos, sin
--- usarse, por si se reactiva el cobro más adelante).
+-- Tabla: votes — un voto GRATIS por cuenta registrada cada 24 horas
+-- (cooldown real desde el último voto, no por día calendario — así se
+-- evita que alguien vote dos veces cerca de la medianoche UTC), a un
+-- grupo. Reemplaza a `bids`/Stripe como fuente del ranking mientras el
+-- cobro está desactivado (ver nota de arriba en `bids` — esa tabla y el
+-- flujo de Stripe se dejan intactos, sin usarse, por si se reactiva el
+-- cobro más adelante).
 -- ------------------------------------------------------------
 create table if not exists votes (
   id uuid primary key default gen_random_uuid(),
@@ -131,13 +133,50 @@ create table if not exists votes (
   created_at timestamptz default now()
 );
 
--- Un voto por cuenta por día calendario (UTC), sin importar a qué grupo —
--- esto es lo que hace cumplir "un voto diario" a nivel de base de datos,
--- no solo en el API (protege contra condiciones de carrera).
-create unique index if not exists idx_votes_one_per_day
-  on votes (user_id, ((created_at at time zone 'utc')::date));
+-- Reemplazado por el cooldown de 24h en cast_vote() — este índice solo
+-- limitaba por día calendario UTC, que es justo el bug que se reporta.
+drop index if exists idx_votes_one_per_day;
 
 create index if not exists idx_votes_group on votes (group_id);
+create index if not exists idx_votes_user_created on votes (user_id, created_at desc);
+
+-- Inserta un voto solo si pasaron 24h reales desde el último voto de esa
+-- cuenta (cualquier grupo). El advisory lock serializa llamadas
+-- concurrentes del mismo usuario dentro de la transacción — sin él, dos
+-- requests simultáneos podrían leer "sin voto previo" antes de que
+-- cualquiera inserte, y ambos pasarían. SECURITY DEFINER + el REVOKE/GRANT
+-- de abajo aseguran que solo el service role (el usado por /api/vote,
+-- después de verificar el token real) puede llamar esta función.
+create or replace function cast_vote(p_user_id uuid, p_group_id uuid)
+returns table (id uuid, created_at timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_last timestamptz;
+begin
+  perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
+
+  select v.created_at into v_last
+  from votes v
+  where v.user_id = p_user_id
+  order by v.created_at desc
+  limit 1;
+
+  if v_last is not null and now() < v_last + interval '24 hours' then
+    raise exception 'vote_cooldown';
+  end if;
+
+  return query
+  insert into votes (user_id, group_id)
+  values (p_user_id, p_group_id)
+  returning votes.id, votes.created_at;
+end;
+$$;
+
+revoke all on function cast_vote(uuid, uuid) from public;
+grant execute on function cast_vote(uuid, uuid) to service_role;
 
 alter table votes enable row level security;
 drop policy if exists "votes_public_read" on votes;

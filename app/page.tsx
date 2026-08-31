@@ -405,7 +405,7 @@ export default async function Home() {
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">03</p>
               <p className="font-semibold">Vota — es gratis</p>
-              <p className="text-sm text-neutral-500">Un voto por cuenta, cada día. Tu voto se suma al total de tu grupo al instante.</p>
+              <p className="text-sm text-neutral-500">Un voto por cuenta cada 24 horas. Tu voto se suma al total de tu grupo al instante.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">04</p>
@@ -431,7 +431,7 @@ export default async function Home() {
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Cuántas veces puedo votar?</p>
-              <p className="text-sm text-neutral-500">Un voto por cuenta, cada día calendario (UTC). Puedes votar por un grupo distinto cada día si quieres.</p>
+              <p className="text-sm text-neutral-500">Un voto por cuenta cada 24 horas desde tu último voto. Puedes votar por un grupo distinto cada vez si quieres.</p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Cómo se decide quién tiene el #1?</p>

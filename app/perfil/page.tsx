@@ -279,10 +279,10 @@ export default function PerfilPage() {
     );
   }
 
-  const startOfDayUtc = new Date();
-  startOfDayUtc.setUTCHours(0, 0, 0, 0);
-  const votedToday = votes.find((v) => new Date(v.created_at) >= startOfDayUtc);
-  const votedTodayGroup = votedToday ? groups.find((g) => g.id === votedToday.group_id) : null;
+  const lastVote = [...votes].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  const nextVoteAt = lastVote ? new Date(new Date(lastVote.created_at).getTime() + 24 * 60 * 60 * 1000) : null;
+  const onCooldown = !!nextVoteAt && Date.now() < nextVoteAt.getTime();
+  const votedTodayGroup = onCooldown ? groups.find((g) => g.id === lastVote.group_id) : null;
 
   const tallies: GroupTally[] = groups
     .map((group) => ({ group, count: votes.filter((v) => v.group_id === group.id).length }))
@@ -403,7 +403,8 @@ export default function PerfilPage() {
       <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/60 rounded-xl p-4">
         {votedTodayGroup ? (
           <p className="text-sm text-pink-700 dark:text-pink-300">
-            ✓ Hoy votaste por <strong>{votedTodayGroup.name}</strong>. Vuelve mañana para votar de nuevo.
+            ✓ Ya votaste por <strong>{votedTodayGroup.name}</strong>. Podrás votar de nuevo el{' '}
+            {nextVoteAt!.toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.
           </p>
         ) : (
           <p className="text-sm text-pink-700 dark:text-pink-300">

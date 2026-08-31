@@ -13,7 +13,8 @@ export default function BidForm({ groups }: { groups: Group[] }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showAuth, setShowAuth] = useState(false);
-  const [votedToday, setVotedToday] = useState<string | null>(null); // group_id o null
+  const [cooldownGroupId, setCooldownGroupId] = useState<string | null>(null);
+  const [nextVoteAt, setNextVoteAt] = useState<string | null>(null);
 
   useEffect(() => {
     async function checkStatus() {
@@ -22,7 +23,10 @@ export default function BidForm({ groups }: { groups: Group[] }) {
       const res = await authFetch('/api/vote');
       if (res.ok) {
         const data = await res.json();
-        if (data.votedToday) setVotedToday(data.groupId);
+        if (data.onCooldown) {
+          setCooldownGroupId(data.groupId);
+          setNextVoteAt(data.nextVoteAt);
+        }
       }
     }
     checkStatus();
@@ -43,7 +47,8 @@ export default function BidForm({ groups }: { groups: Group[] }) {
       });
       const data = await res.json();
       if (res.ok) {
-        setVotedToday(groupId);
+        setCooldownGroupId(groupId);
+        setNextVoteAt(new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString());
       } else {
         setError(data.error || 'Algo salió mal');
       }
@@ -63,21 +68,24 @@ export default function BidForm({ groups }: { groups: Group[] }) {
     castVote();
   }
 
-  const votedGroupName = votedToday ? groups.find((g) => g.id === votedToday)?.name : null;
+  const votedGroupName = cooldownGroupId ? groups.find((g) => g.id === cooldownGroupId)?.name : null;
+  const nextVoteLabel = nextVoteAt
+    ? new Date(nextVoteAt).toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+    : null;
 
   return (
     <section className="border-2 border-pink-700/60 rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-2">
         <Gavel className="w-6 h-6 text-pink-500" />
         <div>
-          <h2 className="font-bold">VOTA GRATIS HOY</h2>
-          <p className="text-xs text-neutral-500">Un voto por cuenta, cada día — sin costo</p>
+          <h2 className="font-bold">VOTA GRATIS</h2>
+          <p className="text-xs text-neutral-500">Un voto por cuenta cada 24 horas — sin costo</p>
         </div>
       </div>
 
-      {votedToday ? (
+      {cooldownGroupId ? (
         <p className="text-sm text-green-600 dark:text-green-400">
-          ✓ Ya votaste hoy por <strong>{votedGroupName ?? 'tu grupo'}</strong>. Vuelve mañana para votar de nuevo.
+          ✓ Ya votaste por <strong>{votedGroupName ?? 'tu grupo'}</strong>. Podrás votar de nuevo el {nextVoteLabel}.
         </p>
       ) : (
         <>

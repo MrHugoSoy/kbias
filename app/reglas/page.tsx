@@ -27,7 +27,7 @@ export default function ReglasPage() {
 
       <LegalSection title="3. Cuentas y frecuencia de voto">
         <p>Necesitas una cuenta gratuita (correo y contraseña) para votar.</p>
-        <p>Cada cuenta puede votar <strong>una vez por día calendario (UTC)</strong>, por el grupo que elijas ese día.</p>
+        <p>Cada cuenta puede votar <strong>una vez cada 24 horas</strong> desde su último voto, por el grupo que elijas.</p>
         <p>No está permitido crear varias cuentas, usar bots o scripts para votar más de lo permitido.</p>
       </LegalSection>
 
