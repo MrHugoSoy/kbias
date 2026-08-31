@@ -21,6 +21,15 @@ type MonthlyRow = {
   rank: number;
 };
 
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 text-center">
+      <p className="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">{value}</p>
+      <p className="text-[10px] text-neutral-500 uppercase tracking-wide mt-1">{label}</p>
+    </div>
+  );
+}
+
 export default async function SalonDeLaFamaPage() {
   const supabase = getSupabasePublicClient();
 
@@ -29,13 +38,18 @@ export default async function SalonDeLaFamaPage() {
   const now = new Date();
   const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString().slice(0, 10);
 
-  const { data: rows } = await supabase
-    .from('monthly_rankings')
-    .select('*')
-    .lt('month_start', currentMonthStart)
-    .lte('rank', 3)
-    .order('month_start', { ascending: false })
-    .order('rank', { ascending: true });
+  const [{ data: rows }, { data: siteStats }, { count: voteCount }, { data: currentRankings }] = await Promise.all([
+    supabase
+      .from('monthly_rankings')
+      .select('*')
+      .lt('month_start', currentMonthStart)
+      .lte('rank', 3)
+      .order('month_start', { ascending: false })
+      .order('rank', { ascending: true }),
+    supabase.from('site_stats').select('*').maybeSingle(),
+    supabase.from('votes').select('id', { count: 'exact', head: true }),
+    supabase.from('group_rankings').select('total_points').gt('total_points', 0),
+  ]);
 
   const months = new Map<string, MonthlyRow[]>();
   for (const row of (rows ?? []) as MonthlyRow[]) {
@@ -43,12 +57,48 @@ export default async function SalonDeLaFamaPage() {
     months.get(row.month_start)!.push(row);
   }
 
+  // Estadísticas del salón: cuántos meses ya se jugaron, cuántos grupos
+  // distintos han sido campeones, y quién tiene más coronas — todo
+  // derivado de los mismos `rows` que ya se pidieron arriba, sin otra
+  // consulta. Si hay empate en coronas, se listan todos los empatados.
+  const champions = (rows ?? []).filter((r) => r.rank === 1) as MonthlyRow[];
+  const distinctChampionCount = new Set(champions.map((c) => c.group_id)).size;
+  const crownsByGroup = new Map<string, { name: string; count: number }>();
+  for (const c of champions) {
+    const entry = crownsByGroup.get(c.group_id) ?? { name: c.group_name, count: 0 };
+    entry.count += 1;
+    crownsByGroup.set(c.group_id, entry);
+  }
+  const maxCrowns = Math.max(0, ...Array.from(crownsByGroup.values()).map((e) => e.count));
+  const topCrownHolders = Array.from(crownsByGroup.values())
+    .filter((e) => e.count === maxCrowns)
+    .map((e) => e.name);
+
   return (
     <LegalPage
       title="Salón de la Fama"
       subtitle="El #1 de cada mes queda registrado aquí para siempre — el ranking en vivo se reinicia, esto no."
       wide
     >
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <StatCard label="Meses jugados" value={months.size.toLocaleString('es-MX')} />
+        <StatCard label="Grupos campeones" value={distinctChampionCount.toLocaleString('es-MX')} />
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 text-center">
+          <p className="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">
+            {maxCrowns === 0 ? '—' : maxCrowns}
+          </p>
+          <p className="text-[10px] text-neutral-500 uppercase tracking-wide mt-1">
+            {maxCrowns === 0 ? 'Más coronas' : `Coronas: ${topCrownHolders.join(' / ')}`}
+          </p>
+        </div>
+        <StatCard label="Votos totales del sitio" value={(voteCount ?? 0).toLocaleString('es-MX')} />
+        <StatCard
+          label="Grupos con votos este mes"
+          value={(currentRankings ?? []).length.toLocaleString('es-MX')}
+        />
+        <StatCard label="Visitas desde el lanzamiento" value={(siteStats?.total_visits ?? 0).toLocaleString('es-MX')} />
+      </div>
+
       {months.size === 0 ? (
         <div className="text-center py-10 space-y-2">
           <Crown className="w-12 h-12 mx-auto text-pink-500" />
