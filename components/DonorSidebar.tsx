@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import PixelAvatar from './PixelAvatar';
+import UserAvatar from './UserAvatar';
 
 type FeedItem = {
   id: string;
@@ -77,12 +77,7 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
         )}
         {items.map((item) => (
           <div key={item.id} className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-lg p-3 text-xs flex items-center gap-2">
-            {item.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.avatar_url} alt="" className="w-5 h-5 rounded-full object-cover shrink-0" />
-            ) : (
-              <PixelAvatar seed={item.user_id} species={item.avatar_species} size={20} />
-            )}
+            <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={20} />
             <div className="flex-1 min-w-0">
               <p className="text-neutral-500 truncate">
                 {item.username ? <strong className="text-neutral-700 dark:text-neutral-300">@{item.username}</strong> : 'Un fan'} votó por{' '}

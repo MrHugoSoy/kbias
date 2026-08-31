@@ -63,12 +63,14 @@ export default async function GroupDetailPage({ params }: Props) {
   const rank = index + 1;
   const hasVotes = group.total_points > 0;
 
+  // Sin límite fijo: un tope como "últimos 50" puede dejar respuestas
+  // huérfanas cuando su comentario padre es más viejo que eso (ver
+  // /api/comments, que sirve el mismo dato para las cargas posteriores).
   const { data: comments } = await supabase
     .from('group_comments_feed')
     .select('*')
     .eq('group_id', group.group_id)
-    .order('created_at', { ascending: false })
-    .limit(50);
+    .order('created_at', { ascending: false });
 
   return (
     <LegalPage

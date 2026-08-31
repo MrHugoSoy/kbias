@@ -328,7 +328,7 @@ create table if not exists group_comments (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references groups(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  body text,               -- null cuando el autor lo borra (ver deleted_at)
+  body text,               -- null solo si deleted_at está lleno (ver constraint abajo)
   parent_id uuid references group_comments(id) on delete cascade,
   updated_at timestamptz,  -- se llena solo si el autor lo edita — muestra "(editado)"
   deleted_at timestamptz,  -- borrado suave: se limpia el body pero la fila queda
@@ -341,6 +341,17 @@ alter table group_comments add column if not exists updated_at timestamptz;
 alter table group_comments add column if not exists deleted_at timestamptz;
 -- El borrado suave limpia body a null en vez de borrar la fila (ver arriba).
 alter table group_comments alter column body drop not null;
+
+-- Sin esto, un `body = null` sin `deleted_at` (un bug o un UPDATE hecho a
+-- mano fuera de /api/comments) se vería como un comentario "vivo" vacío en
+-- vez de mostrar "Comentario eliminado" — el cliente decide qué mostrar
+-- únicamente mirando deleted_at.
+do $$
+begin
+  alter table group_comments
+    add constraint group_comments_body_or_deleted check (deleted_at is not null or body is not null);
+exception when duplicate_object then null;
+end $$;
 
 create index if not exists idx_group_comments_group_created on group_comments (group_id, created_at desc);
 create index if not exists idx_group_comments_parent on group_comments (parent_id);

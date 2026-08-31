@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { MessageCircle, CornerDownRight, Pencil, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
-import PixelAvatar from './PixelAvatar';
+import UserAvatar from './UserAvatar';
 import AuthModal from './AuthModal';
 
 const COMMENT_MAX_LENGTH = 500;
@@ -34,15 +34,6 @@ function timeAgo(dateStr: string) {
   if (hours < 24) return `Hace ${hours}h`;
   const days = Math.floor(hours / 24);
   return `Hace ${days}d`;
-}
-
-function CommentAuthor({ c, size }: { c: Comment; size: number }) {
-  return c.avatar_url ? (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img src={c.avatar_url} alt="" className="rounded-full object-cover shrink-0" style={{ width: size, height: size }} />
-  ) : (
-    <PixelAvatar seed={c.user_id} species={c.avatar_species} size={size} />
-  );
 }
 
 // Profundidad a partir de la cual una respuesta ya no suma más sangría:
@@ -76,10 +67,11 @@ function CommentItem({
   const [error, setError] = useState('');
 
   const [editing, setEditing] = useState(false);
-  const [editBody, setEditBody] = useState(comment.body ?? '');
+  const [editBody, setEditBody] = useState('');
   const [editSaving, setEditSaving] = useState(false);
   const [editError, setEditError] = useState('');
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
 
   const isDeleted = !!comment.deleted_at;
   const isOwner = !!userId && userId === comment.user_id;
@@ -127,11 +119,24 @@ function CommentItem({
     }
   }
 
+  function openEdit() {
+    // Se toma el body actual justo al abrir (no al montar el componente),
+    // para no pisar una edición hecha desde otra pestaña/dispositivo mientras
+    // este comentario ya estaba en pantalla.
+    setEditBody(comment.body ?? '');
+    setEditError('');
+    setEditing(true);
+  }
+
   async function handleDelete() {
     if (!confirm('¿Eliminar este comentario?')) return;
     setDeleting(true);
-    await onDelete(comment.id);
+    setDeleteError('');
+    const result = await onDelete(comment.id);
     setDeleting(false);
+    if (!result.ok) {
+      setDeleteError(result.error || 'Algo salió mal, intenta de nuevo');
+    }
   }
 
   const children = childrenByParent.get(comment.id) ?? [];
@@ -142,7 +147,7 @@ function CommentItem({
   return (
     <div className="space-y-2">
       <div className="flex gap-3">
-        <CommentAuthor c={comment} size={avatarSize} />
+        <UserAvatar avatarUrl={comment.avatar_url} seed={comment.user_id} species={comment.avatar_species} size={avatarSize} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={textSize + ' font-semibold'}>{comment.username ? `@${comment.username}` : 'Un fan'}</span>
@@ -196,7 +201,7 @@ function CommentItem({
             {isOwner && !isDeleted && !editing && (
               <>
                 <button
-                  onClick={() => setEditing(true)}
+                  onClick={openEdit}
                   className="text-[11px] text-neutral-500 hover:text-pink-500 dark:hover:text-pink-400 flex items-center gap-1"
                 >
                   <Pencil className="w-3 h-3" /> Editar
@@ -211,6 +216,7 @@ function CommentItem({
               </>
             )}
           </div>
+          {deleteError && <p className="text-red-500 text-[11px] mt-1">{deleteError}</p>}
 
           {replying && (
             <div className="mt-2 space-y-1">

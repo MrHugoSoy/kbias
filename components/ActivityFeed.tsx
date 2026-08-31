@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import PixelAvatar from './PixelAvatar';
+import UserAvatar from './UserAvatar';
 
 type FeedItem = {
   id: string;
@@ -91,12 +91,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         {items.map((item) => (
           <div key={item.id} className="px-4 py-3 text-sm flex items-center gap-3">
             <span className="text-xs text-neutral-500 w-16 shrink-0" suppressHydrationWarning>{timeAgo(item.created_at)}</span>
-            {item.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={item.avatar_url} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
-            ) : (
-              <PixelAvatar seed={item.user_id} species={item.avatar_species} size={24} />
-            )}
+            <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={24} />
             <span className="flex-1 min-w-0">
               <span className="block">
                 {item.username ? <strong>@{item.username}</strong> : 'Un fan'} votó por{' '}
