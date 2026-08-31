@@ -5,7 +5,7 @@ import { isOffensive } from '@/lib/moderation';
 
 export const dynamic = 'force-dynamic';
 
-export const COMMENT_MAX_LENGTH = 500;
+const COMMENT_MAX_LENGTH = 500;
 
 // GET /api/comments?groupId=xxx — público, últimos 50 comentarios del grupo.
 export async function GET(req: NextRequest) {
