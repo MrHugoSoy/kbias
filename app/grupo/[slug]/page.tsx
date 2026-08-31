@@ -5,6 +5,7 @@ import { LegalPage } from '@/components/LegalPage';
 import BidButton from '@/components/BidButton';
 import CopyLinkButton from '@/components/CopyLinkButton';
 import ShareButtons from '@/components/ShareButtons';
+import GroupComments from '@/components/GroupComments';
 import { siteUrl } from '@/lib/siteUrl';
 
 export const revalidate = 0;
@@ -62,6 +63,13 @@ export default async function GroupDetailPage({ params }: Props) {
   const rank = index + 1;
   const hasVotes = group.total_points > 0;
 
+  const { data: comments } = await supabase
+    .from('group_comments_feed')
+    .select('*')
+    .eq('group_id', group.group_id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+
   return (
     <LegalPage
       title={group.group_name}
@@ -111,6 +119,8 @@ export default async function GroupDetailPage({ params }: Props) {
           <BidButton groupId={group.group_id} groupName={group.group_name} />
         </div>
       </div>
+
+      <GroupComments groupId={group.group_id} initialComments={comments ?? []} />
     </LegalPage>
   );
 }

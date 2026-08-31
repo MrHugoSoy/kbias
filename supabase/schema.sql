@@ -237,6 +237,9 @@ order by total_points desc, g.name asc;
 -- base tanto del Salón de la Fama (filtra rank = 1 y excluye el mes
 -- actual, que sigue en juego) como de cualquier detalle mes a mes.
 -- ------------------------------------------------------------
+-- monthly_champions depende de esta vista — hay que borrarla primero o
+-- Postgres rechaza el drop de monthly_rankings al volver a correr esto.
+drop view if exists monthly_champions;
 drop view if exists monthly_rankings;
 create view monthly_rankings as
 select
@@ -258,7 +261,6 @@ group by date_trunc('month', v.created_at at time zone 'utc'), g.id, g.name, g.f
 -- Vista: monthly_champions — el #1 de cada mes YA CERRADO (excluye el mes
 -- en curso, que todavía puede cambiar de dueño). Esto es el "registro de
 -- ganadores" del Salón de la Fama.
-drop view if exists monthly_champions;
 create view monthly_champions as
 select *
 from monthly_rankings
@@ -316,6 +318,54 @@ join groups g on g.id = v.group_id
 left join profiles p on p.id = v.user_id
 order by v.created_at desc
 limit 50;
+
+-- ------------------------------------------------------------
+-- Tabla: group_comments — foro de discusión por grupo. Cualquier cuenta
+-- registrada puede comentar; se modera igual que los mensajes de voto
+-- (isOffensive en lib/moderation.ts, validado en /api/comments).
+-- ------------------------------------------------------------
+create table if not exists group_comments (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references groups(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  body text not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_group_comments_group_created on group_comments (group_id, created_at desc);
+
+alter table group_comments enable row level security;
+drop policy if exists "group_comments_public_read" on group_comments;
+create policy "group_comments_public_read" on group_comments for select using (true);
+-- Sin policy de insert/delete para anon/authenticated: todo pasa por
+-- /api/comments, que verifica el token real de sesión y escribe con el
+-- service role — mismo patrón que votes/profiles.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'group_comments'
+  ) then
+    alter publication supabase_realtime add table group_comments;
+  end if;
+end $$;
+
+-- Vista: group_comments_feed — comentarios con username/avatar del autor.
+drop view if exists group_comments_feed;
+create view group_comments_feed as
+select
+  c.id,
+  c.group_id,
+  c.body,
+  c.created_at,
+  c.user_id,
+  p.username,
+  p.avatar_species,
+  p.avatar_url
+from group_comments c
+left join profiles p on p.id = c.user_id
+order by c.created_at desc;
 
 -- ------------------------------------------------------------
 -- Storage: bucket "avatars" para fotos de perfil subidas por el usuario.
