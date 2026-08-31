@@ -204,8 +204,11 @@ begin
 end $$;
 
 -- ------------------------------------------------------------
--- Vista: group_rankings — cada grupo con el TOTAL de votos gratuitos
--- que ha recibido (1 voto = 1 punto). No depende de bids/Stripe.
+-- Vista: group_rankings — cada grupo con el total de votos del MES
+-- calendario (UTC) en curso (1 voto = 1 punto). El ranking se reinicia
+-- solo con volver a filtrar por el mes actual — no hay ningún borrado ni
+-- cron: los votos de meses pasados quedan intactos en `votes` y son la
+-- base del Salón de la Fama (ver monthly_champions más abajo).
 -- ------------------------------------------------------------
 drop view if exists group_rankings;
 create view group_rankings as
@@ -217,11 +220,51 @@ select
   g.slug,
   g.bio,
   g.official_url,
-  coalesce(count(v.id), 0) as total_points
+  coalesce(
+    count(v.id) filter (
+      where v.created_at >= (date_trunc('month', now() at time zone 'utc') at time zone 'utc')
+    ),
+    0
+  ) as total_points
 from groups g
 left join votes v on v.group_id = g.id
 group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url
 order by total_points desc, g.name asc;
+
+-- ------------------------------------------------------------
+-- Vista: monthly_rankings — el ranking completo de cada mes calendario
+-- (UTC) que ya tuvo al menos un voto, incluido el mes en curso. Es la
+-- base tanto del Salón de la Fama (filtra rank = 1 y excluye el mes
+-- actual, que sigue en juego) como de cualquier detalle mes a mes.
+-- ------------------------------------------------------------
+drop view if exists monthly_rankings;
+create view monthly_rankings as
+select
+  date_trunc('month', v.created_at at time zone 'utc')::date as month_start,
+  g.id as group_id,
+  g.name as group_name,
+  g.fandom_name,
+  g.image_url,
+  g.slug,
+  count(v.id) as total_points,
+  rank() over (
+    partition by date_trunc('month', v.created_at at time zone 'utc')
+    order by count(v.id) desc
+  ) as rank
+from votes v
+join groups g on g.id = v.group_id
+group by date_trunc('month', v.created_at at time zone 'utc'), g.id, g.name, g.fandom_name, g.image_url, g.slug;
+
+-- Vista: monthly_champions — el #1 de cada mes YA CERRADO (excluye el mes
+-- en curso, que todavía puede cambiar de dueño). Esto es el "registro de
+-- ganadores" del Salón de la Fama.
+drop view if exists monthly_champions;
+create view monthly_champions as
+select *
+from monthly_rankings
+where rank = 1
+  and month_start < date_trunc('month', now() at time zone 'utc')::date
+order by month_start desc;
 
 -- ------------------------------------------------------------
 -- Tabla: profiles — nombre de usuario único y opcional por cuenta.

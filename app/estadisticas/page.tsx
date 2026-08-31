@@ -40,7 +40,7 @@ export default async function EstadisticasPage() {
       </div>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-pink-500 dark:text-pink-400">Ranking completo</h2>
+        <h2 className="text-lg font-bold text-pink-500 dark:text-pink-400">Ranking completo de este mes</h2>
         {(rankings ?? []).length === 0 ? (
           <p className="text-sm text-neutral-500">Todavía no hay grupos registrados.</p>
         ) : (
@@ -73,6 +73,10 @@ export default async function EstadisticasPage() {
         ¿Quieres ver el podio en vivo? Vuelve al{' '}
         <Link href="/#ranking" className="underline hover:text-pink-500 dark:hover:text-pink-400">
           ranking principal
+        </Link>
+        , o revisa a los campeones de meses anteriores en el{' '}
+        <Link href="/salon-de-la-fama" className="underline hover:text-pink-500 dark:hover:text-pink-400">
+          Salón de la Fama
         </Link>
         .
       </p>

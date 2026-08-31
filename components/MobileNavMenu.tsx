@@ -2,11 +2,11 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Trophy, Zap, Clock, HelpCircle, User } from 'lucide-react';
+import { Menu, X, Home, Trophy, Zap, Award, HelpCircle, User } from 'lucide-react';
 
 // Nav de escritorio vive oculta en celular (md:hidden en el <nav> del
 // header) — este botón le da a los mismos links (INICIO/RANKING/CÓMO
-// FUNCIONA/HISTORIAL/FAQ) una forma de abrirse en pantallas chicas.
+// FUNCIONA/SALÓN DE LA FAMA/FAQ) una forma de abrirse en pantallas chicas.
 export default function MobileNavMenu() {
   const [open, setOpen] = useState(false);
 
@@ -34,9 +34,9 @@ export default function MobileNavMenu() {
             <a href="#como-funciona" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Zap className="w-4 h-4" /> CÓMO FUNCIONA
             </a>
-            <a href="#historial-mobile" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              <Clock className="w-4 h-4" /> HISTORIAL
-            </a>
+            <Link href="/salon-de-la-fama" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Award className="w-4 h-4" /> SALÓN DE LA FAMA
+            </Link>
             <a href="#faq" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <HelpCircle className="w-4 h-4" /> FAQ
             </a>

@@ -25,9 +25,9 @@ export default async function SobreNosotrosPage() {
           más a su grupo, cada quien pudiera demostrarlo con hechos?
         </p>
         <p>
-          Aquí no hay categorías ni ciclos que resetean cada día. Hay un solo trono, y lo tiene el grupo con más
-          votos en total. Votar es gratis — solo necesitas una cuenta, un voto al día, y eso es lo único que decide
-          quién manda.
+          Aquí no hay categorías. Hay un solo trono cada mes, y lo tiene el grupo con más votos en ese mes calendario
+          — el ranking se reinicia el día 1 de cada mes, y los campeones anteriores quedan en el Salón de la Fama.
+          Votar es gratis — solo necesitas una cuenta, un voto cada 24 horas, y eso es lo único que decide quién manda.
         </p>
       </LegalSection>
 

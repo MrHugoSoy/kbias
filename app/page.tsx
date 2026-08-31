@@ -7,7 +7,6 @@ import BidForm from '@/components/BidForm';
 import OnlineBar from '@/components/OnlineBar';
 import DonorSidebar from '@/components/DonorSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
-import HistorialLink from '@/components/HistorialLink';
 import MobileNavMenu from '@/components/MobileNavMenu';
 import ProfileAvatarIcon from '@/components/ProfileAvatarIcon';
 import { FooterLinks } from '@/components/LegalPage';
@@ -219,6 +218,14 @@ export default async function Home() {
     console.error('Error cargando datos de Supabase:', { feedError, groupsError, rankingsError });
   }
 
+  // El ranking (group_rankings) cuenta solo los votos del mes calendario
+  // (UTC) en curso — se "reinicia" solo, sin ningún borrado ni cron, al
+  // entrar el mes nuevo. Estas dos fechas son solo para el texto de abajo.
+  const now = new Date();
+  const currentMonthLabel = now.toLocaleDateString('es-MX', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const nextMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  const nextMonthLabel = nextMonthStart.toLocaleDateString('es-MX', { month: 'long', timeZone: 'UTC' });
+
   // Solo los grupos que ya recibieron al menos un voto ocupan un puesto en el podio.
   // Sin eso, se llenaría el top 8 con grupos en 0 votos solo por orden alfabético.
   const bidded = (rankings ?? []).filter((r) => r.total_points > 0);
@@ -255,7 +262,7 @@ export default async function Home() {
             <a href="#" className="text-pink-500 border-b-2 border-pink-500 pb-1">INICIO</a>
             <a href="#ranking">RANKING</a>
             <a href="#como-funciona">CÓMO FUNCIONA</a>
-            <HistorialLink />
+            <Link href="/salon-de-la-fama">SALÓN DE LA FAMA</Link>
             <a href="#faq">FAQ</a>
             <Link href="/perfil" title="Mi perfil" className="flex items-center">
               <ProfileAvatarIcon size={26} />
@@ -271,6 +278,10 @@ export default async function Home() {
 
         {/* Podio: top 3 */}
         <section id="ranking" className="space-y-4">
+          <p className="text-center text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
+            Ranking de {currentMonthLabel} — se reinicia el 1 de {nextMonthLabel}
+          </p>
+
           {top3.length === 0 && (
             <div className="text-center py-6 space-y-2">
               <LogoKW className="w-24 h-24 mx-auto text-pink-500 fill-pink-500/20 animate-bounce" />
@@ -414,7 +425,7 @@ export default async function Home() {
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">04</p>
               <p className="font-semibold">Tu grupo sube en el ranking</p>
-              <p className="text-sm text-neutral-500">El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más votos.</p>
+              <p className="text-sm text-neutral-500">El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más votos ese mes.</p>
             </div>
           </div>
         </section>
@@ -439,7 +450,14 @@ export default async function Home() {
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Cómo se decide quién tiene el #1?</p>
-              <p className="text-sm text-neutral-500">Gana el grupo con más votos acumulados EN TOTAL — se suman todos los votos que ha recibido ese grupo desde siempre, no solo los de hoy.</p>
+              <p className="text-sm text-neutral-500">
+                Gana el grupo con más votos acumulados en el mes calendario en curso. El ranking se reinicia el día 1
+                de cada mes — los campeones de meses anteriores quedan en el{' '}
+                <Link href="/salon-de-la-fama" className="underline hover:text-pink-400">
+                  Salón de la Fama
+                </Link>
+                .
+              </p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">Represento a un grupo, ¿puedo reclamar su perfil?</p>
@@ -463,8 +481,8 @@ export default async function Home() {
           </div>
           <div>
             <Zap className="w-6 h-6 mx-auto mb-1 text-pink-500" />
-            <p className="font-semibold text-neutral-700 dark:text-neutral-300">SIN RESETS</p>
-            <p>El #1 se mantiene hasta que otro grupo acumule más votos.</p>
+            <p className="font-semibold text-neutral-700 dark:text-neutral-300">RANKING MENSUAL</p>
+            <p>El #1 se mantiene hasta que otro grupo acumule más votos ese mes.</p>
           </div>
           <div>
             <Trophy className="w-6 h-6 mx-auto mb-1 text-pink-500" />

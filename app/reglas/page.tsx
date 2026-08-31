@@ -12,10 +12,17 @@ export default function ReglasPage() {
     <LegalPage title="Reglas" subtitle="Cómo funciona el juego y qué se permite en K-pop Wars.">
       <LegalSection title="1. Cómo se gana el #1">
         <p>
-          El puesto #1 lo tiene el grupo con <strong>más votos en total</strong> — se suman todos los votos que ha
-          recibido ese grupo desde siempre, sin importar cuándo se emitieron.
+          El puesto #1 lo tiene el grupo con <strong>más votos del mes calendario en curso</strong> — el ranking se
+          reinicia el día 1 de cada mes, sin importar quién iba ganando el mes anterior.
         </p>
-        <p>El #1 se mantiene hasta que otro grupo acumule más votos. No hay resets ni ciclos.</p>
+        <p>
+          El #1 se mantiene hasta que otro grupo acumule más votos ese mismo mes. Los campeones de cada mes quedan
+          registrados para siempre en el{' '}
+          <Link href="/salon-de-la-fama" className="underline hover:text-pink-400">
+            Salón de la Fama
+          </Link>
+          .
+        </p>
       </LegalSection>
 
       <LegalSection title="2. Esto es un voto, no una apuesta">
