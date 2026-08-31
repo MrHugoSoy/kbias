@@ -232,7 +232,11 @@ export default async function Home() {
   const rankedOverflowCount = Math.max(bidded.length - 8, 0);
 
   // Contador de visitas: incrementa y lee el total en una sola llamada atómica (RPC).
-  const { data: totalVisits } = await supabase.rpc('increment_site_visits');
+  // Se salta en local (`npm run dev`) para que las pruebas no inflen el número real.
+  const { data: totalVisits } =
+    process.env.NODE_ENV === 'production'
+      ? await supabase.rpc('increment_site_visits')
+      : await supabase.from('site_stats').select('total_visits').eq('id', 1).maybeSingle().then((r) => ({ data: r.data?.total_visits ?? 0 }));
   const totalVotes = (rankings ?? []).reduce((sum, r) => sum + r.total_points, 0);
 
   return (

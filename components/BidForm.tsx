@@ -15,11 +15,17 @@ export default function BidForm({ groups }: { groups: Group[] }) {
   const [showAuth, setShowAuth] = useState(false);
   const [cooldownGroupId, setCooldownGroupId] = useState<string | null>(null);
   const [nextVoteAt, setNextVoteAt] = useState<string | null>(null);
+  // Evita mostrar el formulario de voto por un instante y luego cambiar al
+  // aviso de "ya votaste" cuando la sesión sí tiene cooldown activo.
+  const [checkingStatus, setCheckingStatus] = useState(true);
 
   useEffect(() => {
     async function checkStatus() {
       const token = await getAccessToken();
-      if (!token) return;
+      if (!token) {
+        setCheckingStatus(false);
+        return;
+      }
       const res = await authFetch('/api/vote');
       if (res.ok) {
         const data = await res.json();
@@ -28,6 +34,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
           setNextVoteAt(data.nextVoteAt);
         }
       }
+      setCheckingStatus(false);
     }
     checkStatus();
   }, []);
@@ -83,7 +90,12 @@ export default function BidForm({ groups }: { groups: Group[] }) {
         </div>
       </div>
 
-      {cooldownGroupId ? (
+      {checkingStatus ? (
+        <div className="space-y-3">
+          <div className="h-11 rounded-lg bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
+          <div className="h-12 rounded-lg bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
+        </div>
+      ) : cooldownGroupId ? (
         <p className="text-sm text-green-600 dark:text-green-400">
           ✓ Ya votaste por <strong>{votedGroupName ?? 'tu grupo'}</strong>. Podrás votar de nuevo el {nextVoteLabel}.
         </p>
