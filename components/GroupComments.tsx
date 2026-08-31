@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MessageCircle, CornerDownRight } from 'lucide-react';
+import { MessageCircle, CornerDownRight, Pencil, Trash2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import PixelAvatar from './PixelAvatar';
@@ -12,14 +12,18 @@ const COMMENT_MAX_LENGTH = 500;
 type Comment = {
   id: string;
   group_id: string;
-  body: string;
+  body: string | null;
   parent_id: string | null;
   created_at: string;
+  updated_at: string | null;
+  deleted_at: string | null;
   user_id: string;
   username: string | null;
   avatar_species: string | null;
   avatar_url: string | null;
 };
+
+type ActionResult = { ok: boolean; error?: string };
 
 function timeAgo(dateStr: string) {
   const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -53,19 +57,32 @@ function CommentItem({
   depth,
   userId,
   onReply,
+  onEdit,
+  onDelete,
   onRequestAuth,
 }: {
   comment: Comment;
   childrenByParent: Map<string, Comment[]>;
   depth: number;
   userId: string | null;
-  onReply: (body: string, parentId: string) => Promise<{ ok: boolean; error?: string }>;
+  onReply: (body: string, parentId: string) => Promise<ActionResult>;
+  onEdit: (commentId: string, body: string) => Promise<ActionResult>;
+  onDelete: (commentId: string) => Promise<ActionResult>;
   onRequestAuth: (afterAuth: () => void) => void;
 }) {
   const [replying, setReplying] = useState(false);
   const [replyBody, setReplyBody] = useState('');
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
+
+  const [editing, setEditing] = useState(false);
+  const [editBody, setEditBody] = useState(comment.body ?? '');
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+  const [deleting, setDeleting] = useState(false);
+
+  const isDeleted = !!comment.deleted_at;
+  const isOwner = !!userId && userId === comment.user_id;
 
   async function submitReply() {
     const trimmed = replyBody.trim();
@@ -93,9 +110,34 @@ function CommentItem({
     setReplying((v) => !v);
   }
 
+  async function submitEdit() {
+    const trimmed = editBody.trim();
+    if (!trimmed) {
+      setEditError('Escribe un comentario');
+      return;
+    }
+    setEditSaving(true);
+    setEditError('');
+    const result = await onEdit(comment.id, trimmed);
+    setEditSaving(false);
+    if (result.ok) {
+      setEditing(false);
+    } else {
+      setEditError(result.error || 'Algo salió mal, intenta de nuevo');
+    }
+  }
+
+  async function handleDelete() {
+    if (!confirm('¿Eliminar este comentario?')) return;
+    setDeleting(true);
+    await onDelete(comment.id);
+    setDeleting(false);
+  }
+
   const children = childrenByParent.get(comment.id) ?? [];
   const nextDepth = Math.min(depth + 1, MAX_INDENT_DEPTH);
   const avatarSize = depth === 0 ? 32 : 24;
+  const textSize = depth === 0 ? 'text-sm' : 'text-xs';
 
   return (
     <div className="space-y-2">
@@ -103,22 +145,72 @@ function CommentItem({
         <CommentAuthor c={comment} size={avatarSize} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className={depth === 0 ? 'text-sm font-semibold' : 'text-xs font-semibold'}>
-              {comment.username ? `@${comment.username}` : 'Un fan'}
-            </span>
+            <span className={textSize + ' font-semibold'}>{comment.username ? `@${comment.username}` : 'Un fan'}</span>
             <span className="text-[10px] text-neutral-500" suppressHydrationWarning>
               {timeAgo(comment.created_at)}
+              {comment.updated_at && !isDeleted && ' · editado'}
             </span>
           </div>
-          <p className={(depth === 0 ? 'text-sm' : 'text-xs') + ' text-neutral-700 dark:text-neutral-300 text-pretty break-words'}>
-            {comment.body}
-          </p>
-          <button
-            onClick={handleReplyClick}
-            className="text-[11px] text-neutral-500 hover:text-pink-500 dark:hover:text-pink-400 mt-1 flex items-center gap-1"
-          >
-            <CornerDownRight className="w-3 h-3" /> Responder
-          </button>
+
+          {isDeleted ? (
+            <p className={textSize + ' text-neutral-400 dark:text-neutral-600 italic'}>Comentario eliminado</p>
+          ) : editing ? (
+            <div className="mt-1 space-y-1">
+              <textarea
+                value={editBody}
+                onChange={(e) => setEditBody(e.target.value.slice(0, COMMENT_MAX_LENGTH))}
+                rows={2}
+                autoFocus
+                className="w-full bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 text-xs"
+              />
+              <div className="flex items-center justify-between">
+                {editError && <p className="text-red-500 text-[11px]">{editError}</p>}
+                <div className="flex gap-2 ml-auto">
+                  <button
+                    onClick={() => { setEditing(false); setEditBody(comment.body ?? ''); setEditError(''); }}
+                    className="text-[11px] text-neutral-500 px-2"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={submitEdit}
+                    disabled={editSaving}
+                    className="bg-pink-600 hover:bg-pink-500 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition disabled:opacity-50"
+                  >
+                    {editSaving ? 'Guardando...' : 'Guardar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className={textSize + ' text-neutral-700 dark:text-neutral-300 text-pretty break-words'}>{comment.body}</p>
+          )}
+
+          <div className="flex items-center gap-3 mt-1">
+            <button
+              onClick={handleReplyClick}
+              className="text-[11px] text-neutral-500 hover:text-pink-500 dark:hover:text-pink-400 flex items-center gap-1"
+            >
+              <CornerDownRight className="w-3 h-3" /> Responder
+            </button>
+            {isOwner && !isDeleted && !editing && (
+              <>
+                <button
+                  onClick={() => setEditing(true)}
+                  className="text-[11px] text-neutral-500 hover:text-pink-500 dark:hover:text-pink-400 flex items-center gap-1"
+                >
+                  <Pencil className="w-3 h-3" /> Editar
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="text-[11px] text-neutral-500 hover:text-red-500 flex items-center gap-1 disabled:opacity-50"
+                >
+                  <Trash2 className="w-3 h-3" /> {deleting ? 'Eliminando...' : 'Eliminar'}
+                </button>
+              </>
+            )}
+          </div>
 
           {replying && (
             <div className="mt-2 space-y-1">
@@ -166,6 +258,8 @@ function CommentItem({
                   depth={nextDepth}
                   userId={userId}
                   onReply={onReply}
+                  onEdit={onEdit}
+                  onDelete={onDelete}
                   onRequestAuth={onRequestAuth}
                 />
               ))}
@@ -204,9 +298,11 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
           const row = payload.new as {
             id: string;
             group_id: string;
-            body: string;
+            body: string | null;
             parent_id: string | null;
             created_at: string;
+            updated_at: string | null;
+            deleted_at: string | null;
             user_id: string;
           };
           setComments((prev) => {
@@ -226,6 +322,23 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
           }
         }
       )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'group_comments', filter: `group_id=eq.${groupId}` },
+        (payload) => {
+          const row = payload.new as {
+            id: string;
+            body: string | null;
+            updated_at: string | null;
+            deleted_at: string | null;
+          };
+          setComments((prev) =>
+            prev.map((c) =>
+              c.id === row.id ? { ...c, body: row.body, updated_at: row.updated_at, deleted_at: row.deleted_at } : c
+            )
+          );
+        }
+      )
       .subscribe();
 
     return () => {
@@ -233,7 +346,7 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
     };
   }, [groupId]);
 
-  async function postComment(commentBody: string, parentId?: string): Promise<{ ok: boolean; error?: string }> {
+  async function postComment(commentBody: string, parentId?: string): Promise<ActionResult> {
     try {
       const res = await authFetch('/api/comments', {
         method: 'POST',
@@ -245,6 +358,42 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
         return { ok: false, error: data.error || 'Algo salió mal' };
       }
       setComments((prev) => (prev.some((c) => c.id === data.comment.id) ? prev : [data.comment, ...prev]));
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Error de conexión, intenta de nuevo' };
+    }
+  }
+
+  async function editComment(commentId: string, newBody: string): Promise<ActionResult> {
+    try {
+      const res = await authFetch('/api/comments', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentId, body: newBody }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { ok: false, error: data.error || 'Algo salió mal' };
+      }
+      setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, ...data.comment } : c)));
+      return { ok: true };
+    } catch {
+      return { ok: false, error: 'Error de conexión, intenta de nuevo' };
+    }
+  }
+
+  async function deleteComment(commentId: string): Promise<ActionResult> {
+    try {
+      const res = await authFetch('/api/comments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentId }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        return { ok: false, error: data.error || 'Algo salió mal' };
+      }
+      setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, ...data.comment } : c)));
       return { ok: true };
     } catch {
       return { ok: false, error: 'Error de conexión, intenta de nuevo' };
@@ -338,6 +487,8 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
               depth={0}
               userId={userId}
               onReply={postComment}
+              onEdit={editComment}
+              onDelete={deleteComment}
               onRequestAuth={requestAuth}
             />
           </div>

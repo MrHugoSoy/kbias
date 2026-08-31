@@ -96,3 +96,107 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Algo salió mal, intenta de nuevo' }, { status: 500 });
   }
 }
+
+// PATCH /api/comments — body: { commentId: string, body: string }
+//
+// Solo el autor puede editar su propio comentario. Marca updated_at para
+// que el feed muestre "(editado)".
+export async function PATCH(req: NextRequest) {
+  try {
+    const supabase = getSupabaseServiceClient();
+    const userId = await getVerifiedUserId(req, supabase);
+    if (!userId) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    const { commentId, body } = await req.json();
+    if (!commentId || !body || !body.trim()) {
+      return NextResponse.json({ error: 'Escribe un comentario' }, { status: 400 });
+    }
+    const trimmed = body.trim();
+    if (trimmed.length > COMMENT_MAX_LENGTH) {
+      return NextResponse.json({ error: `El comentario no puede pasar de ${COMMENT_MAX_LENGTH} caracteres` }, { status: 400 });
+    }
+    if (isOffensive(trimmed)) {
+      return NextResponse.json({ error: 'Ese comentario no está permitido. Intenta con otro.' }, { status: 400 });
+    }
+
+    const { data: existing } = await supabase
+      .from('group_comments')
+      .select('user_id, deleted_at')
+      .eq('id', commentId)
+      .maybeSingle();
+    if (!existing) {
+      return NextResponse.json({ error: 'Comentario no encontrado' }, { status: 404 });
+    }
+    if (existing.user_id !== userId) {
+      return NextResponse.json({ error: 'No puedes editar el comentario de otra persona' }, { status: 403 });
+    }
+    if (existing.deleted_at) {
+      return NextResponse.json({ error: 'Este comentario ya fue eliminado' }, { status: 400 });
+    }
+
+    const { data: updated, error } = await supabase
+      .from('group_comments')
+      .update({ body: trimmed, updated_at: new Date().toISOString() })
+      .eq('id', commentId)
+      .select('id, group_id, body, parent_id, created_at, updated_at, deleted_at, user_id')
+      .single();
+
+    if (error || !updated) {
+      return NextResponse.json({ error: 'Algo salió mal, intenta de nuevo' }, { status: 500 });
+    }
+
+    return NextResponse.json({ comment: updated });
+  } catch (err) {
+    console.error('Error en PATCH /api/comments:', err);
+    return NextResponse.json({ error: 'Algo salió mal, intenta de nuevo' }, { status: 500 });
+  }
+}
+
+// DELETE /api/comments — body: { commentId: string }
+//
+// Borrado suave: limpia el body y marca deleted_at, pero deja la fila para
+// no romper el hilo de respuestas que cuelgan de ella.
+export async function DELETE(req: NextRequest) {
+  try {
+    const supabase = getSupabaseServiceClient();
+    const userId = await getVerifiedUserId(req, supabase);
+    if (!userId) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+    }
+
+    const { commentId } = await req.json();
+    if (!commentId) {
+      return NextResponse.json({ error: 'Falta commentId' }, { status: 400 });
+    }
+
+    const { data: existing } = await supabase
+      .from('group_comments')
+      .select('user_id')
+      .eq('id', commentId)
+      .maybeSingle();
+    if (!existing) {
+      return NextResponse.json({ error: 'Comentario no encontrado' }, { status: 404 });
+    }
+    if (existing.user_id !== userId) {
+      return NextResponse.json({ error: 'No puedes eliminar el comentario de otra persona' }, { status: 403 });
+    }
+
+    const { data: updated, error } = await supabase
+      .from('group_comments')
+      .update({ body: null, deleted_at: new Date().toISOString() })
+      .eq('id', commentId)
+      .select('id, group_id, body, parent_id, created_at, updated_at, deleted_at, user_id')
+      .single();
+
+    if (error || !updated) {
+      return NextResponse.json({ error: 'Algo salió mal, intenta de nuevo' }, { status: 500 });
+    }
+
+    return NextResponse.json({ comment: updated });
+  } catch (err) {
+    console.error('Error en DELETE /api/comments:', err);
+    return NextResponse.json({ error: 'Algo salió mal, intenta de nuevo' }, { status: 500 });
+  }
+}

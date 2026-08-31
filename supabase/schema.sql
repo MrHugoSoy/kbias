@@ -328,12 +328,19 @@ create table if not exists group_comments (
   id uuid primary key default gen_random_uuid(),
   group_id uuid not null references groups(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
-  body text not null,
+  body text,               -- null cuando el autor lo borra (ver deleted_at)
   parent_id uuid references group_comments(id) on delete cascade,
+  updated_at timestamptz,  -- se llena solo si el autor lo edita — muestra "(editado)"
+  deleted_at timestamptz,  -- borrado suave: se limpia el body pero la fila queda
+                           -- para no romper el hilo de respuestas colgadas de ella
   created_at timestamptz default now()
 );
 
 alter table group_comments add column if not exists parent_id uuid references group_comments(id) on delete cascade;
+alter table group_comments add column if not exists updated_at timestamptz;
+alter table group_comments add column if not exists deleted_at timestamptz;
+-- El borrado suave limpia body a null en vez de borrar la fila (ver arriba).
+alter table group_comments alter column body drop not null;
 
 create index if not exists idx_group_comments_group_created on group_comments (group_id, created_at desc);
 create index if not exists idx_group_comments_parent on group_comments (parent_id);
@@ -364,6 +371,8 @@ select
   c.body,
   c.parent_id,
   c.created_at,
+  c.updated_at,
+  c.deleted_at,
   c.user_id,
   p.username,
   p.avatar_species,
