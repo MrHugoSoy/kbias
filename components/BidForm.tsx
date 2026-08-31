@@ -4,12 +4,14 @@ import { useEffect, useState } from 'react';
 import { ChevronDown, Gavel, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch, getAccessToken } from '@/lib/authFetch';
+import { MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
 import AuthModal from './AuthModal';
 
 type Group = { id: string; name: string; fandom_name: string | null };
 
 export default function BidForm({ groups }: { groups: Group[] }) {
   const [groupId, setGroupId] = useState(groups[0]?.id ?? '');
+  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [showAuth, setShowAuth] = useState(false);
@@ -50,7 +52,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
       const res = await authFetch('/api/vote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId }),
+        body: JSON.stringify({ groupId, message: message.trim() || undefined }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -117,6 +119,20 @@ export default function BidForm({ groups }: { groups: Group[] }) {
               </select>
               <ChevronDown className="w-4 h-4 text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
+          </div>
+
+          <div>
+            <label className="text-xs text-neutral-500 uppercase tracking-wide">Mensaje (opcional)</label>
+            <textarea
+              value={message}
+              onChange={(e) => setMessage(e.target.value.slice(0, MESSAGE_MAX_LENGTH))}
+              placeholder="Deja un mensaje para el feed en vivo"
+              rows={2}
+              className="w-full mt-1 bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 text-sm"
+            />
+            <p className="text-[10px] text-neutral-500 text-right mt-1">
+              {message.length}/{MESSAGE_MAX_LENGTH}
+            </p>
           </div>
 
           {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}

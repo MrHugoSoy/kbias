@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import AuthModal from './AuthModal';
+import VoteMessageModal from './VoteMessageModal';
 
 export default function BidButton({
   groupId,
@@ -15,23 +16,25 @@ export default function BidButton({
   compact?: boolean;
 }) {
   const [showAuth, setShowAuth] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<'ok' | 'error' | null>(null);
   const [message, setMessage] = useState('');
 
-  async function castVote() {
+  async function castVote(voteMessage: string) {
     setLoading(true);
     setResult(null);
     try {
       const res = await authFetch('/api/vote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId }),
+        body: JSON.stringify({ groupId, message: voteMessage || undefined }),
       });
       const data = await res.json();
       if (res.ok) {
         setResult('ok');
         setMessage('¡Voto registrado!');
+        setShowMessageModal(false);
       } else {
         setResult('error');
         setMessage(data.error || 'Algo salió mal');
@@ -51,7 +54,7 @@ export default function BidButton({
       setShowAuth(true);
       return;
     }
-    castVote();
+    setShowMessageModal(true);
   }
 
   return (
@@ -84,8 +87,17 @@ export default function BidButton({
           onClose={() => setShowAuth(false)}
           onAuthed={() => {
             setShowAuth(false);
-            castVote();
+            setShowMessageModal(true);
           }}
+        />
+      )}
+
+      {showMessageModal && (
+        <VoteMessageModal
+          groupName={groupName}
+          loading={loading}
+          onClose={() => setShowMessageModal(false)}
+          onConfirm={castVote}
         />
       )}
     </>

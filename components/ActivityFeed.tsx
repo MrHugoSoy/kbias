@@ -14,6 +14,7 @@ type FeedItem = {
   username: string | null;
   avatar_species: string | null;
   avatar_url: string | null;
+  message: string | null;
 };
 
 export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[] }) {
@@ -32,7 +33,13 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'votes' },
         async (payload) => {
-          const newVote = payload.new as { id: string; group_id: string; created_at: string; user_id: string };
+          const newVote = payload.new as {
+            id: string;
+            group_id: string;
+            created_at: string;
+            user_id: string;
+            message: string | null;
+          };
 
           const [{ data: group }, { data: profile }] = await Promise.all([
             supabase.from('groups').select('name, fandom_name').eq('id', newVote.group_id).single(),
@@ -49,6 +56,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             username: profile?.username ?? null,
             avatar_species: profile?.avatar_species ?? null,
             avatar_url: profile?.avatar_url ?? null,
+            message: newVote.message ?? null,
           };
 
           setItems((prev) => [feedItem, ...prev].slice(0, 50));
@@ -89,9 +97,16 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             ) : (
               <PixelAvatar seed={item.user_id} species={item.avatar_species} size={24} />
             )}
-            <span className="flex-1">
-              {item.username ? <strong>@{item.username}</strong> : 'Un fan'} votó por{' '}
-              <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
+            <span className="flex-1 min-w-0">
+              <span className="block">
+                {item.username ? <strong>@{item.username}</strong> : 'Un fan'} votó por{' '}
+                <strong className="text-pink-600 dark:text-pink-400">{item.group_name}</strong>
+              </span>
+              {item.message && (
+                <span className="block text-xs text-neutral-500 dark:text-neutral-400 italic truncate">
+                  "{item.message}"
+                </span>
+              )}
             </span>
           </div>
         ))}

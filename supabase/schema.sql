@@ -130,8 +130,11 @@ create table if not exists votes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   group_id uuid not null references groups(id) on delete cascade,
+  message text,                          -- mensaje corto opcional del votante (máx. 140, validado en /api/vote)
   created_at timestamptz default now()
 );
+
+alter table votes add column if not exists message text;
 
 -- Reemplazado por el cooldown de 24h en cast_vote() — este índice solo
 -- limitaba por día calendario UTC, que es justo el bug que se reporta.
@@ -147,7 +150,12 @@ create index if not exists idx_votes_user_created on votes (user_id, created_at 
 -- cualquiera inserte, y ambos pasarían. SECURITY DEFINER + el REVOKE/GRANT
 -- de abajo aseguran que solo el service role (el usado por /api/vote,
 -- después de verificar el token real) puede llamar esta función.
-create or replace function cast_vote(p_user_id uuid, p_group_id uuid)
+-- La versión anterior (sin p_message) es una firma distinta para Postgres
+-- (el tipo de los parámetros es parte de la identidad de la función) — hay
+-- que borrarla explícitamente o quedaría duplicada junto a esta.
+drop function if exists cast_vote(uuid, uuid);
+
+create or replace function cast_vote(p_user_id uuid, p_group_id uuid, p_message text default null)
 returns table (id uuid, created_at timestamptz)
 language plpgsql
 security definer
@@ -169,14 +177,14 @@ begin
   end if;
 
   return query
-  insert into votes (user_id, group_id)
-  values (p_user_id, p_group_id)
+  insert into votes (user_id, group_id, message)
+  values (p_user_id, p_group_id, p_message)
   returning votes.id, votes.created_at;
 end;
 $$;
 
-revoke all on function cast_vote(uuid, uuid) from public;
-grant execute on function cast_vote(uuid, uuid) to service_role;
+revoke all on function cast_vote(uuid, uuid, text) from public;
+grant execute on function cast_vote(uuid, uuid, text) to service_role;
 
 alter table votes enable row level security;
 drop policy if exists "votes_public_read" on votes;
@@ -256,6 +264,7 @@ select
   g.fandom_name,
   v.created_at,
   v.user_id,
+  v.message,
   p.username,
   p.avatar_species,
   p.avatar_url

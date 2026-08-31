@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabase';
 import { getVerifiedUserId } from '@/lib/authServer';
+import { isOffensive } from '@/lib/moderation';
+import { MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
 
 export const dynamic = 'force-dynamic';
 
@@ -60,9 +62,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { groupId } = await req.json();
+    const { groupId, message } = await req.json();
     if (!groupId) {
       return NextResponse.json({ error: 'Falta groupId' }, { status: 400 });
+    }
+
+    if (message) {
+      if (message.length > MESSAGE_MAX_LENGTH) {
+        return NextResponse.json({ error: `El mensaje no puede pasar de ${MESSAGE_MAX_LENGTH} caracteres` }, { status: 400 });
+      }
+      if (isOffensive(message)) {
+        return NextResponse.json({ error: 'Ese mensaje no está permitido. Intenta con otro.' }, { status: 400 });
+      }
     }
 
     const { data: group } = await supabase.from('groups').select('id').eq('id', groupId).maybeSingle();
@@ -85,7 +96,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const { error } = await supabase.rpc('cast_vote', { p_user_id: userId, p_group_id: groupId });
+    const { error } = await supabase.rpc('cast_vote', {
+      p_user_id: userId,
+      p_group_id: groupId,
+      p_message: message?.trim() || null,
+    });
     if (error) {
       // La función en la base de datos rechazó el voto (condición de
       // carrera: alguien más ganó la carrera desde la consulta de arriba).
