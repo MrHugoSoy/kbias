@@ -9,6 +9,7 @@ import DonorSidebar from '@/components/DonorSidebar';
 import ThemeToggle from '@/components/ThemeToggle';
 import MobileNavMenu from '@/components/MobileNavMenu';
 import ProfileAvatarIcon from '@/components/ProfileAvatarIcon';
+import NotificationBell from '@/components/NotificationBell';
 import { FooterLinks } from '@/components/LegalPage';
 import LogoKW from '@/components/icons/LogoKW';
 
@@ -268,6 +269,7 @@ export default async function Home() {
               <ProfileAvatarIcon size={26} />
             </Link>
           </nav>
+          <NotificationBell />
           <ThemeToggle />
           <MobileNavMenu />
         </div>

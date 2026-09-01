@@ -145,7 +145,7 @@ function CommentItem({
   const textSize = depth === 0 ? 'text-sm' : 'text-xs';
 
   return (
-    <div className="space-y-2">
+    <div id={`comment-${comment.id}`} className="space-y-2 scroll-mt-20">
       <div className="flex gap-3">
         <UserAvatar avatarUrl={comment.avatar_url} seed={comment.user_id} species={comment.avatar_species} size={avatarSize} />
         <div className="flex-1 min-w-0">

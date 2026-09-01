@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
     const [{ data: group }, { data: parent }] = await Promise.all([
       supabase.from('groups').select('id').eq('id', groupId).maybeSingle(),
       parentId
-        ? supabase.from('group_comments').select('group_id').eq('id', parentId).maybeSingle()
+        ? supabase.from('group_comments').select('group_id, user_id').eq('id', parentId).maybeSingle()
         : Promise.resolve({ data: null }),
     ]);
     if (!group) {
@@ -92,6 +92,19 @@ export async function POST(req: NextRequest) {
 
     if (error || !inserted) {
       return NextResponse.json({ error: 'Algo salió mal, intenta de nuevo' }, { status: 500 });
+    }
+
+    // Alerta al autor del comentario original — nunca a uno mismo, y solo
+    // si el comentario respondido sigue teniendo dueño (no se puede fallar
+    // silenciosamente algo que el usuario ya vio confirmado: si esto
+    // truena, no debe tumbar la respuesta que sí se guardó).
+    if (parent && parent.user_id !== userId) {
+      await supabase.from('notifications').insert({
+        user_id: parent.user_id,
+        actor_id: userId,
+        comment_id: inserted.id,
+        group_id: groupId,
+      });
     }
 
     const { data: profile } = await supabase

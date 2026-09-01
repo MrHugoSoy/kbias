@@ -393,6 +393,63 @@ left join profiles p on p.id = c.user_id
 order by c.created_at desc;
 
 -- ------------------------------------------------------------
+-- Tabla: notifications — alerta cuando alguien responde uno de tus
+-- comentarios. Solo se genera para respuestas de otra persona (nunca te
+-- notificas a ti mismo); se inserta desde /api/comments al crear la
+-- respuesta, con el service role.
+-- ------------------------------------------------------------
+create table if not exists notifications (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,   -- quien recibe la alerta
+  actor_id uuid not null references auth.users(id) on delete cascade,  -- quien respondió
+  comment_id uuid not null references group_comments(id) on delete cascade,
+  group_id uuid not null references groups(id) on delete cascade,
+  read_at timestamptz,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_notifications_user_created on notifications (user_id, created_at desc);
+
+alter table notifications enable row level security;
+-- Sin policy de select/insert para anon/authenticated: todo pasa por
+-- /api/notifications (leer/marcar leído) y /api/comments (crear al
+-- responder), que verifican el token real de sesión y usan el service role.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'notifications'
+  ) then
+    alter publication supabase_realtime add table notifications;
+  end if;
+end $$;
+
+-- Vista: notifications_feed — la alerta con los datos ya armados para
+-- mostrarla (quién respondió, en qué grupo, y el texto de la respuesta).
+drop view if exists notifications_feed;
+create view notifications_feed as
+select
+  n.id,
+  n.user_id,
+  n.comment_id,
+  n.group_id,
+  n.read_at,
+  n.created_at,
+  g.name as group_name,
+  g.slug as group_slug,
+  c.body as comment_body,
+  c.parent_id,
+  p.username as actor_username,
+  p.avatar_species as actor_avatar_species,
+  p.avatar_url as actor_avatar_url
+from notifications n
+join groups g on g.id = n.group_id
+join group_comments c on c.id = n.comment_id
+left join profiles p on p.id = n.actor_id
+order by n.created_at desc;
+
+-- ------------------------------------------------------------
 -- Storage: bucket "avatars" para fotos de perfil subidas por el usuario.
 -- Público de lectura; cada quien solo puede escribir dentro de su propia
 -- carpeta ({user_id}/archivo.ext), verificado por RLS con auth.uid().
