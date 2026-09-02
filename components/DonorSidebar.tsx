@@ -170,11 +170,14 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
         onMouseLeave={resume}
         onScroll={handleScroll}
         className={
+          // La barra queda invisible en reposo (el auto-scroll ya deja lo
+          // más nuevo a la vista) y solo aparece al pasar el mouse — sigue
+          // siendo scrolleable con la rueda aunque no se vea la barra.
           'space-y-2 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1 ' +
-          '[scrollbar-width:thin] [scrollbar-color:theme(colors.pink.400/0.5)_transparent] ' +
+          '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.pink.400/0.5)_transparent] ' +
           '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
-          '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-pink-400/50 ' +
-          'hover:[&::-webkit-scrollbar-thumb]:bg-pink-400/80'
+          '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +
+          '[&:hover::-webkit-scrollbar-thumb]:bg-pink-400/60'
         }
       >
         {items.length === 0 && (
