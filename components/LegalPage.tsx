@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ArrowLeft, Mail } from 'lucide-react';
 import TikTokIcon from '@/components/icons/TikTokIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
-import LogoKW from '@/components/icons/LogoKW';
+import SiteHeader from '@/components/SiteHeader';
 import { CONTACT_EMAIL } from '@/lib/contact';
 
 // Agrega aquí cada nueva red social conforme se sumen
@@ -74,12 +74,7 @@ export function LegalPage({
   const maxW = wide ? 'max-w-4xl' : 'max-w-2xl';
   return (
     <main className="min-h-screen bg-white text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
-      <header className={`flex items-center gap-3 px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 ${maxW} mx-auto`}>
-        <Link href="/" className="flex items-center gap-3">
-          <LogoKW className="w-9 h-9 text-pink-500" />
-          <p className="font-extrabold tracking-tight">K-POP WARS</p>
-        </Link>
-      </header>
+      <SiteHeader maxWidthClassName={maxW} />
 
       <div className={`${maxW} mx-auto px-4 py-10 space-y-8`}>
         <div>

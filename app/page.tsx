@@ -6,12 +6,8 @@ import BidForm from '@/components/BidForm';
 import OnlineBar from '@/components/OnlineBar';
 import RankingBoard from '@/components/RankingBoard';
 import CommunityPointsTotal from '@/components/CommunityPointsTotal';
-import ThemeToggle from '@/components/ThemeToggle';
-import MobileNavMenu from '@/components/MobileNavMenu';
-import ProfileAvatarIcon from '@/components/ProfileAvatarIcon';
-import NotificationBell from '@/components/NotificationBell';
+import SiteHeader from '@/components/SiteHeader';
 import { FooterLinks } from '@/components/LegalPage';
-import LogoKW from '@/components/icons/LogoKW';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
@@ -46,31 +42,7 @@ export default async function Home() {
 
   return (
     <main className="min-h-screen bg-white text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
-      {/* Header */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
-        <Link href="/" className="flex items-center gap-2">
-          <LogoKW className="w-10 h-10 text-pink-500" />
-          <div>
-            <h1 className="font-extrabold tracking-tight leading-none">K-POP WARS</h1>
-            <p className="text-[10px] text-pink-400 tracking-widest">EL PODER ES DE LOS FANS</p>
-          </div>
-        </Link>
-        <div className="flex items-center gap-6">
-          <nav className="hidden md:flex gap-6 text-sm text-neutral-500 dark:text-neutral-400">
-            <a href="#" className="text-pink-500 border-b-2 border-pink-500 pb-1">INICIO</a>
-            <a href="#ranking">RANKING</a>
-            <a href="#como-funciona">CÓMO FUNCIONA</a>
-            <Link href="/salon-de-la-fama">SALÓN DE LA FAMA</Link>
-            <a href="#faq">FAQ</a>
-            <Link href="/perfil" title="Mi perfil" className="flex items-center">
-              <ProfileAvatarIcon size={26} />
-            </Link>
-          </nav>
-          <NotificationBell />
-          <ThemeToggle />
-          <MobileNavMenu />
-        </div>
-      </header>
+      <SiteHeader home />
 
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
         <OnlineBar totalVisits={totalVisits ?? 0} />
