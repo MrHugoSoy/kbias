@@ -1,25 +1,50 @@
 'use client';
 
 import { useState } from 'react';
+import { ChevronDown } from 'lucide-react';
 import { MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
 
 export default function VoteMessageModal({
   groupName,
+  pointsRemaining,
   loading,
   onClose,
   onConfirm,
 }: {
   groupName: string;
+  pointsRemaining: number;
   loading: boolean;
   onClose: () => void;
-  onConfirm: (message: string) => void;
+  onConfirm: (message: string, points: number) => void;
 }) {
   const [message, setMessage] = useState('');
+  const [points, setPoints] = useState(1);
 
   return (
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
       <div className="bg-white dark:bg-neutral-900 p-6 rounded-xl w-full max-w-sm space-y-4">
         <h3 className="text-xl font-bold">Vota por {groupName}</h3>
+
+        <div>
+          <label className="text-xs text-neutral-500 uppercase tracking-wide">
+            Puntos (te quedan {pointsRemaining} hoy)
+          </label>
+          <div className="relative mt-1">
+            <select
+              value={points}
+              onChange={(e) => setPoints(Number(e.target.value))}
+              className="w-full appearance-none bg-neutral-100 dark:bg-neutral-800 rounded-lg pl-3 pr-9 py-2"
+            >
+              {Array.from({ length: pointsRemaining }, (_, i) => i + 1).map((n) => (
+                <option key={n} value={n}>
+                  {n} {n === 1 ? 'punto' : 'puntos'}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="w-4 h-4 text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          </div>
+        </div>
+
         <div>
           <textarea
             value={message}
@@ -37,11 +62,11 @@ export default function VoteMessageModal({
             Cancelar
           </button>
           <button
-            onClick={() => onConfirm(message.trim())}
+            onClick={() => onConfirm(message.trim(), points)}
             disabled={loading}
             className="flex-1 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold disabled:opacity-50"
           >
-            {loading ? 'Votando...' : 'Votar'}
+            {loading ? 'Enviando...' : `Dar ${points} ${points === 1 ? 'punto' : 'puntos'}`}
           </button>
         </div>
       </div>

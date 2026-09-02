@@ -38,7 +38,7 @@ export default async function SalonDeLaFamaPage() {
   const now = new Date();
   const currentMonthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString().slice(0, 10);
 
-  const [{ data: rows }, { data: siteStats }, { count: voteCount }, { data: currentRankings }] = await Promise.all([
+  const [{ data: rows }, { data: siteStats }, { data: pointsRows }, { data: currentRankings }] = await Promise.all([
     supabase
       .from('monthly_rankings')
       .select('*')
@@ -47,9 +47,10 @@ export default async function SalonDeLaFamaPage() {
       .order('month_start', { ascending: false })
       .order('rank', { ascending: true }),
     supabase.from('site_stats').select('*').maybeSingle(),
-    supabase.from('votes').select('id', { count: 'exact', head: true }),
+    supabase.from('votes').select('points'),
     supabase.from('group_rankings').select('total_points').gt('total_points', 0),
   ]);
+  const totalPoints = (pointsRows ?? []).reduce((sum, r) => sum + r.points, 0);
 
   const months = new Map<string, MonthlyRow[]>();
   for (const row of (rows ?? []) as MonthlyRow[]) {
@@ -91,9 +92,9 @@ export default async function SalonDeLaFamaPage() {
             {maxCrowns === 0 ? 'Más coronas' : `Coronas: ${topCrownHolders.join(' / ')}`}
           </p>
         </div>
-        <StatCard label="Votos totales del sitio" value={(voteCount ?? 0).toLocaleString('es-MX')} />
+        <StatCard label="Puntos totales del sitio" value={totalPoints.toLocaleString('es-MX')} />
         <StatCard
-          label="Grupos con votos este mes"
+          label="Grupos con puntos este mes"
           value={(currentRankings ?? []).length.toLocaleString('es-MX')}
         />
         <StatCard label="Visitas desde el lanzamiento" value={(siteStats?.total_visits ?? 0).toLocaleString('es-MX')} />
@@ -147,7 +148,7 @@ export default async function SalonDeLaFamaPage() {
                         {r.fandom_name && <p className="text-xs text-pink-400 truncate">{r.fandom_name}</p>}
                       </div>
                       <span className="font-mono text-amber-600 dark:text-amber-400 font-bold shrink-0">
-                        {r.total_points.toLocaleString('es-MX')} {r.total_points === 1 ? 'voto' : 'votos'}
+                        {r.total_points.toLocaleString('es-MX')} {r.total_points === 1 ? 'punto' : 'puntos'}
                       </span>
                     </Link>
                   ))}
@@ -171,7 +172,7 @@ export default async function SalonDeLaFamaPage() {
                         <p className="font-semibold text-sm truncate">{r.group_name}</p>
                       </div>
                       <span className="font-mono text-sm text-neutral-500 shrink-0">
-                        {r.total_points.toLocaleString('es-MX')} {r.total_points === 1 ? 'voto' : 'votos'}
+                        {r.total_points.toLocaleString('es-MX')} {r.total_points === 1 ? 'punto' : 'puntos'}
                       </span>
                     </Link>
                   ))}

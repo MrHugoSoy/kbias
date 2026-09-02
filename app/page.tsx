@@ -122,16 +122,16 @@ function RankCard({
               : 'text-xl font-bold text-amber-400 font-mono'
         }
       >
-        {group.total_points.toLocaleString('es-MX')} {group.total_points === 1 ? 'voto' : 'votos'}
+        {group.total_points.toLocaleString('es-MX')} {group.total_points === 1 ? 'punto' : 'puntos'}
       </p>
       {!isCompact && (
         <p className="text-xs text-neutral-500">
-          {group.total_points === 0 ? 'Nadie ha votado aún' : '¡Vótalo para que suba más!'}
+          {group.total_points === 0 ? 'Nadie le ha dado puntos aún' : '¡Dale puntos para que suba más!'}
         </p>
       )}
       {!isCompact && group.total_points > 0 && (
         <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
-          Para quitarle el puesto: +{group.total_points.toLocaleString('es-MX')} votos
+          Para quitarle el puesto: +{group.total_points.toLocaleString('es-MX')} puntos
         </p>
       )}
       <div className={isCompact ? 'pt-0.5' : 'pt-1'}>
@@ -369,13 +369,13 @@ export default async function Home() {
                       </div>
                     </div>
                     <div className="text-right hidden sm:block">
-                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Votos recibidos</p>
+                      <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Puntos recibidos</p>
                       <p className="text-pink-400 font-mono text-sm">
-                        {r.total_points > 0 ? `${r.total_points.toLocaleString('es-MX')} votos` : 'Sin votos aún'}
+                        {r.total_points > 0 ? `${r.total_points.toLocaleString('es-MX')} puntos` : 'Sin puntos aún'}
                       </p>
                       {r.total_points > 0 && (
                         <p className="text-[10px] text-neutral-400 dark:text-neutral-600">
-                          Quítaselo: +{r.total_points.toLocaleString('es-MX')} votos
+                          Quítaselo: +{r.total_points.toLocaleString('es-MX')} puntos
                         </p>
                       )}
                     </div>
@@ -399,7 +399,7 @@ export default async function Home() {
         <div className="text-center py-2">
           <p className="text-sm text-neutral-500 dark:text-neutral-400">Esta comunidad ha lanzado</p>
           <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
-            {totalVotes.toLocaleString('es-MX')} votos
+            {totalVotes.toLocaleString('es-MX')} puntos
           </p>
         </div>
 
@@ -417,17 +417,17 @@ export default async function Home() {
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">02</p>
               <p className="font-semibold">Elige tu grupo</p>
-              <p className="text-sm text-neutral-500">Escoge al grupo por el que quieres votar en la lista de competidores.</p>
+              <p className="text-sm text-neutral-500">Escoge uno o varios grupos de la lista de competidores.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">03</p>
-              <p className="font-semibold">Vota — es gratis</p>
-              <p className="text-sm text-neutral-500">Un voto por cuenta cada 24 horas. Tu voto se suma al total de tu grupo al instante.</p>
+              <p className="font-semibold">Reparte tus puntos — es gratis</p>
+              <p className="text-sm text-neutral-500">5 puntos por cuenta cada día. Dáselos todos a uno o repártelos entre varios.</p>
             </div>
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
               <p className="text-pink-400 font-mono text-sm">04</p>
               <p className="font-semibold">Tu grupo sube en el ranking</p>
-              <p className="text-sm text-neutral-500">El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más votos ese mes.</p>
+              <p className="text-sm text-neutral-500">El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más puntos ese mes.</p>
             </div>
           </div>
         </section>
@@ -447,13 +447,13 @@ export default async function Home() {
               <p className="text-sm text-neutral-500">Para que el ranking refleje personas reales — sin cuenta, cualquiera podría votar cientos de veces por su grupo.</p>
             </div>
             <div className="p-4 space-y-1">
-              <p className="font-semibold text-sm">¿Cuántas veces puedo votar?</p>
-              <p className="text-sm text-neutral-500">Un voto por cuenta cada 24 horas desde tu último voto. Puedes votar por un grupo distinto cada vez si quieres.</p>
+              <p className="font-semibold text-sm">¿Cuántos puntos tengo?</p>
+              <p className="text-sm text-neutral-500">5 puntos por cuenta cada día calendario (UTC) — puedes dárselos todos a un grupo o repartirlos entre varios.</p>
             </div>
             <div className="p-4 space-y-1">
               <p className="font-semibold text-sm">¿Cómo se decide quién tiene el #1?</p>
               <p className="text-sm text-neutral-500">
-                Gana el grupo con más votos acumulados en el mes calendario en curso. El ranking se reinicia el día 1
+                Gana el grupo con más puntos acumulados en el mes calendario en curso. El ranking se reinicia el día 1
                 de cada mes — los campeones de meses anteriores quedan en el{' '}
                 <Link href="/salon-de-la-fama" className="underline hover:text-pink-400">
                   Salón de la Fama
@@ -484,7 +484,7 @@ export default async function Home() {
           <div>
             <Zap className="w-6 h-6 mx-auto mb-1 text-pink-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">RANKING MENSUAL</p>
-            <p>El #1 se mantiene hasta que otro grupo acumule más votos ese mes.</p>
+            <p>El #1 se mantiene hasta que otro grupo acumule más puntos ese mes.</p>
           </div>
           <div>
             <Trophy className="w-6 h-6 mx-auto mb-1 text-pink-500" />

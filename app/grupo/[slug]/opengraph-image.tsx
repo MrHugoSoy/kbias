@@ -16,7 +16,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
 
   const name = group?.group_name ?? 'K-pop Wars';
   const fandom = group?.fandom_name;
-  const votes = group?.total_points ?? 0;
+  const points = group?.total_points ?? 0;
   const photo = group?.image_url;
 
   return new ImageResponse(
@@ -62,7 +62,7 @@ export default async function Image({ params }: { params: { slug: string } }) {
           <div style={{ display: 'flex', fontSize: 28, color: '#f472b6', marginTop: 6 }}>♥ {fandom} ♥</div>
         )}
         <div style={{ display: 'flex', fontSize: 36, fontWeight: 800, color: '#fbbf24', marginTop: 20 }}>
-          {votes.toLocaleString('es-MX')} votos
+          {points.toLocaleString('es-MX')} puntos
         </div>
         <div style={{ display: 'flex', fontSize: 22, color: '#71717a', marginTop: 24, letterSpacing: 4 }}>
           KPOPWARS.COM

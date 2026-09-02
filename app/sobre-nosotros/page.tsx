@@ -10,7 +10,8 @@ export const revalidate = 0;
 
 export default async function SobreNosotrosPage() {
   const supabase = getSupabasePublicClient();
-  const { count: voteCount } = await supabase.from('votes').select('id', { count: 'exact', head: true });
+  const { data: pointsRows } = await supabase.from('votes').select('points');
+  const totalPoints = (pointsRows ?? []).reduce((sum, r) => sum + r.points, 0);
   const { data: siteStats } = await supabase.from('site_stats').select('*').maybeSingle();
   const { count: groupCount } = await supabase.from('groups').select('id', { count: 'exact', head: true });
 
@@ -25,9 +26,10 @@ export default async function SobreNosotrosPage() {
           más a su grupo, cada quien pudiera demostrarlo con hechos?
         </p>
         <p>
-          Aquí no hay categorías. Hay un solo trono cada mes, y lo tiene el grupo con más votos en ese mes calendario
+          Aquí no hay categorías. Hay un solo trono cada mes, y lo tiene el grupo con más puntos en ese mes calendario
           — el ranking se reinicia el día 1 de cada mes, y los campeones anteriores quedan en el Salón de la Fama.
-          Votar es gratis — solo necesitas una cuenta, un voto cada 24 horas, y eso es lo único que decide quién manda.
+          Votar es gratis — solo necesitas una cuenta, 5 puntos por día para repartir como quieras, y eso es lo único
+          que decide quién manda.
         </p>
       </LegalSection>
 
@@ -36,9 +38,9 @@ export default async function SobreNosotrosPage() {
         <div className="grid grid-cols-3 gap-3 not-prose pt-2">
           <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-3 text-center">
             <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">
-              {(voteCount ?? 0).toLocaleString('es-MX')}
+              {totalPoints.toLocaleString('es-MX')}
             </p>
-            <p className="text-[10px] text-neutral-500 uppercase tracking-wide mt-1">Votos</p>
+            <p className="text-[10px] text-neutral-500 uppercase tracking-wide mt-1">Puntos</p>
           </div>
           <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-3 text-center">
             <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">{groupCount ?? 0}</p>

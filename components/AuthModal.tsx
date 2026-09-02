@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthModal({
@@ -17,6 +18,7 @@ export default function AuthModal({
   const [error, setError] = useState('');
   const [checkEmail, setCheckEmail] = useState(false);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -91,8 +93,8 @@ export default function AuthModal({
           <>
             <h3 className="text-xl font-bold">{mode === 'register' ? 'Crea tu cuenta gratis' : 'Inicia sesión'}</h3>
             <p className="text-sm text-neutral-500 dark:text-neutral-400">
-              Necesitas una cuenta para votar — así evitamos que una sola persona vote varias veces. Un voto gratis por
-              cuenta cada 24 horas.
+              Necesitas una cuenta para votar — así evitamos que una sola persona vote varias veces. 5 puntos gratis
+              por cuenta cada día, para repartir como quieras.
             </p>
             <input
               type="email"
@@ -101,14 +103,26 @@ export default function AuthModal({
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2"
             />
-            <input
-              type="password"
-              placeholder="Contraseña (mínimo 6 caracteres)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
-              className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                placeholder="Contraseña (mínimo 6 caracteres)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+                className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-lg px-3 py-2 pr-10"
+              />
+              {password && (
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-300"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              )}
+            </div>
             {mode === 'register' && (
               <label className="flex items-start gap-2 text-xs text-neutral-500 dark:text-neutral-400">
                 <input

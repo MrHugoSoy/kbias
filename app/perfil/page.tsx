@@ -12,8 +12,10 @@ import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
+const DAILY_POINT_BUDGET = 5;
+
 type Group = { id: string; name: string; fandom_name: string | null; image_url: string | null };
-type VoteRow = { group_id: string; created_at: string };
+type VoteRow = { group_id: string; created_at: string; points: number };
 
 type GroupTally = { group: Group; count: number };
 
@@ -110,7 +112,7 @@ export default function PerfilPage() {
     async function loadData() {
       if (!cached) setLoadingData(true);
       const [{ data: voteRows }, { data: groupRows }, { data: profileRow }] = await Promise.all([
-        supabase.from('votes').select('group_id, created_at').eq('user_id', user!.id),
+        supabase.from('votes').select('group_id, created_at, points').eq('user_id', user!.id),
         supabase.from('groups').select('id, name, fandom_name, image_url'),
         supabase.from('profiles').select('username, avatar_species, avatar_url').eq('id', user!.id).maybeSingle(),
       ]);
@@ -293,15 +295,18 @@ export default function PerfilPage() {
     );
   }
 
-  const lastVote = [...votes].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-  const nextVoteAt = lastVote ? new Date(new Date(lastVote.created_at).getTime() + 24 * 60 * 60 * 1000) : null;
-  const onCooldown = !!nextVoteAt && Date.now() < nextVoteAt.getTime();
-  const votedTodayGroup = onCooldown ? groups.find((g) => g.id === lastVote.group_id) : null;
+  const utcDayStart = new Date();
+  utcDayStart.setUTCHours(0, 0, 0, 0);
+  const pointsUsedToday = votes
+    .filter((v) => new Date(v.created_at) >= utcDayStart)
+    .reduce((sum, v) => sum + v.points, 0);
+  const pointsRemainingToday = Math.max(0, DAILY_POINT_BUDGET - pointsUsedToday);
 
   const tallies: GroupTally[] = groups
-    .map((group) => ({ group, count: votes.filter((v) => v.group_id === group.id).length }))
+    .map((group) => ({ group, count: votes.filter((v) => v.group_id === group.id).reduce((sum, v) => sum + v.points, 0) }))
     .filter((t) => t.count > 0)
     .sort((a, b) => b.count - a.count);
+  const totalPointsGiven = votes.reduce((sum, v) => sum + v.points, 0);
 
   const memberSince = new Date(user.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -415,25 +420,24 @@ export default function PerfilPage() {
       )}
 
       <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/60 rounded-xl p-4">
-        {votedTodayGroup ? (
+        {pointsRemainingToday > 0 ? (
           <p className="text-sm text-pink-700 dark:text-pink-300">
-            ✓ Ya votaste por <strong>{votedTodayGroup.name}</strong>. Podrás votar de nuevo el{' '}
-            {nextVoteAt!.toLocaleString('es-MX', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}.
+            Te quedan <strong>{pointsRemainingToday} de {DAILY_POINT_BUDGET}</strong> puntos hoy —{' '}
+            <a href="/#ranking" className="underline font-semibold">
+              repártelos en el ranking
+            </a>
+            .
           </p>
         ) : (
           <p className="text-sm text-pink-700 dark:text-pink-300">
-            Todavía no has votado hoy —{' '}
-            <a href="/#ranking" className="underline font-semibold">
-              ve al ranking y vota
-            </a>
-            .
+            ✓ Ya repartiste tus {DAILY_POINT_BUDGET} puntos de hoy. Vuelve mañana para más.
           </p>
         )}
       </div>
 
       <div className="space-y-3">
         <h2 className="text-lg font-bold text-pink-500 dark:text-pink-400">
-          Tu historial de votos {votes.length > 0 && `(${votes.length} en total)`}
+          Tus puntos dados {totalPointsGiven > 0 && `(${totalPointsGiven} en total)`}
         </h2>
 
         {tallies.length === 0 ? (
@@ -455,7 +459,7 @@ export default function PerfilPage() {
                   <p className="text-xs text-pink-400 truncate">{group.fandom_name}</p>
                 </div>
                 <span className="font-mono text-amber-600 dark:text-amber-400 shrink-0">
-                  {count} {count === 1 ? 'voto' : 'votos'}
+                  {count} {count === 1 ? 'punto' : 'puntos'}
                 </span>
               </div>
             ))}

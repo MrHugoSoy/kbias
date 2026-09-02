@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: Props) {
   const title = group.name;
   const description =
     group.bio ||
-    `Vota gratis por ${group.name}${group.fandom_name ? ` (${group.fandom_name})` : ''} en K-pop Wars — cada voto suma al total de tu grupo.`;
+    `Vota gratis por ${group.name}${group.fandom_name ? ` (${group.fandom_name})` : ''} en K-pop Wars — dale tus puntos y súmalos al total de tu grupo.`;
   const url = `${siteUrl}/grupo/${params.slug}`;
 
   return {
@@ -91,14 +91,14 @@ export default async function GroupDetailPage({ params }: Props) {
         {group.fandom_name && <p className="text-pink-400 font-semibold">♥ {group.fandom_name} ♥</p>}
         {group.bio && <p className="text-sm text-neutral-600 dark:text-neutral-400 max-w-sm mx-auto text-pretty">{group.bio}</p>}
 
-        <p className="text-xs text-neutral-500 tracking-widest uppercase pt-2">Votos este mes</p>
+        <p className="text-xs text-neutral-500 tracking-widest uppercase pt-2">Puntos este mes</p>
         <p className="text-5xl font-black text-amber-400 drop-shadow-[0_0_20px_rgba(251,191,36,0.4)] font-mono">
-          {group.total_points.toLocaleString('es-MX')} votos
+          {group.total_points.toLocaleString('es-MX')} puntos
         </p>
 
         {hasVotes && (
           <p className="text-sm text-neutral-500">
-            Para quitarle este puesto: más de {group.total_points.toLocaleString('es-MX')} votos este mes.
+            Para quitarle este puesto: más de {group.total_points.toLocaleString('es-MX')} puntos este mes.
           </p>
         )}
 

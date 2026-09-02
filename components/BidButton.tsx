@@ -17,23 +17,25 @@ export default function BidButton({
 }) {
   const [showAuth, setShowAuth] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
+  const [pointsRemaining, setPointsRemaining] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [result, setResult] = useState<'ok' | 'error' | null>(null);
   const [message, setMessage] = useState('');
 
-  async function castVote(voteMessage: string) {
+  async function castVote(voteMessage: string, points: number) {
     setLoading(true);
     setResult(null);
     try {
       const res = await authFetch('/api/vote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ groupId, message: voteMessage || undefined }),
+        body: JSON.stringify({ groupId, points, message: voteMessage || undefined }),
       });
       const data = await res.json();
       if (res.ok) {
         setResult('ok');
-        setMessage('¡Voto registrado!');
+        setMessage('¡Puntos entregados!');
         setShowMessageModal(false);
       } else {
         setResult('error');
@@ -54,7 +56,22 @@ export default function BidButton({
       setShowAuth(true);
       return;
     }
-    setShowMessageModal(true);
+    setChecking(true);
+    try {
+      const res = await authFetch('/api/vote');
+      const data2 = await res.json();
+      const remaining = res.ok ? data2.pointsRemaining ?? 0 : 0;
+      if (remaining <= 0) {
+        setResult('error');
+        setMessage('Ya repartiste tus 5 puntos de hoy. Vuelve mañana.');
+        setTimeout(() => setResult(null), 4000);
+        return;
+      }
+      setPointsRemaining(remaining);
+      setShowMessageModal(true);
+    } finally {
+      setChecking(false);
+    }
   }
 
   return (
@@ -62,7 +79,7 @@ export default function BidButton({
       <div className={compact ? 'w-full' : 'inline-flex flex-col items-end gap-1'}>
         <button
           onClick={handleClick}
-          disabled={loading}
+          disabled={loading || checking}
           className={
             (compact
               ? 'w-full bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg transition'
@@ -87,7 +104,7 @@ export default function BidButton({
           onClose={() => setShowAuth(false)}
           onAuthed={() => {
             setShowAuth(false);
-            setShowMessageModal(true);
+            handleClick();
           }}
         />
       )}
@@ -95,6 +112,7 @@ export default function BidButton({
       {showMessageModal && (
         <VoteMessageModal
           groupName={groupName}
+          pointsRemaining={pointsRemaining}
           loading={loading}
           onClose={() => setShowMessageModal(false)}
           onConfirm={castVote}

@@ -4,7 +4,7 @@ import { CONTACT_EMAIL } from '@/lib/contact';
 
 export const metadata = {
   title: 'Reglas',
-  description: 'Cómo se gana el #1 en K-pop Wars, cómo funciona el voto diario gratuito y moderación.',
+  description: 'Cómo se gana el #1 en K-pop Wars, cómo funcionan los 5 puntos diarios gratuitos y moderación.',
 };
 
 export default function ReglasPage() {
@@ -12,11 +12,11 @@ export default function ReglasPage() {
     <LegalPage title="Reglas" subtitle="Cómo funciona el juego y qué se permite en K-pop Wars.">
       <LegalSection title="1. Cómo se gana el #1">
         <p>
-          El puesto #1 lo tiene el grupo con <strong>más votos del mes calendario en curso</strong> — el ranking se
+          El puesto #1 lo tiene el grupo con <strong>más puntos del mes calendario en curso</strong> — el ranking se
           reinicia el día 1 de cada mes, sin importar quién iba ganando el mes anterior.
         </p>
         <p>
-          El #1 se mantiene hasta que otro grupo acumule más votos ese mismo mes. Los campeones de cada mes quedan
+          El #1 se mantiene hasta que otro grupo acumule más puntos ese mismo mes. Los campeones de cada mes quedan
           registrados para siempre en el{' '}
           <Link href="/salon-de-la-fama" className="underline hover:text-pink-400">
             Salón de la Fama
@@ -32,10 +32,13 @@ export default function ReglasPage() {
         </p>
       </LegalSection>
 
-      <LegalSection title="3. Cuentas y frecuencia de voto">
+      <LegalSection title="3. Cuentas y puntos diarios">
         <p>Necesitas una cuenta gratuita (correo y contraseña) para votar.</p>
-        <p>Cada cuenta puede votar <strong>una vez cada 24 horas</strong> desde su último voto, por el grupo que elijas.</p>
-        <p>No está permitido crear varias cuentas, usar bots o scripts para votar más de lo permitido.</p>
+        <p>
+          Cada cuenta recibe <strong>5 puntos gratis por día calendario (UTC)</strong> para repartir entre los grupos
+          que quieras — todos a uno, o divididos entre varios.
+        </p>
+        <p>No está permitido crear varias cuentas, usar bots o scripts para conseguir más puntos de los permitidos.</p>
       </LegalSection>
 
       <LegalSection title="4. Menores de edad">

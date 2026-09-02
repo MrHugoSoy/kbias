@@ -15,6 +15,7 @@ type FeedItem = {
   avatar_species: string | null;
   avatar_url: string | null;
   message: string | null;
+  points: number;
 };
 
 export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[] }) {
@@ -35,6 +36,7 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             created_at: string;
             user_id: string;
             message: string | null;
+            points: number;
           };
 
           const [{ data: group }, { data: profile }] = await Promise.all([
@@ -53,6 +55,7 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             avatar_species: profile?.avatar_species ?? null,
             avatar_url: profile?.avatar_url ?? null,
             message: newVote.message ?? null,
+            points: newVote.points,
           };
 
           setItems((prev) => [feedItem, ...prev].slice(0, 20));
@@ -80,7 +83,8 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={20} />
             <div className="flex-1 min-w-0">
               <p className="text-neutral-500 truncate">
-                {item.username ? <strong className="text-neutral-700 dark:text-neutral-300">@{item.username}</strong> : 'Un fan'} votó por{' '}
+                {item.username ? <strong className="text-neutral-700 dark:text-neutral-300">@{item.username}</strong> : 'Un fan'} le dio{' '}
+                <strong className="text-amber-500">{item.points}</strong> a{' '}
                 <span className="text-pink-600 dark:text-pink-400">{item.group_name}</span>
               </p>
               {item.message && (

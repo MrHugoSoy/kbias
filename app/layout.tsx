@@ -4,7 +4,7 @@ import './globals.css';
 
 const title = 'K-pop Wars — Ranking K-pop';
 const description =
-  'El grupo de K-pop con más votos se queda con el puesto #1. Vota gratis, una vez al día — sin ciclos, sin reset. El poder es de los fans.';
+  'El grupo de K-pop con más puntos se queda con el puesto #1 cada mes. 5 puntos gratis por cuenta cada día, para repartir como quieras. El poder es de los fans.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

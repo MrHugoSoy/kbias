@@ -5,7 +5,7 @@ import { LegalPage } from '@/components/LegalPage';
 
 export const metadata = {
   title: 'Estadísticas',
-  description: 'Cifras en vivo de K-pop Wars: votos totales, grupos activos y visitas desde el lanzamiento.',
+  description: 'Cifras en vivo de K-pop Wars: puntos totales, grupos activos y visitas desde el lanzamiento.',
 };
 
 export const revalidate = 0;
@@ -23,7 +23,8 @@ export default async function EstadisticasPage() {
   const supabase = getSupabasePublicClient();
 
   const { data: siteStats } = await supabase.from('site_stats').select('*').maybeSingle();
-  const { count: voteCount } = await supabase.from('votes').select('id', { count: 'exact', head: true });
+  const { data: pointsRows } = await supabase.from('votes').select('points');
+  const totalPoints = (pointsRows ?? []).reduce((sum, r) => sum + r.points, 0);
   const { data: rankings } = await supabase
     .from('group_rankings')
     .select('*')
@@ -34,8 +35,8 @@ export default async function EstadisticasPage() {
   return (
     <LegalPage title="Estadísticas en vivo" subtitle="Los números reales detrás de K-pop Wars, actualizados al cargar la página." wide>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <StatCard label="Votos totales" value={(voteCount ?? 0).toLocaleString('es-MX')} />
-        <StatCard label="Grupos con votos" value={groupsWithPoints.toLocaleString('es-MX')} />
+        <StatCard label="Puntos totales" value={totalPoints.toLocaleString('es-MX')} />
+        <StatCard label="Grupos con puntos" value={groupsWithPoints.toLocaleString('es-MX')} />
         <StatCard label="Visitas desde el lanzamiento" value={(siteStats?.total_visits ?? 0).toLocaleString('es-MX')} />
       </div>
 
@@ -61,7 +62,7 @@ export default async function EstadisticasPage() {
                   <p className="text-xs text-pink-400 truncate">{r.fandom_name}</p>
                 </div>
                 <span className="font-mono text-amber-600 dark:text-amber-400 shrink-0">
-                  {r.total_points.toLocaleString('es-MX')} votos
+                  {r.total_points.toLocaleString('es-MX')} puntos
                 </span>
               </div>
             ))}

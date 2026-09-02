@@ -6,54 +6,51 @@ import { MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
 
 export const dynamic = 'force-dynamic';
 
-const COOLDOWN_MS = 24 * 60 * 60 * 1000;
+const DAILY_POINT_BUDGET = 5;
 
-function cooldownMessage(nextVoteAt: Date): string {
-  return `Ya votaste. Podrás votar de nuevo el ${nextVoteAt.toLocaleString('es-MX', {
-    day: 'numeric',
-    month: 'short',
-    hour: '2-digit',
-    minute: '2-digit',
-  })}.`;
+function utcDayStart(): Date {
+  const d = new Date();
+  d.setUTCHours(0, 0, 0, 0);
+  return d;
 }
 
-// GET /api/vote — dice si el usuario sigue en cooldown (24h desde su
-// último voto, sin importar el grupo) y cuándo puede volver a votar.
+function utcDayReset(): Date {
+  const start = utcDayStart();
+  return new Date(start.getTime() + 24 * 60 * 60 * 1000);
+}
+
+async function pointsUsedToday(supabase: ReturnType<typeof getSupabaseServiceClient>, userId: string) {
+  const { data } = await supabase
+    .from('votes')
+    .select('points')
+    .eq('user_id', userId)
+    .gte('created_at', utcDayStart().toISOString());
+  return (data ?? []).reduce((sum, row) => sum + row.points, 0);
+}
+
+// GET /api/vote — cuántos de los 5 puntos diarios ya se repartieron hoy
+// (día calendario UTC) y a qué hora se recargan.
 export async function GET(req: NextRequest) {
   const supabase = getSupabaseServiceClient();
   const userId = await getVerifiedUserId(req, supabase);
   if (!userId) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: lastVote } = await supabase
-    .from('votes')
-    .select('group_id, created_at')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (!lastVote) {
-    return NextResponse.json({ onCooldown: false, groupId: null, nextVoteAt: null });
-  }
-
-  const nextVoteAt = new Date(new Date(lastVote.created_at).getTime() + COOLDOWN_MS);
-  const onCooldown = Date.now() < nextVoteAt.getTime();
+  const used = await pointsUsedToday(supabase, userId);
 
   return NextResponse.json({
-    onCooldown,
-    groupId: onCooldown ? lastVote.group_id : null,
-    nextVoteAt: onCooldown ? nextVoteAt.toISOString() : null,
+    pointsUsedToday: used,
+    pointsRemaining: Math.max(0, DAILY_POINT_BUDGET - used),
+    dailyBudget: DAILY_POINT_BUDGET,
+    resetAt: utcDayReset().toISOString(),
   });
 }
 
-// POST /api/vote — body: { groupId: string }
+// POST /api/vote — body: { groupId: string, points: number, message?: string }
 //
-// El voto es gratis y requiere sesión real (verificada por token, nunca por
-// un userId que mande el cliente). Cada cuenta puede votar cada 24 horas
-// reales desde su último voto — la función cast_vote() en la base de datos
+// Cada cuenta tiene 5 puntos gratis por día calendario (UTC) para repartir
+// entre los grupos que quiera — la función cast_vote() en la base de datos
 // es la defensa real contra condiciones de carrera; la consulta de abajo
-// solo da un mensaje de error más claro (con la hora exacta) antes de
-// intentarlo.
+// solo da un mensaje de error más claro antes de intentarlo.
 export async function POST(req: NextRequest) {
   try {
     const supabase = getSupabaseServiceClient();
@@ -62,9 +59,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    const { groupId, message } = await req.json();
+    const { groupId, points, message } = await req.json();
     if (!groupId) {
       return NextResponse.json({ error: 'Falta groupId' }, { status: 400 });
+    }
+    const pointsToGive = Number(points);
+    if (!Number.isInteger(pointsToGive) || pointsToGive < 1 || pointsToGive > DAILY_POINT_BUDGET) {
+      return NextResponse.json({ error: 'Elige entre 1 y 5 puntos' }, { status: 400 });
     }
 
     if (message) {
@@ -81,30 +82,30 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Grupo no encontrado' }, { status: 404 });
     }
 
-    const { data: lastVote } = await supabase
-      .from('votes')
-      .select('created_at')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle();
-
-    if (lastVote) {
-      const nextVoteAt = new Date(new Date(lastVote.created_at).getTime() + COOLDOWN_MS);
-      if (Date.now() < nextVoteAt.getTime()) {
-        return NextResponse.json({ error: cooldownMessage(nextVoteAt) }, { status: 409 });
-      }
+    const used = await pointsUsedToday(supabase, userId);
+    if (used + pointsToGive > DAILY_POINT_BUDGET) {
+      const remaining = Math.max(0, DAILY_POINT_BUDGET - used);
+      return NextResponse.json(
+        {
+          error:
+            remaining > 0
+              ? `Solo te quedan ${remaining} de ${DAILY_POINT_BUDGET} puntos hoy.`
+              : 'Ya repartiste tus 5 puntos de hoy. Vuelve mañana.',
+        },
+        { status: 409 }
+      );
     }
 
     const { error } = await supabase.rpc('cast_vote', {
       p_user_id: userId,
       p_group_id: groupId,
+      p_points: pointsToGive,
       p_message: message?.trim() || null,
     });
     if (error) {
-      // La función en la base de datos rechazó el voto (condición de
+      // La función en la base de datos rechazó la asignación (condición de
       // carrera: alguien más ganó la carrera desde la consulta de arriba).
-      return NextResponse.json({ error: 'Ya votaste hace poco. Inténtalo más tarde.' }, { status: 409 });
+      return NextResponse.json({ error: 'Ya no te quedan puntos suficientes hoy.' }, { status: 409 });
     }
 
     return NextResponse.json({ ok: true });
