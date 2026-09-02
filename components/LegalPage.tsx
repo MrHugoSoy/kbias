@@ -49,7 +49,7 @@ export function FooterLinks() {
         </Link>
         <span className="mx-2">·</span>
         <Link href="/estadisticas" className="hover:text-pink-400">
-          Estadísticas en vivo
+          Ranking Global
         </Link>
         <span className="mx-2">·</span>
         <Link href="/salon-de-la-fama" className="hover:text-pink-400">

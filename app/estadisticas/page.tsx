@@ -3,8 +3,8 @@ import { LegalPage } from '@/components/LegalPage';
 import LiveStatsSection from '@/components/LiveStatsSection';
 
 export const metadata = {
-  title: 'Estadísticas',
-  description: 'Cifras en vivo de K-pop Wars: puntos totales, grupos activos y visitas desde el lanzamiento.',
+  title: 'Ranking Global',
+  description: 'El ranking completo de K-pop Wars en vivo, con puntos totales, grupos activos y visitas desde el lanzamiento.',
 };
 
 export const revalidate = 0;
@@ -21,7 +21,7 @@ export default async function EstadisticasPage() {
     .order('total_points', { ascending: false });
 
   return (
-    <LegalPage title="Estadísticas en vivo" subtitle="Los números reales detrás de K-pop Wars, actualizados en el momento." wide>
+    <LegalPage title="Ranking Global" subtitle="Actualizado en tiempo real." wide>
       <LiveStatsSection
         initialRankings={rankings ?? []}
         initialTotalPoints={totalPoints}
