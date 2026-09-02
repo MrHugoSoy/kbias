@@ -8,6 +8,8 @@ import { authFetch } from '@/lib/authFetch';
 import { LegalPage } from '@/components/LegalPage';
 import AuthModal from '@/components/AuthModal';
 import PixelAvatar, { SPECIES } from '@/components/PixelAvatar';
+import LevelBadge from '@/components/LevelBadge';
+import { levelForXp, xpForLevel } from '@/lib/level';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
@@ -26,6 +28,7 @@ type ProfileCache = {
   username: string | null;
   avatarSpecies: string | null;
   avatarUrl: string | null;
+  xp: number;
 };
 
 // Vive fuera del componente a propósito: sobrevive a que el usuario salga
@@ -48,6 +51,7 @@ export default function PerfilPage() {
   const [savingUsername, setSavingUsername] = useState(false);
   const [avatarSpecies, setAvatarSpecies] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [xp, setXp] = useState(0);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [avatarError, setAvatarError] = useState('');
@@ -55,6 +59,14 @@ export default function PerfilPage() {
   const [savingMarketing, setSavingMarketing] = useState(false);
   const [marketingError, setMarketingError] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  // Solo se usa para el temporizador de "vuelve en Xh Ym Zs" — se actualiza
+  // cada segundo mientras la pestaña está abierta en /perfil.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -106,6 +118,7 @@ export default function PerfilPage() {
       setUsername(cached.username);
       setAvatarSpecies(cached.avatarSpecies);
       setAvatarUrl(cached.avatarUrl);
+      setXp(cached.xp);
       setLoadingData(false);
     }
 
@@ -114,7 +127,7 @@ export default function PerfilPage() {
       const [{ data: voteRows }, { data: groupRows }, { data: profileRow }] = await Promise.all([
         supabase.from('votes').select('group_id, created_at, points').eq('user_id', user!.id),
         supabase.from('groups').select('id, name, fandom_name, image_url'),
-        supabase.from('profiles').select('username, avatar_species, avatar_url').eq('id', user!.id).maybeSingle(),
+        supabase.from('profiles').select('username, avatar_species, avatar_url, xp').eq('id', user!.id).maybeSingle(),
       ]);
       const next: ProfileCache = {
         userId: user!.id,
@@ -123,6 +136,7 @@ export default function PerfilPage() {
         username: profileRow?.username ?? null,
         avatarSpecies: profileRow?.avatar_species ?? null,
         avatarUrl: profileRow?.avatar_url ?? null,
+        xp: profileRow?.xp ?? 0,
       };
       profileCache = next;
       setVotes(next.votes);
@@ -130,6 +144,7 @@ export default function PerfilPage() {
       setUsername(next.username);
       setAvatarSpecies(next.avatarSpecies);
       setAvatarUrl(next.avatarUrl);
+      setXp(next.xp);
       setLoadingData(false);
 
       // Sincroniza el avatar en el user_metadata de la sesión: así el
@@ -302,6 +317,20 @@ export default function PerfilPage() {
     .reduce((sum, v) => sum + v.points, 0);
   const pointsRemainingToday = Math.max(0, DAILY_POINT_BUDGET - pointsUsedToday);
 
+  // Cuenta regresiva hasta la medianoche UTC, cuando se recargan los 5
+  // puntos — solo importa mostrarla cuando ya no quedan puntos hoy.
+  const nextResetAt = new Date(utcDayStart.getTime() + 24 * 60 * 60 * 1000);
+  const msUntilReset = Math.max(0, nextResetAt.getTime() - now);
+  const hoursLeft = Math.floor(msUntilReset / 3_600_000);
+  const minutesLeft = Math.floor((msUntilReset % 3_600_000) / 60_000);
+  const secondsLeft = Math.floor((msUntilReset % 60_000) / 1000);
+  const resetCountdown = `${hoursLeft}h ${String(minutesLeft).padStart(2, '0')}m ${String(secondsLeft).padStart(2, '0')}s`;
+
+  const level = levelForXp(xp);
+  const xpIntoLevel = xp - xpForLevel(level);
+  const xpForNextLevel = xpForLevel(level + 1) - xpForLevel(level);
+  const levelProgressPct = Math.min(100, Math.round((xpIntoLevel / xpForNextLevel) * 100));
+
   const tallies: GroupTally[] = groups
     .map((group) => ({ group, count: votes.filter((v) => v.group_id === group.id).reduce((sum, v) => sum + v.points, 0) }))
     .filter((t) => t.count > 0)
@@ -366,6 +395,7 @@ export default function PerfilPage() {
                 className="flex items-center gap-1.5 text-sm font-semibold hover:text-pink-500"
               >
                 {username ? `@${username}` : 'Elige un nombre de usuario'}
+                <LevelBadge xp={xp} />
                 <Pencil className="w-3 h-3 text-neutral-400" />
               </button>
             )}
@@ -419,6 +449,18 @@ export default function PerfilPage() {
         </div>
       )}
 
+      <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <p className="text-sm font-bold text-pink-500 dark:text-pink-400">Nivel {level}</p>
+          <p className="text-xs text-neutral-500">
+            {xp} XP · faltan {xpForNextLevel - xpIntoLevel} para el nivel {level + 1}
+          </p>
+        </div>
+        <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+          <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${levelProgressPct}%` }} />
+        </div>
+      </div>
+
       <div className="bg-pink-50 dark:bg-pink-950/30 border border-pink-200 dark:border-pink-900/60 rounded-xl p-4">
         {pointsRemainingToday > 0 ? (
           <p className="text-sm text-pink-700 dark:text-pink-300">
@@ -430,7 +472,8 @@ export default function PerfilPage() {
           </p>
         ) : (
           <p className="text-sm text-pink-700 dark:text-pink-300">
-            ✓ Ya repartiste tus {DAILY_POINT_BUDGET} puntos de hoy. Vuelve mañana para más.
+            ✓ Ya repartiste tus {DAILY_POINT_BUDGET} puntos de hoy. Vuelve en{' '}
+            <strong className="font-mono" suppressHydrationWarning>{resetCountdown}</strong>.
           </p>
         )}
       </div>
