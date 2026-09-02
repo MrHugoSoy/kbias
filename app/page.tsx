@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Zap, ShieldCheck, Trophy, Handshake, HelpCircle } from 'lucide-react';
+import { Zap, ShieldCheck, Trophy, Handshake, HelpCircle, Swords, CheckSquare, TrendingUp, Award, ArrowRight } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import ActivityFeed from '@/components/ActivityFeed';
 import BidForm from '@/components/BidForm';
@@ -7,12 +7,19 @@ import OnlineBar from '@/components/OnlineBar';
 import RankingBoard from '@/components/RankingBoard';
 import CommunityPointsTotal from '@/components/CommunityPointsTotal';
 import SiteHeader from '@/components/SiteHeader';
+import Hero from '@/components/Hero';
+import VoteCtaWidget from '@/components/VoteCtaWidget';
 import { FooterLinks } from '@/components/LegalPage';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
 export default async function Home() {
   const supabase = getSupabasePublicClient();
+
+  // Congela el puesto de cada grupo al inicio del día (si no se ha hecho
+  // hoy) para poder mostrar la flechita de "subió/bajó" en el ranking —
+  // ver sync_rank_snapshots() en schema.sql.
+  await supabase.rpc('sync_rank_snapshots');
 
   const { data: feed, error: feedError } = await supabase.from('vote_feed').select('*');
   const { data: groups, error: groupsError } = await supabase.from('groups').select('*').order('name');
@@ -45,23 +52,25 @@ export default async function Home() {
       <SiteHeader home />
 
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
+        <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 2)} totalVisits={totalVisits ?? 0} />
+
         <OnlineBar totalVisits={totalVisits ?? 0} />
 
-        {/* Podio: top 3 */}
+        {/* Ranking Global */}
         <RankingBoard
           initialRankings={rankings ?? []}
-          feed={feed ?? []}
           currentMonthLabel={currentMonthLabel}
           nextMonthLabel={nextMonthLabel}
         />
 
-        {/* Panel de voto — pegado al ranking para que no haya que bajar tanto */}
-        <BidForm groups={groups ?? []} />
-
-        {/* Actividad en vivo — oculta en lg+ porque ahí ya está el sidebar de donadores mostrando lo mismo */}
-        <div id="historial-mobile" className="lg:hidden">
+        {/* Actividad en vivo + tarjeta de progreso */}
+        <div className="grid lg:grid-cols-[1fr_20rem] gap-6 items-start">
           <ActivityFeed initialItems={feed ?? []} />
+          <VoteCtaWidget />
         </div>
+
+        {/* Panel de voto — para votar por cualquier grupo, no solo el top 6 */}
+        <BidForm groups={groups ?? []} />
 
         {/* Total de votos */}
         <CommunityPointsTotal initialRankings={rankings ?? []} />
@@ -69,36 +78,30 @@ export default async function Home() {
         {/* Cómo funciona */}
         <section id="como-funciona" className="space-y-4">
           <h2 className="text-lg font-bold flex items-center gap-2">
-            <Zap className="w-5 h-5 text-pink-500" /> ¿CÓMO FUNCIONA?
+            <Zap className="w-5 h-5 text-violet-500" /> ¿CÓMO FUNCIONA?
           </h2>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
-              <p className="text-pink-400 font-mono text-sm">01</p>
-              <p className="font-semibold">Crea tu cuenta gratis</p>
-              <p className="text-sm text-neutral-500">Solo necesitas un correo y una contraseña — sin costo, sin tarjeta.</p>
-            </div>
-            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
-              <p className="text-pink-400 font-mono text-sm">02</p>
-              <p className="font-semibold">Elige tu grupo</p>
-              <p className="text-sm text-neutral-500">Escoge uno o varios grupos de la lista de competidores.</p>
-            </div>
-            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
-              <p className="text-pink-400 font-mono text-sm">03</p>
-              <p className="font-semibold">Reparte tus puntos — es gratis</p>
-              <p className="text-sm text-neutral-500">5 puntos por cuenta cada día. Dáselos todos a uno o repártelos entre varios.</p>
-            </div>
-            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-1">
-              <p className="text-pink-400 font-mono text-sm">04</p>
-              <p className="font-semibold">Tu grupo sube en el ranking</p>
-              <p className="text-sm text-neutral-500">El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más puntos ese mes.</p>
-            </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {[
+              { Icon: Swords, title: 'Crea tu cuenta gratis', body: 'Solo necesitas un correo y una contraseña — sin costo, sin tarjeta.' },
+              { Icon: CheckSquare, title: 'Elige tu grupo', body: 'Escoge uno o varios grupos de la lista de competidores.' },
+              { Icon: TrendingUp, title: 'Reparte tus puntos — es gratis', body: '5 puntos por cuenta cada día. Dáselos todos a uno o repártelos entre varios.' },
+              { Icon: Award, title: 'Tu grupo sube en el ranking', body: 'El total se actualiza al instante. El #1 se mantiene hasta que otro grupo acumule más puntos ese mes.' },
+            ].map(({ Icon, title, body }, i) => (
+              <div key={i} className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-100 to-pink-100 dark:from-violet-950/50 dark:to-pink-950/50 flex items-center justify-center">
+                  <Icon className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+                </div>
+                <p className="font-semibold">{title}</p>
+                <p className="text-sm text-neutral-500">{body}</p>
+              </div>
+            ))}
           </div>
         </section>
 
         {/* FAQ */}
         <section id="faq" className="space-y-3">
           <h2 className="text-lg font-bold flex items-center gap-2">
-            <HelpCircle className="w-5 h-5 text-pink-500" /> FAQ
+            <HelpCircle className="w-5 h-5 text-violet-500" /> FAQ
           </h2>
           <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 rounded-xl overflow-hidden">
             <div className="p-4 space-y-1">
@@ -118,7 +121,7 @@ export default async function Home() {
               <p className="text-sm text-neutral-500">
                 Gana el grupo con más puntos acumulados en el mes calendario en curso. El ranking se reinicia el día 1
                 de cada mes — los campeones de meses anteriores quedan en el{' '}
-                <Link href="/salon-de-la-fama" className="underline hover:text-pink-400">
+                <Link href="/salon-de-la-fama" className="underline hover:text-violet-500 dark:hover:text-violet-400">
                   Salón de la Fama
                 </Link>
                 .
@@ -128,7 +131,7 @@ export default async function Home() {
               <p className="font-semibold text-sm">Represento a un grupo, ¿puedo reclamar su perfil?</p>
               <p className="text-sm text-neutral-500">
                 Sí —{' '}
-                <a href="/reclamar" className="underline hover:text-pink-400">
+                <a href="/reclamar" className="underline hover:text-violet-500 dark:hover:text-violet-400">
                   envía tu solicitud aquí
                 </a>
                 . La revisamos a mano contra el link de verificación que dejes.
@@ -140,26 +143,40 @@ export default async function Home() {
         {/* Footer de confianza */}
         <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6 border-t border-neutral-200 dark:border-neutral-900">
           <div>
-            <ShieldCheck className="w-6 h-6 mx-auto mb-1 text-pink-500" />
+            <ShieldCheck className="w-6 h-6 mx-auto mb-1 text-violet-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">100% GRATIS</p>
             <p>Votar no cuesta nada. Solo necesitas una cuenta.</p>
           </div>
           <div>
-            <Zap className="w-6 h-6 mx-auto mb-1 text-pink-500" />
+            <Zap className="w-6 h-6 mx-auto mb-1 text-violet-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">RANKING MENSUAL</p>
             <p>El #1 se mantiene hasta que otro grupo acumule más puntos ese mes.</p>
           </div>
           <div>
-            <Trophy className="w-6 h-6 mx-auto mb-1 text-pink-500" />
+            <Trophy className="w-6 h-6 mx-auto mb-1 text-violet-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">UN SOLO TRONO</p>
             <p>No hay categorías. Solo uno puede reinar.</p>
           </div>
           <div>
-            <Handshake className="w-6 h-6 mx-auto mb-1 text-pink-500" />
+            <Handshake className="w-6 h-6 mx-auto mb-1 text-violet-500" />
             <p className="font-semibold text-neutral-700 dark:text-neutral-300">EL PODER ES DE LOS FANS</p>
             <p>Tú decides quién reina en el mundo del K-pop.</p>
           </div>
         </footer>
+
+        {/* CTA final */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 to-pink-500 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div>
+            <h3 className="text-xl font-black">¿Listo para llevar a tu grupo a la cima?</h3>
+            <p className="text-sm text-white/90">Únete a miles de fans y sé parte de la batalla del K-pop.</p>
+          </div>
+          <a
+            href="/#ranking"
+            className="shrink-0 inline-flex items-center gap-1.5 bg-white text-violet-700 font-bold px-5 py-2.5 rounded-lg hover:opacity-90 transition"
+          >
+            Votar ahora <ArrowRight className="w-4 h-4" />
+          </a>
+        </div>
 
         <FooterLinks />
       </div>

@@ -79,9 +79,9 @@ export default function BidForm({ groups }: { groups: Group[] }) {
   }
 
   return (
-    <section className="border-2 border-pink-700/60 rounded-2xl p-6 space-y-4">
+    <section className="border-2 border-violet-300 dark:border-violet-800/60 rounded-2xl p-6 space-y-4">
       <div className="flex items-center gap-2">
-        <Gavel className="w-6 h-6 text-pink-500" />
+        <Gavel className="w-6 h-6 text-violet-500" />
         <div>
           <h2 className="font-bold">VOTA GRATIS</h2>
           <p className="text-xs text-neutral-500">5 puntos por cuenta cada día — repártelos como quieras</p>
@@ -99,7 +99,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
         </p>
       ) : (
         <>
-          <p className="text-xs text-pink-500 font-semibold">
+          <p className="text-xs text-violet-600 dark:text-violet-400 font-semibold">
             Te quedan {pointsRemaining} de {DAILY_POINT_BUDGET} puntos hoy
           </p>
 
@@ -159,7 +159,7 @@ export default function BidForm({ groups }: { groups: Group[] }) {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full py-3 rounded-lg bg-pink-600 hover:bg-pink-500 font-bold disabled:opacity-50"
+            className="w-full py-3 rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 hover:opacity-90 text-white font-bold disabled:opacity-50"
           >
             {loading ? (
               'Enviando...'

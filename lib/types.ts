@@ -11,4 +11,5 @@ export type RankingRow = {
   bio: string | null;
   official_url: string | null;
   total_points: number;
+  rank_snapshot_value: number | null;
 };

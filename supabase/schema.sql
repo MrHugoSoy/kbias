@@ -33,6 +33,10 @@ create table if not exists groups (
 -- Por si la tabla ya existía antes de agregar estas columnas (idempotente).
 alter table groups add column if not exists bio text;
 alter table groups add column if not exists official_url text;
+-- Puesto "congelado" al inicio del día (ver sync_rank_snapshots() más abajo)
+-- — tiene que existir antes de la vista group_rankings, que ya lo expone.
+alter table groups add column if not exists rank_snapshot_date date;
+alter table groups add column if not exists rank_snapshot_value integer;
 
 -- ------------------------------------------------------------
 -- Tabla: bids (cada pago que reclama o intenta reclamar el trono)
@@ -275,6 +279,7 @@ select
   g.slug,
   g.bio,
   g.official_url,
+  g.rank_snapshot_value,
   coalesce(
     sum(v.points) filter (
       where v.created_at >= (date_trunc('month', now() at time zone 'utc') at time zone 'utc')
@@ -283,8 +288,43 @@ select
   ) as total_points
 from groups g
 left join votes v on v.group_id = g.id
-group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url
+group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url, g.rank_snapshot_value
 order by total_points desc, g.name asc;
+
+-- Puesto "congelado" al inicio del día calendario (UTC) en curso (columnas
+-- agregadas junto a la tabla groups, arriba) — se compara contra el puesto
+-- en vivo para mostrar la flechita de "subió/bajó" en el ranking, sin
+-- inventar un historial completo de posiciones. sync_rank_snapshots() se
+-- llama en cada carga de la portada (barato: si ya se guardó hoy, no hace
+-- nada) y solo se actualiza una vez por día — así el valor se queda fijo
+-- como "puesto de ayer" durante todo el día de hoy en vez de recalcularse
+-- en cada voto.
+create or replace function sync_rank_snapshots()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_today date := (now() at time zone 'utc')::date;
+begin
+  if exists (select 1 from groups where rank_snapshot_date = v_today) then
+    return;
+  end if;
+
+  with ranked as (
+    select group_id, rank() over (order by total_points desc) as rnk
+    from group_rankings
+  )
+  update groups g
+  set rank_snapshot_date = v_today,
+      rank_snapshot_value = r.rnk
+  from ranked r
+  where r.group_id = g.id;
+end;
+$$;
+
+grant execute on function sync_rank_snapshots() to anon, authenticated;
 
 -- ------------------------------------------------------------
 -- Vista: monthly_rankings — el ranking completo de cada mes calendario

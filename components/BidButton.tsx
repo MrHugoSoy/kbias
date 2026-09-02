@@ -86,8 +86,8 @@ export default function BidButton({
           disabled={loading || checking}
           className={
             (compact
-              ? 'w-full bg-pink-600 hover:bg-pink-500 text-white font-bold text-xs px-2 py-1.5 rounded-lg transition'
-              : 'bg-pink-600 hover:bg-pink-500 text-white font-bold px-4 py-2 rounded-lg transition whitespace-nowrap') +
+              ? 'w-full bg-gradient-to-r from-violet-600 to-pink-500 hover:opacity-90 text-white font-bold text-xs px-2 py-1.5 rounded-lg transition'
+              : 'bg-gradient-to-r from-violet-600 to-pink-500 hover:opacity-90 text-white font-bold px-4 py-2 rounded-lg transition whitespace-nowrap') +
             ' disabled:opacity-50'
           }
         >
