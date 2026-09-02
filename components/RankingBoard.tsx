@@ -47,7 +47,7 @@ function RankCard({
           : isCompact
             ? 'relative border border-neutral-200 dark:border-neutral-800 rounded-xl text-center space-y-1 bg-white dark:bg-neutral-950 ' +
               (emphasize ? 'p-3 sm:p-4' : 'p-2 sm:p-3')
-            : 'relative border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-gradient-to-b from-pink-50 to-white dark:from-pink-950/15 dark:to-black sm:h-[390px] sm:flex sm:flex-col sm:justify-center') +
+            : 'relative border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 text-center space-y-2 bg-gradient-to-b from-pink-50 to-white dark:from-pink-950/15 dark:to-black sm:min-h-[390px] sm:flex sm:flex-col sm:justify-center') +
         (orderClassName ? ' ' + orderClassName : '')
       }
     >
