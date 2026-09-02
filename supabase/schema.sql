@@ -118,23 +118,31 @@ create index if not exists idx_bids_supporter on bids (group_id, supporter_name)
   where status = 'succeeded' and is_anonymous = false;
 
 -- ------------------------------------------------------------
--- Tabla: votes — un voto GRATIS por cuenta registrada cada 24 horas
--- (cooldown real desde el último voto, no por día calendario — así se
--- evita que alguien vote dos veces cerca de la medianoche UTC), a un
--- grupo. Reemplaza a `bids`/Stripe como fuente del ranking mientras el
--- cobro está desactivado (ver nota de arriba en `bids` — esa tabla y el
--- flujo de Stripe se dejan intactos, sin usarse, por si se reactiva el
--- cobro más adelante).
+-- Tabla: votes — cada cuenta registrada tiene 5 puntos GRATIS por día
+-- calendario (UTC) para repartir entre los grupos que quiera (todos a
+-- uno, o divididos) — no es "un voto", es una asignación de puntos; una
+-- fila = una asignación, con su cantidad en `points`. Reemplaza a
+-- `bids`/Stripe como fuente del ranking mientras el cobro está
+-- desactivado (ver nota de arriba en `bids` — esa tabla y el flujo de
+-- Stripe se dejan intactos, sin usarse, por si se reactiva el cobro más
+-- adelante).
 -- ------------------------------------------------------------
 create table if not exists votes (
   id uuid primary key default gen_random_uuid(),
   user_id uuid not null references auth.users(id) on delete cascade,
   group_id uuid not null references groups(id) on delete cascade,
+  points integer not null default 1 check (points between 1 and 5),
   message text,                          -- mensaje corto opcional del votante (máx. 140, validado en /api/vote)
   created_at timestamptz default now()
 );
 
 alter table votes add column if not exists message text;
+alter table votes add column if not exists points integer not null default 1;
+do $$
+begin
+  alter table votes add constraint votes_points_range check (points between 1 and 5);
+exception when duplicate_object then null;
+end $$;
 
 -- Reemplazado por el cooldown de 24h en cast_vote() — este índice solo
 -- limitaba por día calendario UTC, que es justo el bug que se reporta.
@@ -143,48 +151,54 @@ drop index if exists idx_votes_one_per_day;
 create index if not exists idx_votes_group on votes (group_id);
 create index if not exists idx_votes_user_created on votes (user_id, created_at desc);
 
--- Inserta un voto solo si pasaron 24h reales desde el último voto de esa
--- cuenta (cualquier grupo). El advisory lock serializa llamadas
--- concurrentes del mismo usuario dentro de la transacción — sin él, dos
--- requests simultáneos podrían leer "sin voto previo" antes de que
--- cualquiera inserte, y ambos pasarían. SECURITY DEFINER + el REVOKE/GRANT
--- de abajo aseguran que solo el service role (el usado por /api/vote,
--- después de verificar el token real) puede llamar esta función.
--- La versión anterior (sin p_message) es una firma distinta para Postgres
--- (el tipo de los parámetros es parte de la identidad de la función) — hay
--- que borrarla explícitamente o quedaría duplicada junto a esta.
+-- Inserta una asignación de puntos solo si no se pasa del presupuesto de 5
+-- por día calendario UTC (sumando lo ya repartido hoy entre todos los
+-- grupos). El advisory lock serializa llamadas concurrentes del mismo
+-- usuario dentro de la transacción — sin él, dos requests simultáneos
+-- podrían leer "presupuesto libre" antes de que cualquiera inserte, y las
+-- dos pasarían aunque juntas se pasen de 5. SECURITY DEFINER + el
+-- REVOKE/GRANT de abajo aseguran que solo el service role (el usado por
+-- /api/vote, después de verificar el token real) puede llamar esta
+-- función. Las versiones anteriores son firmas distintas para Postgres
+-- (el tipo de los parámetros es parte de la identidad de la función) —
+-- hay que borrarlas explícitamente o quedarían duplicadas junto a esta.
 drop function if exists cast_vote(uuid, uuid);
+drop function if exists cast_vote(uuid, uuid, text);
 
-create or replace function cast_vote(p_user_id uuid, p_group_id uuid, p_message text default null)
+create or replace function cast_vote(p_user_id uuid, p_group_id uuid, p_points integer, p_message text default null)
 returns table (id uuid, created_at timestamptz)
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
-  v_last timestamptz;
+  v_used_today integer;
+  v_day_start timestamptz := date_trunc('day', now() at time zone 'utc') at time zone 'utc';
 begin
+  if p_points is null or p_points < 1 or p_points > 5 then
+    raise exception 'invalid_points';
+  end if;
+
   perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
 
-  select v.created_at into v_last
+  select coalesce(sum(v.points), 0) into v_used_today
   from votes v
   where v.user_id = p_user_id
-  order by v.created_at desc
-  limit 1;
+    and v.created_at >= v_day_start;
 
-  if v_last is not null and now() < v_last + interval '24 hours' then
-    raise exception 'vote_cooldown';
+  if v_used_today + p_points > 5 then
+    raise exception 'daily_budget_exceeded';
   end if;
 
   return query
-  insert into votes (user_id, group_id, message)
-  values (p_user_id, p_group_id, p_message)
+  insert into votes (user_id, group_id, points, message)
+  values (p_user_id, p_group_id, p_points, p_message)
   returning votes.id, votes.created_at;
 end;
 $$;
 
-revoke all on function cast_vote(uuid, uuid, text) from public;
-grant execute on function cast_vote(uuid, uuid, text) to service_role;
+revoke all on function cast_vote(uuid, uuid, integer, text) from public;
+grant execute on function cast_vote(uuid, uuid, integer, text) to service_role;
 
 alter table votes enable row level security;
 drop policy if exists "votes_public_read" on votes;
@@ -221,7 +235,7 @@ select
   g.bio,
   g.official_url,
   coalesce(
-    count(v.id) filter (
+    sum(v.points) filter (
       where v.created_at >= (date_trunc('month', now() at time zone 'utc') at time zone 'utc')
     ),
     0
@@ -249,10 +263,10 @@ select
   g.fandom_name,
   g.image_url,
   g.slug,
-  count(v.id) as total_points,
+  sum(v.points) as total_points,
   rank() over (
     partition by date_trunc('month', v.created_at at time zone 'utc')
-    order by count(v.id) desc
+    order by sum(v.points) desc
   ) as rank
 from votes v
 join groups g on g.id = v.group_id
@@ -310,6 +324,7 @@ select
   v.created_at,
   v.user_id,
   v.message,
+  v.points,
   p.username,
   p.avatar_species,
   p.avatar_url
@@ -373,7 +388,44 @@ begin
   end if;
 end $$;
 
--- Vista: group_comments_feed — comentarios con username/avatar del autor.
+-- ------------------------------------------------------------
+-- Tabla: comment_likes — un like por cuenta por comentario. El unique
+-- constraint es lo que hace el toggle seguro contra doble clic / dos
+-- pestañas, no solo el chequeo del API.
+-- ------------------------------------------------------------
+create table if not exists comment_likes (
+  id uuid primary key default gen_random_uuid(),
+  comment_id uuid not null references group_comments(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique (comment_id, user_id)
+);
+
+create index if not exists idx_comment_likes_comment on comment_likes (comment_id);
+
+alter table comment_likes enable row level security;
+-- Sin policy de select/insert/delete para anon/authenticated: todo pasa
+-- por /api/comments/likes, que verifica el token real de sesión y escribe
+-- con el service role.
+
+-- Necesario para que un DELETE traiga el comment_id en el payload de
+-- Realtime (por default solo manda la primary key) — así el like en vivo
+-- de otros usuarios se puede restar del contador sin otra consulta.
+alter table comment_likes replica identity full;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'comment_likes'
+  ) then
+    alter publication supabase_realtime add table comment_likes;
+  end if;
+end $$;
+
+-- Vista: group_comments_feed — comentarios con username/avatar del autor
+-- y el total de likes (quién le dio like, si el que pregunta ya lo hizo,
+-- se resuelve aparte en /api/comments, que sí conoce al usuario).
 drop view if exists group_comments_feed;
 create view group_comments_feed as
 select
@@ -387,7 +439,8 @@ select
   c.user_id,
   p.username,
   p.avatar_species,
-  p.avatar_url
+  p.avatar_url,
+  (select count(*) from comment_likes cl where cl.comment_id = c.id)::int as like_count
 from group_comments c
 left join profiles p on p.id = c.user_id
 order by c.created_at desc;
