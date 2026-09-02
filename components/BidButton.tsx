@@ -94,9 +94,18 @@ export default function BidButton({
             </>
           )}
         </button>
-        {result && (
-          <p className={'text-[11px] ' + (result === 'ok' ? 'text-green-500' : 'text-red-500')}>{message}</p>
-        )}
+        {/* Siempre montado (con min-height reservado) para que el mensaje no
+            empuje el resto de la tarjeta al aparecer — antes, al no tener
+            espacio reservado, "aparecía" el párrafo y recorría hacia arriba
+            la biografía del grupo dentro de la tarjeta de altura fija. */}
+        <p
+          className={
+            'text-[11px] min-h-[2.2em] leading-tight ' +
+            (result ? (result === 'ok' ? 'text-green-500' : 'text-red-500') : 'invisible')
+          }
+        >
+          {message || ' '}
+        </p>
       </div>
 
       {showAuth && (
