@@ -5,6 +5,7 @@ import { MessageCircle, CornerDownRight, Pencil, Trash2, Heart } from 'lucide-re
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import UserAvatar from './UserAvatar';
+import LevelBadge from './LevelBadge';
 import AuthModal from './AuthModal';
 
 const COMMENT_MAX_LENGTH = 500;
@@ -21,6 +22,7 @@ type Comment = {
   username: string | null;
   avatar_species: string | null;
   avatar_url: string | null;
+  xp: number;
   like_count: number;
 };
 
@@ -168,6 +170,7 @@ function CommentItem({
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <span className={textSize + ' font-semibold'}>{comment.username ? `@${comment.username}` : 'Un fan'}</span>
+            <LevelBadge xp={comment.xp} />
             <span className="text-[10px] text-neutral-500" suppressHydrationWarning>
               {timeAgo(comment.created_at)}
               {comment.updated_at && !isDeleted && ' · editado'}
@@ -386,13 +389,13 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
           setComments((prev) => {
             if (prev.some((c) => c.id === row.id)) return prev;
             return [
-              { ...row, username: null, avatar_species: null, avatar_url: null, like_count: 0 },
+              { ...row, username: null, avatar_species: null, avatar_url: null, xp: 0, like_count: 0 },
               ...prev,
             ];
           });
           const { data: profile } = await supabase
             .from('profiles')
-            .select('username, avatar_species, avatar_url')
+            .select('username, avatar_species, avatar_url, xp')
             .eq('id', row.user_id)
             .maybeSingle();
           if (profile) {

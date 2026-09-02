@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import UserAvatar from './UserAvatar';
+import LevelBadge from './LevelBadge';
 
 type FeedItem = {
   id: string;
@@ -14,6 +15,7 @@ type FeedItem = {
   username: string | null;
   avatar_species: string | null;
   avatar_url: string | null;
+  xp: number;
   message: string | null;
   points: number;
 };
@@ -45,7 +47,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
 
           const [{ data: group }, { data: profile }] = await Promise.all([
             supabase.from('groups').select('name, fandom_name').eq('id', newVote.group_id).single(),
-            supabase.from('profiles').select('username, avatar_species, avatar_url').eq('id', newVote.user_id).maybeSingle(),
+            supabase.from('profiles').select('username, avatar_species, avatar_url, xp').eq('id', newVote.user_id).maybeSingle(),
           ]);
 
           const feedItem: FeedItem = {
@@ -58,6 +60,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             username: profile?.username ?? null,
             avatar_species: profile?.avatar_species ?? null,
             avatar_url: profile?.avatar_url ?? null,
+            xp: profile?.xp ?? 0,
             message: newVote.message ?? null,
             points: newVote.points,
           };
@@ -97,7 +100,8 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={24} />
             <span className="flex-1 min-w-0">
               <span className="block">
-                {item.username ? <strong>@{item.username}</strong> : 'Un fan'} le dio{' '}
+                {item.username ? <strong>@{item.username}</strong> : 'Un fan'}{' '}
+                <LevelBadge xp={item.xp} /> le dio{' '}
                 <strong className="text-amber-500">
                   {item.points} {item.points === 1 ? 'punto' : 'puntos'}
                 </strong>{' '}

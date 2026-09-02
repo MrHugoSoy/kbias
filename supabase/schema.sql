@@ -164,9 +164,17 @@ create index if not exists idx_votes_user_created on votes (user_id, created_at 
 -- hay que borrarlas explícitamente o quedarían duplicadas junto a esta.
 drop function if exists cast_vote(uuid, uuid);
 drop function if exists cast_vote(uuid, uuid, text);
+-- create or replace no permite cambiar las columnas de salida de una
+-- función existente (aquí id/created_at -> vote_id/vote_created_at) —
+-- hay que borrar la versión vieja de esta misma firma primero.
+drop function if exists cast_vote(uuid, uuid, integer, text);
 
+-- Las columnas de salida se llaman vote_id/vote_created_at (no "id" a
+-- secas) para no chocar con la columna profiles.id: RETURNS TABLE crea
+-- variables plpgsql con esos nombres, y una que se llamara "id" volvía
+-- ambiguo el "on conflict (id)" del insert a profiles de abajo.
 create or replace function cast_vote(p_user_id uuid, p_group_id uuid, p_points integer, p_message text default null)
-returns table (id uuid, created_at timestamptz)
+returns table (vote_id uuid, vote_created_at timestamptz)
 language plpgsql
 security definer
 set search_path = public
@@ -174,6 +182,11 @@ as $$
 declare
   v_used_today integer;
   v_day_start timestamptz := date_trunc('day', now() at time zone 'utc') at time zone 'utc';
+  v_today date := (now() at time zone 'utc')::date;
+  v_last_active date;
+  v_prev_streak integer;
+  v_new_streak integer;
+  v_streak_bonus integer := 0;
 begin
   if p_points is null or p_points < 1 or p_points > 5 then
     raise exception 'invalid_points';
@@ -189,6 +202,34 @@ begin
   if v_used_today + p_points > 5 then
     raise exception 'daily_budget_exceeded';
   end if;
+
+  -- Racha de días activos + bono de XP: la bolsa de puntos ya limita a un
+  -- único "día activo" por cuenta (repartir 2 veces el mismo día no cuenta
+  -- doble), así que el cálculo de racha se hace aquí mismo, bajo el mismo
+  -- advisory lock que ya serializa al usuario. El bono crece con la racha
+  -- hasta un tope de 10 XP/día para no premiar rachas larguísimas de forma
+  -- desproporcionada frente a repartir puntos (1 XP por punto).
+  select p.last_active_date, p.current_streak into v_last_active, v_prev_streak
+  from profiles p where p.id = p_user_id;
+
+  if v_last_active is null or v_last_active < v_today - 1 then
+    v_new_streak := 1;
+    v_streak_bonus := 1;
+  elsif v_last_active = v_today - 1 then
+    v_new_streak := coalesce(v_prev_streak, 0) + 1;
+    v_streak_bonus := least(v_new_streak, 10);
+  else
+    -- Ya había una entrada hoy (segunda asignación del mismo día): la
+    -- racha no cambia y no se vuelve a dar el bono.
+    v_new_streak := coalesce(v_prev_streak, 1);
+  end if;
+
+  insert into profiles (id, xp, current_streak, last_active_date)
+  values (p_user_id, p_points + v_streak_bonus, v_new_streak, v_today)
+  on conflict (id) do update
+  set xp = profiles.xp + p_points + v_streak_bonus,
+      current_streak = v_new_streak,
+      last_active_date = v_today;
 
   return query
   insert into votes (user_id, group_id, points, message)
@@ -300,6 +341,14 @@ alter table profiles alter column username drop not null;
 alter table profiles add column if not exists avatar_species text;
 alter table profiles add column if not exists avatar_url text;
 
+-- Sistema de experiencia (XP) y nivel: xp se gana repartiendo puntos (1 XP
+-- por punto) y con un bono por racha de días activos seguidos, ambos
+-- otorgados dentro de cast_vote(). El nivel no se guarda — se deriva del xp
+-- con la misma fórmula en lib/level.ts, así nunca puede desincronizarse.
+alter table profiles add column if not exists xp integer not null default 0;
+alter table profiles add column if not exists current_streak integer not null default 0;
+alter table profiles add column if not exists last_active_date date;
+
 alter table profiles enable row level security;
 drop policy if exists "profiles_public_read" on profiles;
 create policy "profiles_public_read" on profiles for select using (true);
@@ -327,7 +376,8 @@ select
   v.points,
   p.username,
   p.avatar_species,
-  p.avatar_url
+  p.avatar_url,
+  coalesce(p.xp, 0) as xp
 from votes v
 join groups g on g.id = v.group_id
 left join profiles p on p.id = v.user_id
@@ -440,6 +490,7 @@ select
   p.username,
   p.avatar_species,
   p.avatar_url,
+  coalesce(p.xp, 0) as xp,
   (select count(*) from comment_likes cl where cl.comment_id = c.id)::int as like_count
 from group_comments c
 left join profiles p on p.id = c.user_id

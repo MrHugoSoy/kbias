@@ -18,6 +18,7 @@ type FeedItem = {
   username: string | null;
   avatar_species: string | null;
   avatar_url: string | null;
+  xp: number;
   message: string | null;
   points: number;
 };

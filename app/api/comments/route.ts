@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('username, avatar_species, avatar_url')
+      .select('username, avatar_species, avatar_url, xp')
       .eq('id', userId)
       .maybeSingle();
 
@@ -138,6 +138,7 @@ export async function POST(req: NextRequest) {
         username: profile?.username ?? null,
         avatar_species: profile?.avatar_species ?? null,
         avatar_url: profile?.avatar_url ?? null,
+        xp: profile?.xp ?? 0,
       },
     });
   } catch (err) {
