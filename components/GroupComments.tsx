@@ -48,6 +48,7 @@ function CommentItem({
   childrenByParent,
   depth,
   userId,
+  canComment,
   likedIds,
   onReply,
   onEdit,
@@ -59,6 +60,7 @@ function CommentItem({
   childrenByParent: Map<string, Comment[]>;
   depth: number;
   userId: string | null;
+  canComment: boolean;
   likedIds: Set<string>;
   onReply: (body: string, parentId: string) => Promise<ActionResult>;
   onEdit: (commentId: string, body: string) => Promise<ActionResult>;
@@ -106,6 +108,8 @@ function CommentItem({
     }
     setReplying((v) => !v);
   }
+
+  const replyBlocked = !!userId && !canComment;
 
   function handleLikeClick() {
     if (!userId) {
@@ -245,7 +249,18 @@ function CommentItem({
           </div>
           {deleteError && <p className="text-red-500 text-[11px] mt-1">{deleteError}</p>}
 
-          {replying && (
+          {replying && replyBlocked && (
+            <div className="mt-2 flex items-center justify-between gap-2 bg-pink-50 dark:bg-pink-950/30 rounded-lg px-3 py-2">
+              <p className="text-[11px] text-pink-600 dark:text-pink-400">
+                Necesitas darle puntos a este grupo hoy para responder.
+              </p>
+              <button onClick={() => setReplying(false)} className="text-[11px] text-neutral-500 shrink-0">
+                Cerrar
+              </button>
+            </div>
+          )}
+
+          {replying && !replyBlocked && (
             <div className="mt-2 space-y-1">
               <textarea
                 value={replyBody}
@@ -290,6 +305,7 @@ function CommentItem({
                   childrenByParent={childrenByParent}
                   depth={nextDepth}
                   userId={userId}
+                  canComment={canComment}
                   likedIds={likedIds}
                   onReply={onReply}
                   onEdit={onEdit}
@@ -315,6 +331,7 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [votedGroupToday, setVotedGroupToday] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null));
@@ -333,6 +350,21 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
       .then((res) => res.json())
       .then((data) => setLikedIds(new Set<string>(data.likedCommentIds ?? [])));
   }, [userId, groupId]);
+
+  // Solo se puede comentar/responder en la sección de un grupo si ya se le
+  // dieron puntos a ESE grupo hoy — mismo límite de día calendario UTC que
+  // usa /api/comments para rechazar el POST en el servidor.
+  useEffect(() => {
+    if (!userId) {
+      setVotedGroupToday(false);
+      return;
+    }
+    authFetch(`/api/vote?groupId=${groupId}`)
+      .then((res) => res.json())
+      .then((data) => setVotedGroupToday(!!data.votedGroupToday));
+  }, [userId, groupId]);
+
+  const canComment = !!userId && votedGroupToday;
 
   useEffect(() => {
     const channel = supabase
@@ -564,28 +596,34 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
         <MessageCircle className="w-5 h-5 text-pink-500" /> Zona de fans
       </h2>
 
-      <div className="space-y-2">
-        <textarea
-          value={body}
-          onChange={(e) => setBody(e.target.value.slice(0, COMMENT_MAX_LENGTH))}
-          placeholder={userId ? 'Comparte tu opinión sobre este grupo...' : 'Inicia sesión para comentar'}
-          rows={3}
-          className="w-full bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 text-sm"
-        />
-        <div className="flex items-center justify-between">
-          <p className="text-[10px] text-neutral-500">
-            {body.length}/{COMMENT_MAX_LENGTH}
-          </p>
-          <button
-            onClick={handlePostClick}
-            disabled={posting}
-            className="bg-pink-600 hover:bg-pink-500 text-white font-bold text-sm px-4 py-2 rounded-lg transition disabled:opacity-50"
-          >
-            {posting ? 'Publicando...' : 'Comentar'}
-          </button>
+      {userId && !votedGroupToday ? (
+        <div className="bg-pink-50 dark:bg-pink-950/30 rounded-lg px-4 py-3 text-sm text-pink-600 dark:text-pink-400">
+          Necesitas darle puntos a este grupo hoy para comentar. Dale tus puntos arriba y vuelve a esta sección.
         </div>
-        {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
-      </div>
+      ) : (
+        <div className="space-y-2">
+          <textarea
+            value={body}
+            onChange={(e) => setBody(e.target.value.slice(0, COMMENT_MAX_LENGTH))}
+            placeholder={userId ? 'Comparte tu opinión sobre este grupo...' : 'Inicia sesión para comentar'}
+            rows={3}
+            className="w-full bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 text-sm"
+          />
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] text-neutral-500">
+              {body.length}/{COMMENT_MAX_LENGTH}
+            </p>
+            <button
+              onClick={handlePostClick}
+              disabled={posting}
+              className="bg-pink-600 hover:bg-pink-500 text-white font-bold text-sm px-4 py-2 rounded-lg transition disabled:opacity-50"
+            >
+              {posting ? 'Publicando...' : 'Comentar'}
+            </button>
+          </div>
+          {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
+        </div>
+      )}
 
       <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
         {topLevel.length === 0 && (
@@ -599,6 +637,7 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
               depth={0}
               userId={userId}
               likedIds={likedIds}
+              canComment={canComment}
               onReply={postComment}
               onEdit={editComment}
               onDelete={deleteComment}

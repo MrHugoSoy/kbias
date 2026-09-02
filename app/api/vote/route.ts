@@ -3,16 +3,11 @@ import { getSupabaseServiceClient } from '@/lib/supabase';
 import { getVerifiedUserId } from '@/lib/authServer';
 import { isOffensive } from '@/lib/moderation';
 import { MESSAGE_MAX_LENGTH } from '@/lib/bidValidation';
+import { utcDayStart } from '@/lib/dailyWindow';
 
 export const dynamic = 'force-dynamic';
 
 const DAILY_POINT_BUDGET = 5;
-
-function utcDayStart(): Date {
-  const d = new Date();
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
-}
 
 function utcDayReset(): Date {
   const start = utcDayStart();
@@ -29,7 +24,9 @@ async function pointsUsedToday(supabase: ReturnType<typeof getSupabaseServiceCli
 }
 
 // GET /api/vote — cuántos de los 5 puntos diarios ya se repartieron hoy
-// (día calendario UTC) y a qué hora se recargan.
+// (día calendario UTC) y a qué hora se recargan. Si viene ?groupId=, además
+// dice si esa cuenta ya le dio puntos a ESE grupo hoy (lo usa GroupComments
+// para saber si puede comentar en la página de ese grupo).
 export async function GET(req: NextRequest) {
   const supabase = getSupabaseServiceClient();
   const userId = await getVerifiedUserId(req, supabase);
@@ -37,11 +34,26 @@ export async function GET(req: NextRequest) {
 
   const used = await pointsUsedToday(supabase, userId);
 
+  const groupId = req.nextUrl.searchParams.get('groupId');
+  let votedGroupToday = false;
+  if (groupId) {
+    const { data } = await supabase
+      .from('votes')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('group_id', groupId)
+      .gte('created_at', utcDayStart().toISOString())
+      .limit(1)
+      .maybeSingle();
+    votedGroupToday = !!data;
+  }
+
   return NextResponse.json({
     pointsUsedToday: used,
     pointsRemaining: Math.max(0, DAILY_POINT_BUDGET - used),
     dailyBudget: DAILY_POINT_BUDGET,
     resetAt: utcDayReset().toISOString(),
+    votedGroupToday,
   });
 }
 

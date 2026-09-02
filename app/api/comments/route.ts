@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabase';
 import { getVerifiedUserId } from '@/lib/authServer';
 import { isOffensive } from '@/lib/moderation';
+import { utcDayStart } from '@/lib/dailyWindow';
 
 export const dynamic = 'force-dynamic';
 
@@ -82,6 +83,24 @@ export async function POST(req: NextRequest) {
     }
     if (parentId && (!parent || parent.group_id !== groupId)) {
       return NextResponse.json({ error: 'Comentario original no encontrado' }, { status: 404 });
+    }
+
+    // Solo puede comentar (o responder) en la sección de un grupo quien ya
+    // le dio puntos a ESE grupo hoy — mismo límite de día calendario UTC
+    // que el presupuesto diario de votos.
+    const { data: votedToday } = await supabase
+      .from('votes')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('group_id', groupId)
+      .gte('created_at', utcDayStart().toISOString())
+      .limit(1)
+      .maybeSingle();
+    if (!votedToday) {
+      return NextResponse.json(
+        { error: 'Necesitas darle puntos a este grupo hoy para comentar.' },
+        { status: 403 }
+      );
     }
 
     const { data: inserted, error } = await supabase
