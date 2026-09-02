@@ -64,7 +64,7 @@ export default function VoteMessageModal({
           <button
             onClick={() => onConfirm(message.trim(), points)}
             disabled={loading}
-            className="flex-1 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-bold disabled:opacity-50"
+            className="flex-1 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 hover:opacity-90 text-white font-bold disabled:opacity-50"
           >
             {loading ? 'Enviando...' : `Dar ${points} ${points === 1 ? 'punto' : 'puntos'}`}
           </button>

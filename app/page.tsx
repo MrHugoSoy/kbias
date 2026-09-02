@@ -8,6 +8,7 @@ import RankingBoard from '@/components/RankingBoard';
 import CommunityPointsTotal from '@/components/CommunityPointsTotal';
 import SiteHeader from '@/components/SiteHeader';
 import Hero from '@/components/Hero';
+import SongBattles from '@/components/SongBattles';
 import VoteCtaWidget from '@/components/VoteCtaWidget';
 import { FooterLinks } from '@/components/LegalPage';
 
@@ -55,6 +56,9 @@ export default async function Home() {
         <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 2)} totalVisits={totalVisits ?? 0} />
 
         <OnlineBar totalVisits={totalVisits ?? 0} />
+
+        {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
+        <SongBattles />
 
         {/* Ranking Global */}
         <RankingBoard

@@ -173,46 +173,26 @@ drop function if exists cast_vote(uuid, uuid, text);
 -- hay que borrar la versión vieja de esta misma firma primero.
 drop function if exists cast_vote(uuid, uuid, integer, text);
 
--- Las columnas de salida se llaman vote_id/vote_created_at (no "id" a
--- secas) para no chocar con la columna profiles.id: RETURNS TABLE crea
--- variables plpgsql con esos nombres, y una que se llamara "id" volvía
--- ambiguo el "on conflict (id)" del insert a profiles de abajo.
-create or replace function cast_vote(p_user_id uuid, p_group_id uuid, p_points integer, p_message text default null)
-returns table (vote_id uuid, vote_created_at timestamptz)
+-- Racha de días activos + bono de XP — factorizado aparte de cast_vote()
+-- para que cast_song_vote() (batallas de canciones, más abajo) otorgue
+-- exactamente la misma XP sin duplicar esta lógica. La bolsa de puntos ya
+-- limita a un único "día activo" por cuenta (repartir varias veces el
+-- mismo día no cuenta doble como racha nueva). El bono crece con la racha
+-- hasta un tope de 10 XP/día para no premiar rachas larguísimas de forma
+-- desproporcionada frente a repartir puntos (1 XP por punto).
+create or replace function grant_vote_xp(p_user_id uuid, p_points integer)
+returns void
 language plpgsql
 security definer
 set search_path = public
 as $$
 declare
-  v_used_today integer;
-  v_day_start timestamptz := date_trunc('day', now() at time zone 'utc') at time zone 'utc';
   v_today date := (now() at time zone 'utc')::date;
   v_last_active date;
   v_prev_streak integer;
   v_new_streak integer;
   v_streak_bonus integer := 0;
 begin
-  if p_points is null or p_points < 1 or p_points > 5 then
-    raise exception 'invalid_points';
-  end if;
-
-  perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
-
-  select coalesce(sum(v.points), 0) into v_used_today
-  from votes v
-  where v.user_id = p_user_id
-    and v.created_at >= v_day_start;
-
-  if v_used_today + p_points > 5 then
-    raise exception 'daily_budget_exceeded';
-  end if;
-
-  -- Racha de días activos + bono de XP: la bolsa de puntos ya limita a un
-  -- único "día activo" por cuenta (repartir 2 veces el mismo día no cuenta
-  -- doble), así que el cálculo de racha se hace aquí mismo, bajo el mismo
-  -- advisory lock que ya serializa al usuario. El bono crece con la racha
-  -- hasta un tope de 10 XP/día para no premiar rachas larguísimas de forma
-  -- desproporcionada frente a repartir puntos (1 XP por punto).
   select p.last_active_date, p.current_streak into v_last_active, v_prev_streak
   from profiles p where p.id = p_user_id;
 
@@ -234,6 +214,45 @@ begin
   set xp = profiles.xp + p_points + v_streak_bonus,
       current_streak = v_new_streak,
       last_active_date = v_today;
+end;
+$$;
+
+revoke all on function grant_vote_xp(uuid, integer) from public;
+grant execute on function grant_vote_xp(uuid, integer) to service_role;
+
+-- Las columnas de salida se llaman vote_id/vote_created_at (no "id" a
+-- secas) para no chocar con la columna profiles.id: RETURNS TABLE crea
+-- variables plpgsql con esos nombres, y una que se llamara "id" volvía
+-- ambiguo el "on conflict (id)" del insert a profiles de abajo.
+create or replace function cast_vote(p_user_id uuid, p_group_id uuid, p_points integer, p_message text default null)
+returns table (vote_id uuid, vote_created_at timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_used_today integer;
+  v_day_start timestamptz := date_trunc('day', now() at time zone 'utc') at time zone 'utc';
+begin
+  if p_points is null or p_points < 1 or p_points > 5 then
+    raise exception 'invalid_points';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
+
+  -- El presupuesto de 5 puntos diarios es compartido entre votos de grupo
+  -- y votos de batallas de canciones (song_votes, ver más abajo) — una
+  -- sola economía de puntos en todo el sitio.
+  select
+    coalesce((select sum(v.points) from votes v where v.user_id = p_user_id and v.created_at >= v_day_start), 0) +
+    coalesce((select sum(sv.points) from song_votes sv where sv.user_id = p_user_id and sv.created_at >= v_day_start), 0)
+  into v_used_today;
+
+  if v_used_today + p_points > 5 then
+    raise exception 'daily_budget_exceeded';
+  end if;
+
+  perform grant_vote_xp(p_user_id, p_points);
 
   return query
   insert into votes (user_id, group_id, points, message)
@@ -261,6 +280,200 @@ begin
     alter publication supabase_realtime add table votes;
   end if;
 end $$;
+
+-- ------------------------------------------------------------
+-- Batallas de canciones: cada grupo puede tener varias canciones (se
+-- cargan a mano, igual que los grupos); el sistema empareja canciones
+-- activas al azar en "batallas" de duración fija y la gente vota por una
+-- de las dos usando el mismo presupuesto de 5 puntos diarios que ya usan
+-- los votos de grupo (ver el chequeo compartido en cast_vote/cast_song_vote).
+-- ------------------------------------------------------------
+create table if not exists songs (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references groups(id) on delete cascade,
+  title text not null,
+  cover_url text,
+  active boolean not null default true,  -- en false para retirarla de futuros emparejamientos sin borrar su historial
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_songs_group on songs (group_id);
+
+alter table songs enable row level security;
+drop policy if exists "songs_public_read" on songs;
+create policy "songs_public_read" on songs for select using (true);
+-- Sin policy de insert/update: se cargan a mano con el service role desde el SQL Editor.
+
+-- Duración fija de cada batalla, en horas — 48h por defecto ("24-48h
+-- fijas"). Cambiar esta constante en ensure_active_song_battles() más
+-- abajo si se quiere otra duración.
+create table if not exists song_battles (
+  id uuid primary key default gen_random_uuid(),
+  song_a_id uuid not null references songs(id) on delete cascade,
+  song_b_id uuid not null references songs(id) on delete cascade,
+  starts_at timestamptz not null default now(),
+  ends_at timestamptz not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_song_battles_ends_at on song_battles (ends_at desc);
+
+alter table song_battles enable row level security;
+drop policy if exists "song_battles_public_read" on song_battles;
+create policy "song_battles_public_read" on song_battles for select using (true);
+
+create table if not exists song_votes (
+  id uuid primary key default gen_random_uuid(),
+  battle_id uuid not null references song_battles(id) on delete cascade,
+  song_id uuid not null references songs(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  points integer not null default 1 check (points between 1 and 5),
+  message text,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_song_votes_battle on song_votes (battle_id);
+create index if not exists idx_song_votes_user_created on song_votes (user_id, created_at desc);
+
+alter table song_votes enable row level security;
+drop policy if exists "song_votes_public_read" on song_votes;
+create policy "song_votes_public_read" on song_votes for select using (true);
+-- Sin policy de insert: todo pasa por /api/song-vote (cast_song_vote), que
+-- verifica el token real de sesión y escribe con el service role.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'song_votes'
+  ) then
+    alter publication supabase_realtime add table song_votes;
+  end if;
+end $$;
+
+-- Arma batallas nuevas cuando no queda ninguna activa: toma las canciones
+-- activas que no estén ya en una batalla vigente, las revuelve al azar y
+-- las empareja de dos en dos (la que sobra, si el número es impar, se
+-- queda fuera de esta ronda). Se llama en cada carga de la portada — si ya
+-- hay batallas activas no hace nada, así que es barato.
+create or replace function ensure_active_song_battles()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_battle_hours constant integer := 48;
+begin
+  if exists (select 1 from song_battles where ends_at > now()) then
+    return;
+  end if;
+
+  with available as (
+    select id
+    from songs
+    where active = true
+    order by random()
+  ),
+  numbered as (
+    select id, row_number() over () as rn
+    from available
+  ),
+  paired as (
+    select a.id as song_a_id, b.id as song_b_id
+    from numbered a
+    join numbered b on b.rn = a.rn + 1
+    where a.rn % 2 = 1
+  )
+  insert into song_battles (song_a_id, song_b_id, starts_at, ends_at)
+  select song_a_id, song_b_id, now(), now() + (v_battle_hours || ' hours')::interval
+  from paired;
+end;
+$$;
+
+grant execute on function ensure_active_song_battles() to anon, authenticated;
+
+-- Igual que cast_vote() pero para una batalla de canciones — mismo
+-- presupuesto de 5 puntos diarios (chequeado contra votes + song_votes) y
+-- misma XP otorgada vía grant_vote_xp().
+create or replace function cast_song_vote(p_user_id uuid, p_battle_id uuid, p_song_id uuid, p_points integer, p_message text default null)
+returns table (song_vote_id uuid, song_vote_created_at timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_used_today integer;
+  v_day_start timestamptz := date_trunc('day', now() at time zone 'utc') at time zone 'utc';
+  v_battle song_battles%rowtype;
+begin
+  if p_points is null or p_points < 1 or p_points > 5 then
+    raise exception 'invalid_points';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
+
+  select * into v_battle from song_battles where id = p_battle_id;
+  if v_battle.id is null or v_battle.ends_at <= now() then
+    raise exception 'battle_not_active';
+  end if;
+  if p_song_id != v_battle.song_a_id and p_song_id != v_battle.song_b_id then
+    raise exception 'invalid_song';
+  end if;
+
+  select
+    coalesce((select sum(v.points) from votes v where v.user_id = p_user_id and v.created_at >= v_day_start), 0) +
+    coalesce((select sum(sv.points) from song_votes sv where sv.user_id = p_user_id and sv.created_at >= v_day_start), 0)
+  into v_used_today;
+
+  if v_used_today + p_points > 5 then
+    raise exception 'daily_budget_exceeded';
+  end if;
+
+  perform grant_vote_xp(p_user_id, p_points);
+
+  return query
+  insert into song_votes (battle_id, song_id, user_id, points, message)
+  values (p_battle_id, p_song_id, p_user_id, p_points, p_message)
+  returning song_votes.id, song_votes.created_at;
+end;
+$$;
+
+revoke all on function cast_song_vote(uuid, uuid, uuid, integer, text) from public;
+grant execute on function cast_song_vote(uuid, uuid, uuid, integer, text) to service_role;
+
+-- Vista: song_battle_feed — batallas activas con los datos ya armados
+-- (canción + grupo de cada lado, y los puntos que lleva cada una) para
+-- mostrarlas directo en la portada.
+drop view if exists song_battle_feed;
+create view song_battle_feed as
+select
+  b.id as battle_id,
+  b.starts_at,
+  b.ends_at,
+  sa.id as song_a_id,
+  sa.title as song_a_title,
+  sa.cover_url as song_a_cover,
+  ga.id as song_a_group_id,
+  ga.name as song_a_group_name,
+  ga.slug as song_a_group_slug,
+  ga.image_url as song_a_group_image,
+  sb.id as song_b_id,
+  sb.title as song_b_title,
+  sb.cover_url as song_b_cover,
+  gb.id as song_b_group_id,
+  gb.name as song_b_group_name,
+  gb.slug as song_b_group_slug,
+  gb.image_url as song_b_group_image,
+  coalesce((select sum(sv.points) from song_votes sv where sv.battle_id = b.id and sv.song_id = b.song_a_id), 0) as song_a_points,
+  coalesce((select sum(sv.points) from song_votes sv where sv.battle_id = b.id and sv.song_id = b.song_b_id), 0) as song_b_points
+from song_battles b
+join songs sa on sa.id = b.song_a_id
+join groups ga on ga.id = sa.group_id
+join songs sb on sb.id = b.song_b_id
+join groups gb on gb.id = sb.group_id
+where b.ends_at > now()
+order by b.ends_at asc;
 
 -- ------------------------------------------------------------
 -- Vista: group_rankings — cada grupo con el total de votos del MES
