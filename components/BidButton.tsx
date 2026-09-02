@@ -76,7 +76,11 @@ export default function BidButton({
 
   return (
     <>
-      <div className={compact ? 'w-full' : 'inline-flex flex-col items-end gap-1'}>
+      {/* flex (no inline-flex) para que el ancho lo fije el contenedor, no el
+          hijo más ancho — con inline-flex, el mensaje largo ensanchaba esta
+          caja y el botón (alineado con items-end) se corría a la derecha
+          para seguir pegado al nuevo borde. */}
+      <div className={(compact ? 'w-full' : 'flex flex-col items-center') + ' gap-1'}>
         <button
           onClick={handleClick}
           disabled={loading || checking}
@@ -100,7 +104,7 @@ export default function BidButton({
             la biografía del grupo dentro de la tarjeta de altura fija. */}
         <p
           className={
-            'text-[11px] min-h-[2.2em] leading-tight ' +
+            'text-[11px] min-h-[2.2em] leading-tight text-center ' +
             (result ? (result === 'ok' ? 'text-green-500' : 'text-red-500') : 'invisible')
           }
         >
