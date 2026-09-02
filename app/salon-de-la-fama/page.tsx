@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Crown, Mic2 } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import { LegalPage } from '@/components/LegalPage';
+import LiveHallOfFameStats from '@/components/LiveHallOfFameStats';
 
 export const metadata = {
   title: 'Salón de la Fama',
@@ -48,7 +49,7 @@ export default async function SalonDeLaFamaPage() {
       .order('rank', { ascending: true }),
     supabase.from('site_stats').select('*').maybeSingle(),
     supabase.from('votes').select('points'),
-    supabase.from('group_rankings').select('total_points').gt('total_points', 0),
+    supabase.from('group_rankings').select('*'),
   ]);
   const totalPoints = (pointsRows ?? []).reduce((sum, r) => sum + r.points, 0);
 
@@ -92,11 +93,7 @@ export default async function SalonDeLaFamaPage() {
             {maxCrowns === 0 ? 'Más coronas' : `Coronas: ${topCrownHolders.join(' / ')}`}
           </p>
         </div>
-        <StatCard label="Puntos totales del sitio" value={totalPoints.toLocaleString('es-MX')} />
-        <StatCard
-          label="Grupos con puntos este mes"
-          value={(currentRankings ?? []).length.toLocaleString('es-MX')}
-        />
+        <LiveHallOfFameStats initialCurrentRankings={currentRankings ?? []} initialTotalPoints={totalPoints} />
         <StatCard label="Visitas desde el lanzamiento" value={(siteStats?.total_visits ?? 0).toLocaleString('es-MX')} />
       </div>
 
