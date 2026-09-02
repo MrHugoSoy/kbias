@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { LogOut, Mic2, Pencil, Upload } from 'lucide-react';
+import { ImagePlus, Lock, LogOut, Mic2, Pencil, Upload, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import { LegalPage } from '@/components/LegalPage';
@@ -10,6 +10,7 @@ import AuthModal from '@/components/AuthModal';
 import PixelAvatar, { SPECIES } from '@/components/PixelAvatar';
 import LevelBadge from '@/components/LevelBadge';
 import { levelForXp, xpForLevel } from '@/lib/level';
+import { hasPerk, PERK_LEVELS } from '@/lib/perks';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
@@ -29,6 +30,7 @@ type ProfileCache = {
   avatarSpecies: string | null;
   avatarUrl: string | null;
   xp: number;
+  bannerUrl: string | null;
 };
 
 // Vive fuera del componente a propósito: sobrevive a que el usuario salga
@@ -52,6 +54,10 @@ export default function PerfilPage() {
   const [avatarSpecies, setAvatarSpecies] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [xp, setXp] = useState(0);
+  const [bannerUrl, setBannerUrl] = useState<string | null>(null);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [bannerError, setBannerError] = useState('');
+  const bannerInputRef = useRef<HTMLInputElement>(null);
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [avatarError, setAvatarError] = useState('');
@@ -119,6 +125,7 @@ export default function PerfilPage() {
       setAvatarSpecies(cached.avatarSpecies);
       setAvatarUrl(cached.avatarUrl);
       setXp(cached.xp);
+      setBannerUrl(cached.bannerUrl);
       setLoadingData(false);
     }
 
@@ -127,7 +134,7 @@ export default function PerfilPage() {
       const [{ data: voteRows }, { data: groupRows }, { data: profileRow }] = await Promise.all([
         supabase.from('votes').select('group_id, created_at, points').eq('user_id', user!.id),
         supabase.from('groups').select('id, name, fandom_name, image_url'),
-        supabase.from('profiles').select('username, avatar_species, avatar_url, xp').eq('id', user!.id).maybeSingle(),
+        supabase.from('profiles').select('username, avatar_species, avatar_url, xp, banner_url').eq('id', user!.id).maybeSingle(),
       ]);
       const next: ProfileCache = {
         userId: user!.id,
@@ -137,6 +144,7 @@ export default function PerfilPage() {
         avatarSpecies: profileRow?.avatar_species ?? null,
         avatarUrl: profileRow?.avatar_url ?? null,
         xp: profileRow?.xp ?? 0,
+        bannerUrl: profileRow?.banner_url ?? null,
       };
       profileCache = next;
       setVotes(next.votes);
@@ -145,6 +153,7 @@ export default function PerfilPage() {
       setAvatarSpecies(next.avatarSpecies);
       setAvatarUrl(next.avatarUrl);
       setXp(next.xp);
+      setBannerUrl(next.bannerUrl);
       setLoadingData(false);
 
       // Sincroniza el avatar en el user_metadata de la sesión: así el
@@ -258,6 +267,64 @@ export default function PerfilPage() {
     }
   }
 
+  async function handleBannerUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file || !user) return;
+    setBannerError('');
+
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setBannerError('Solo se aceptan JPG, PNG o WEBP');
+      return;
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setBannerError('La imagen no puede superar 2MB');
+      return;
+    }
+
+    setUploadingBanner(true);
+    try {
+      const ext = file.name.split('.').pop() ?? 'jpg';
+      const path = `${user.id}/banner-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+
+      const res = await authFetch('/api/banner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bannerUrl: publicUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      setBannerUrl(publicUrl);
+      patchCache({ bannerUrl: publicUrl });
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Error al subir la imagen');
+    } finally {
+      setUploadingBanner(false);
+    }
+  }
+
+  async function removeBanner() {
+    setBannerError('');
+    try {
+      const res = await authFetch('/api/banner', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bannerUrl: null }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setBannerUrl(null);
+      patchCache({ bannerUrl: null });
+    } catch (err) {
+      setBannerError(err instanceof Error ? err.message : 'Error al quitar el banner');
+    }
+  }
+
   if (!authLoaded) {
     return (
       <LegalPage title="Mi perfil" subtitle="Cargando...">
@@ -339,8 +406,56 @@ export default function PerfilPage() {
 
   const memberSince = new Date(user.created_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'long', day: 'numeric' });
 
+  const bannerUnlocked = hasPerk(level, 'profileBanner');
+
   return (
     <LegalPage title="Mi perfil" subtitle={`Miembro desde ${memberSince}.`}>
+      <div className="relative rounded-xl overflow-hidden bg-neutral-100 dark:bg-neutral-900 h-28">
+        {bannerUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={bannerUrl} alt="Banner de tu perfil" className="w-full h-full object-cover" />
+        ) : bannerUnlocked ? (
+          <button
+            onClick={() => bannerInputRef.current?.click()}
+            disabled={uploadingBanner}
+            className="w-full h-full flex items-center justify-center gap-2 text-sm text-neutral-500 hover:text-pink-500 dark:hover:text-pink-400 transition disabled:opacity-50"
+          >
+            <ImagePlus className="w-5 h-5" /> {uploadingBanner ? 'Subiendo...' : 'Agregar banner de perfil'}
+          </button>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center gap-2 text-sm text-neutral-400 dark:text-neutral-600">
+            <Lock className="w-4 h-4" /> Desbloqueas un banner de perfil en el nivel {PERK_LEVELS.profileBanner}
+          </div>
+        )}
+        {bannerUrl && (
+          <div className="absolute top-2 right-2 flex gap-1.5">
+            <button
+              onClick={() => bannerInputRef.current?.click()}
+              disabled={uploadingBanner}
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition disabled:opacity-50"
+              title="Cambiar banner"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+            </button>
+            <button
+              onClick={removeBanner}
+              className="bg-black/50 hover:bg-black/70 text-white rounded-full p-1.5 transition"
+              title="Quitar banner"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+        <input
+          ref={bannerInputRef}
+          type="file"
+          accept=".jpg,.jpeg,.png,.webp"
+          onChange={handleBannerUpload}
+          className="hidden"
+        />
+      </div>
+      {bannerError && <p className="text-xs text-red-500">{bannerError}</p>}
+
       <div className="flex items-center justify-between bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4">
         <div className="flex items-center gap-3 min-w-0">
           <button

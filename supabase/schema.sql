@@ -349,6 +349,12 @@ alter table profiles add column if not exists xp integer not null default 0;
 alter table profiles add column if not exists current_streak integer not null default 0;
 alter table profiles add column if not exists last_active_date date;
 
+-- Recompensas por nivel (ver lib/perks.ts para qué nivel desbloquea qué) —
+-- banner_url es la primera: se sube igual que la foto de perfil, al bucket
+-- "avatars" ya existente, y solo /api/banner la deja guardar si el nivel
+-- derivado del xp ya alcanza el requisito.
+alter table profiles add column if not exists banner_url text;
+
 alter table profiles enable row level security;
 drop policy if exists "profiles_public_read" on profiles;
 create policy "profiles_public_read" on profiles for select using (true);
