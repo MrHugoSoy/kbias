@@ -36,9 +36,9 @@ export default function SiteHeader({ home }: { home?: boolean }) {
           <a href="/#ranking" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
             RANKING
           </a>
-          <a href="/#como-funciona" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
+          <Link href="/como-funciona" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
             CÓMO FUNCIONA
-          </a>
+          </Link>
           <Link href="/salon-de-la-fama" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
             SALÓN DE LA FAMA
           </Link>
