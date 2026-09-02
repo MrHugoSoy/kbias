@@ -11,17 +11,9 @@ import LogoKW from './icons/LogoKW';
 // a notificaciones/perfil/tema. Los anclas usan ruta absoluta ("/#ranking")
 // para que funcionen igual ya sea que estés en la portada o llegando desde
 // otra página.
-export default function SiteHeader({
-  home,
-  maxWidthClassName = 'max-w-4xl xl:max-w-[75.5rem]',
-}: {
-  home?: boolean;
-  maxWidthClassName?: string;
-}) {
+export default function SiteHeader({ home }: { home?: boolean }) {
   return (
-    <header
-      className={`flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 ${maxWidthClassName} mx-auto`}
-    >
+    <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
       <Link href="/" className="flex items-center gap-2">
         <LogoKW className="w-10 h-10 text-pink-500" />
         <div>

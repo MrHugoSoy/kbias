@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowUp } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import UserAvatar from './UserAvatar';
 import LevelBadge from './LevelBadge';
@@ -20,8 +21,67 @@ type FeedItem = {
   points: number;
 };
 
+// Cuánto se espera sin interacción antes de retomar el auto-scroll solo.
+const RESUME_AFTER_MS = 5000;
+
 export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[] }) {
   const [items, setItems] = useState<FeedItem[]>(initialItems);
+  const [pending, setPending] = useState<FeedItem[]>([]);
+  const [paused, setPaused] = useState(false);
+
+  // El handler de Realtime se registra una sola vez (deps [] en el useEffect
+  // de abajo) — usa este ref en vez del state "paused" para no quedarse con
+  // un valor stale por el cierre de la función.
+  const pausedRef = useRef(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const ignoreScrollRef = useRef(false);
+  const resumeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
+
+  function clearResumeTimer() {
+    if (resumeTimerRef.current) {
+      clearTimeout(resumeTimerRef.current);
+      resumeTimerRef.current = null;
+    }
+  }
+
+  function resume() {
+    clearResumeTimer();
+    setPaused(false);
+    setPending((pend) => {
+      if (pend.length > 0) {
+        setItems((prev) => [...pend, ...prev].slice(0, 20));
+      }
+      return [];
+    });
+    // Vuelve a dejar visible lo más nuevo, arriba del todo.
+    ignoreScrollRef.current = true;
+    containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      ignoreScrollRef.current = false;
+    }, 500);
+  }
+
+  function pause() {
+    setPaused(true);
+    clearResumeTimer();
+    resumeTimerRef.current = setTimeout(resume, RESUME_AFTER_MS);
+  }
+
+  function handleScroll() {
+    if (ignoreScrollRef.current) return;
+    if (!pausedRef.current) {
+      if ((containerRef.current?.scrollTop ?? 0) > 4) pause();
+      return;
+    }
+    // Sigue interactuando mientras está en pausa: reinicia el contador de
+    // inactividad en vez de retomar de inmediato.
+    clearResumeTimer();
+    resumeTimerRef.current = setTimeout(resume, RESUME_AFTER_MS);
+  }
 
   useEffect(() => {
     // Reutiliza el cliente compartido de lib/supabase.ts — ver nota en
@@ -61,13 +121,29 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
             points: newVote.points,
           };
 
+          // Congelado (el usuario está viendo votos anteriores): se acumula
+          // aparte y se muestra un badge, en vez de mover la lista debajo de
+          // donde está leyendo.
+          if (pausedRef.current) {
+            setPending((prev) => [feedItem, ...prev].slice(0, 20));
+            return;
+          }
+
           setItems((prev) => [feedItem, ...prev].slice(0, 20));
+          ignoreScrollRef.current = true;
+          requestAnimationFrame(() => {
+            if (containerRef.current) containerRef.current.scrollTop = 0;
+            setTimeout(() => {
+              ignoreScrollRef.current = false;
+            }, 50);
+          });
         }
       )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
+      clearResumeTimer();
     };
   }, []);
 
@@ -77,7 +153,22 @@ export default function DonorSidebar({ initialItems }: { initialItems: FeedItem[
         <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
         <h2 className="text-xs font-bold tracking-widest text-neutral-500 dark:text-neutral-400 uppercase">Votos en vivo</h2>
       </div>
+
+      {paused && pending.length > 0 && (
+        <button
+          onClick={resume}
+          className="w-full flex items-center justify-center gap-1 text-[11px] font-semibold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 dark:hover:bg-pink-950/60 border border-pink-200 dark:border-pink-900 rounded-full py-1.5 transition"
+        >
+          <ArrowUp className="w-3 h-3" />
+          {pending.length} {pending.length === 1 ? 'nuevo voto' : 'nuevos votos'}
+        </button>
+      )}
+
       <div
+        ref={containerRef}
+        onMouseEnter={pause}
+        onMouseLeave={resume}
+        onScroll={handleScroll}
         className={
           'space-y-2 max-h-[calc(100vh-8rem)] overflow-y-auto pr-1 ' +
           '[scrollbar-width:thin] [scrollbar-color:theme(colors.pink.400/0.5)_transparent] ' +
