@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { MessageCircle, CornerDownRight, Pencil, Trash2 } from 'lucide-react';
+import { MessageCircle, CornerDownRight, Pencil, Trash2, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import UserAvatar from './UserAvatar';
@@ -21,6 +21,7 @@ type Comment = {
   username: string | null;
   avatar_species: string | null;
   avatar_url: string | null;
+  like_count: number;
 };
 
 type ActionResult = { ok: boolean; error?: string };
@@ -47,18 +48,22 @@ function CommentItem({
   childrenByParent,
   depth,
   userId,
+  likedIds,
   onReply,
   onEdit,
   onDelete,
+  onToggleLike,
   onRequestAuth,
 }: {
   comment: Comment;
   childrenByParent: Map<string, Comment[]>;
   depth: number;
   userId: string | null;
+  likedIds: Set<string>;
   onReply: (body: string, parentId: string) => Promise<ActionResult>;
   onEdit: (commentId: string, body: string) => Promise<ActionResult>;
   onDelete: (commentId: string) => Promise<ActionResult>;
+  onToggleLike: (commentId: string) => void;
   onRequestAuth: (afterAuth: () => void) => void;
 }) {
   const [replying, setReplying] = useState(false);
@@ -100,6 +105,14 @@ function CommentItem({
       return;
     }
     setReplying((v) => !v);
+  }
+
+  function handleLikeClick() {
+    if (!userId) {
+      onRequestAuth(() => onToggleLike(comment.id));
+      return;
+    }
+    onToggleLike(comment.id);
   }
 
   async function submitEdit() {
@@ -192,6 +205,20 @@ function CommentItem({
           )}
 
           <div className="flex items-center gap-3 mt-1">
+            {!isDeleted && (
+              <button
+                onClick={handleLikeClick}
+                className={
+                  'text-[11px] flex items-center gap-1 transition ' +
+                  (likedIds.has(comment.id)
+                    ? 'text-pink-500'
+                    : 'text-neutral-500 hover:text-pink-500 dark:hover:text-pink-400')
+                }
+              >
+                <Heart className={'w-3 h-3' + (likedIds.has(comment.id) ? ' fill-current' : '')} />
+                {comment.like_count > 0 ? comment.like_count : 'Me gusta'}
+              </button>
+            )}
             <button
               onClick={handleReplyClick}
               className="text-[11px] text-neutral-500 hover:text-pink-500 dark:hover:text-pink-400 flex items-center gap-1"
@@ -263,9 +290,11 @@ function CommentItem({
                   childrenByParent={childrenByParent}
                   depth={nextDepth}
                   userId={userId}
+                  likedIds={likedIds}
                   onReply={onReply}
                   onEdit={onEdit}
                   onDelete={onDelete}
+                  onToggleLike={onToggleLike}
                   onRequestAuth={onRequestAuth}
                 />
               ))}
@@ -285,6 +314,7 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
   const [body, setBody] = useState('');
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
+  const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setUserId(data.session?.user?.id ?? null));
@@ -293,6 +323,16 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
     } = supabase.auth.onAuthStateChange((_event, session) => setUserId(session?.user?.id ?? null));
     return () => subscription.unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (!userId) {
+      setLikedIds(new Set());
+      return;
+    }
+    authFetch(`/api/comments/likes?groupId=${groupId}`)
+      .then((res) => res.json())
+      .then((data) => setLikedIds(new Set<string>(data.likedCommentIds ?? [])));
+  }, [userId, groupId]);
 
   useEffect(() => {
     const channel = supabase
@@ -314,7 +354,7 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
           setComments((prev) => {
             if (prev.some((c) => c.id === row.id)) return prev;
             return [
-              { ...row, username: null, avatar_species: null, avatar_url: null },
+              { ...row, username: null, avatar_species: null, avatar_url: null, like_count: 0 },
               ...prev,
             ];
           });
@@ -345,12 +385,41 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
           );
         }
       )
+      // comment_likes no tiene group_id propio (sería una columna redundante
+      // solo para poder filtrar acá), así que se escucha sin filtro de la
+      // tabla completa y se descarta lo que no sea de un comentario ya
+      // cargado en este grupo — así los contadores se ven en vivo para
+      // todos los que tengan la página abierta, no solo para quien dio like.
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'comment_likes' },
+        (payload) => {
+          const row = payload.new as { comment_id: string; user_id: string };
+          // El propio like ya se refleja al instante con la respuesta del
+          // POST — aplicar este evento también lo contaría dos veces.
+          if (row.user_id === userId) return;
+          setComments((prev) =>
+            prev.map((c) => (c.id === row.comment_id ? { ...c, like_count: c.like_count + 1 } : c))
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'DELETE', schema: 'public', table: 'comment_likes' },
+        (payload) => {
+          const row = payload.old as { comment_id: string; user_id: string };
+          if (row.user_id === userId) return;
+          setComments((prev) =>
+            prev.map((c) => (c.id === row.comment_id ? { ...c, like_count: Math.max(0, c.like_count - 1) } : c))
+          );
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [groupId]);
+  }, [groupId, userId]);
 
   async function postComment(commentBody: string, parentId?: string): Promise<ActionResult> {
     try {
@@ -404,6 +473,43 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
     } catch {
       return { ok: false, error: 'Error de conexión, intenta de nuevo' };
     }
+  }
+
+  async function toggleLike(commentId: string) {
+    const wasLiked = likedIds.has(commentId);
+    const delta = wasLiked ? -1 : 1;
+
+    // Optimista: se ve al instante. El realtime de comment_likes ignora los
+    // eventos generados por uno mismo (ver el filtro user_id === userId
+    // arriba) precisamente para no contar este cambio dos veces.
+    setLikedIds((prev) => {
+      const next = new Set(prev);
+      wasLiked ? next.delete(commentId) : next.add(commentId);
+      return next;
+    });
+    setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, like_count: c.like_count + delta } : c)));
+
+    try {
+      const res = await authFetch('/api/comments/likes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ commentId }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, like_count: data.likeCount } : c)));
+        return;
+      }
+    } catch {
+      // sigue al revert de abajo
+    }
+    // Falló: revierte el optimista.
+    setLikedIds((prev) => {
+      const next = new Set(prev);
+      wasLiked ? next.add(commentId) : next.delete(commentId);
+      return next;
+    });
+    setComments((prev) => prev.map((c) => (c.id === commentId ? { ...c, like_count: c.like_count - delta } : c)));
   }
 
   async function handleSubmit() {
@@ -492,9 +598,11 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
               childrenByParent={childrenByParent}
               depth={0}
               userId={userId}
+              likedIds={likedIds}
               onReply={postComment}
               onEdit={editComment}
               onDelete={deleteComment}
+              onToggleLike={toggleLike}
               onRequestAuth={requestAuth}
             />
           </div>
