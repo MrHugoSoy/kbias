@@ -1,4 +1,5 @@
-import { Crown, Zap } from 'lucide-react';
+import { Crown } from 'lucide-react';
+import HeroStats from './HeroStats';
 import type { RankingRow } from '@/lib/types';
 
 // Portada nueva estilo "batalla" — usa datos reales (los dos grupos con más
@@ -35,9 +36,7 @@ export default function Hero({ topGroups, totalVisits }: { topGroups: RankingRow
             Ver rankings
           </a>
         </div>
-        <p className="flex items-center gap-1.5 text-xs text-neutral-500">
-          <Zap className="w-3.5 h-3.5 text-violet-500" /> {totalVisits.toLocaleString('es-MX')} visitas · Rankings en vivo 24/7
-        </p>
+        <HeroStats totalVisits={totalVisits} />
       </div>
 
       {first && second && (

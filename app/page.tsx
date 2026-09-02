@@ -3,7 +3,6 @@ import { Zap, ShieldCheck, Trophy, Handshake, HelpCircle, ArrowRight } from 'luc
 import { getSupabasePublicClient } from '@/lib/supabase';
 import ActivityFeed from '@/components/ActivityFeed';
 import BidForm from '@/components/BidForm';
-import OnlineBar from '@/components/OnlineBar';
 import RankingBoard from '@/components/RankingBoard';
 import CommunityPointsTotal from '@/components/CommunityPointsTotal';
 import SiteHeader from '@/components/SiteHeader';
@@ -54,8 +53,6 @@ export default async function Home() {
 
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
         <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 2)} totalVisits={totalVisits ?? 0} />
-
-        <OnlineBar totalVisits={totalVisits ?? 0} />
 
         {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
         <SongBattles />
