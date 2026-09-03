@@ -7,7 +7,7 @@ import CommunityPointsTotal from '@/components/CommunityPointsTotal';
 import SiteHeader from '@/components/SiteHeader';
 import Hero from '@/components/Hero';
 import SongBattles from '@/components/SongBattles';
-import VoteCtaWidget from '@/components/VoteCtaWidget';
+import FandomsRankingPanel from '@/components/FandomsRankingPanel';
 import { FooterLinks } from '@/components/LegalPage';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
@@ -59,10 +59,10 @@ export default async function Home() {
           nextMonthLabel={nextMonthLabel}
         />
 
-        {/* Actividad en vivo + tarjeta de progreso */}
+        {/* Ranking de fandoms (todos los grupos, con scroll) + actividad en vivo */}
         <div className="grid lg:grid-cols-2 gap-6 items-start">
+          <FandomsRankingPanel initialRankings={rankings ?? []} />
           <ActivityFeed initialItems={feed ?? []} />
-          <VoteCtaWidget />
         </div>
 
         {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
