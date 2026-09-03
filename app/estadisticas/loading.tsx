@@ -3,9 +3,19 @@ import { LegalPage } from '@/components/LegalPage';
 export default function Loading() {
   return (
     <LegalPage title="Ranking Global" subtitle="Cargando..." wide>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="flex items-center gap-6 border-b border-neutral-200 dark:border-neutral-800 pb-2">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-4 w-16 rounded bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
+        ))}
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {[1, 2, 3].map((i) => (
           <div key={i} className="h-20 rounded-xl bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className={'rounded-2xl bg-neutral-100 dark:bg-neutral-900 animate-pulse ' + (i === 2 ? 'h-52' : 'h-44')} />
         ))}
       </div>
       <div className="space-y-2">
