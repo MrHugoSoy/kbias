@@ -15,7 +15,6 @@ import { hasPerk, PERK_LEVELS } from '@/lib/perks';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 
 const SPARKLINE_DAYS = 14;
-type Tab = 'info' | 'stats';
 
 const MAX_PHOTO_BYTES = 2 * 1024 * 1024;
 
@@ -82,7 +81,6 @@ export default function PerfilPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [now, setNow] = useState(() => Date.now());
   const [currentStreak, setCurrentStreak] = useState(0);
-  const [tab, setTab] = useState<Tab>('info');
 
   // Solo se usa para el temporizador de "vuelve en Xh Ym Zs" — se actualiza
   // cada segundo mientras la pestaña está abierta en /perfil.
@@ -599,120 +597,95 @@ export default function PerfilPage() {
           </div>
         )}
 
-        <div className="flex items-center gap-6 border-b border-neutral-200 dark:border-neutral-800 text-sm font-semibold overflow-x-auto">
-          <button
-            onClick={() => setTab('info')}
-            className={
-              'pb-2 shrink-0 ' +
-              (tab === 'info' ? 'border-b-2 border-violet-600 text-violet-600 dark:text-violet-400' : 'text-neutral-500')
-            }
-          >
-            Información
-          </button>
-          <button
-            onClick={() => setTab('stats')}
-            className={
-              'pb-2 shrink-0 ' +
-              (tab === 'stats' ? 'border-b-2 border-violet-600 text-violet-600 dark:text-violet-400' : 'text-neutral-500')
-            }
-          >
-            Estadísticas
-          </button>
-        </div>
+        <div className="space-y-4">
+          <div className="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900/60 rounded-xl p-4">
+            {pointsRemainingToday > 0 ? (
+              <p className="text-sm text-violet-700 dark:text-violet-300">
+                Te quedan <strong>{pointsRemainingToday} de {DAILY_POINT_BUDGET}</strong> puntos hoy —{' '}
+                <a href="/#ranking" className="underline font-semibold">
+                  repártelos en el ranking
+                </a>
+                .
+              </p>
+            ) : (
+              <p className="text-sm text-violet-700 dark:text-violet-300">
+                ✓ Ya repartiste tus {DAILY_POINT_BUDGET} puntos de hoy. Vuelve en{' '}
+                <strong className="font-mono" suppressHydrationWarning>{resetCountdown}</strong>.
+              </p>
+            )}
+          </div>
 
-        {tab === 'info' ? (
-          <div className="space-y-4">
-            <div className="bg-violet-50 dark:bg-violet-950/30 border border-violet-200 dark:border-violet-900/60 rounded-xl p-4">
-              {pointsRemainingToday > 0 ? (
-                <p className="text-sm text-violet-700 dark:text-violet-300">
-                  Te quedan <strong>{pointsRemainingToday} de {DAILY_POINT_BUDGET}</strong> puntos hoy —{' '}
-                  <a href="/#ranking" className="underline font-semibold">
-                    repártelos en el ranking
-                  </a>
-                  .
-                </p>
-              ) : (
-                <p className="text-sm text-violet-700 dark:text-violet-300">
-                  ✓ Ya repartiste tus {DAILY_POINT_BUDGET} puntos de hoy. Vuelve en{' '}
-                  <strong className="font-mono" suppressHydrationWarning>{resetCountdown}</strong>.
-                </p>
-              )}
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-violet-600 dark:text-violet-400">Nivel {level}</p>
+              <p className="text-xs text-neutral-500">
+                {xp} XP · faltan {xpForNextLevel - xpIntoLevel} para el nivel {level + 1}
+              </p>
             </div>
-
-            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 flex items-start gap-3">
-              <input
-                type="checkbox"
-                checked={marketingOptIn}
-                disabled={savingMarketing}
-                onChange={(e) => toggleMarketing(e.target.checked)}
-                className="mt-0.5 shrink-0"
-              />
-              <div>
-                <p className="text-sm font-semibold">Correos de novedades</p>
-                <p className="text-xs text-neutral-500 mt-0.5">
-                  Novedades, nuevos rankings y promociones de nuestros socios. Opcional — puedes cambiarlo cuando quieras.
-                </p>
-                {marketingError && <p className="text-xs text-red-500 mt-1">{marketingError}</p>}
-              </div>
+            <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-violet-600 to-pink-500 rounded-full transition-all" style={{ width: `${levelProgressPct}%` }} />
             </div>
           </div>
-        ) : (
-          <div className="space-y-4">
+
+          <div className="grid sm:grid-cols-3 gap-3">
+            <StatBlock label="Puntos dados" value={totalPointsGiven.toLocaleString('es-MX')} data={dailySeries} />
+            <StatBlock label="Puntos hoy" value={pointsUsedToday.toLocaleString('es-MX')} />
             <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-violet-600 dark:text-violet-400">Nivel {level}</p>
-                <p className="text-xs text-neutral-500">
-                  {xp} XP · faltan {xpForNextLevel - xpIntoLevel} para el nivel {level + 1}
-                </p>
-              </div>
-              <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-                <div className="h-full bg-gradient-to-r from-violet-600 to-pink-500 rounded-full transition-all" style={{ width: `${levelProgressPct}%` }} />
-              </div>
-            </div>
-
-            <div className="grid sm:grid-cols-3 gap-3">
-              <StatBlock label="Puntos dados" value={totalPointsGiven.toLocaleString('es-MX')} data={dailySeries} />
-              <StatBlock label="Puntos hoy" value={pointsUsedToday.toLocaleString('es-MX')} />
-              <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
-                <p className="text-xs text-neutral-500 uppercase tracking-wide">Racha</p>
-                <p className="text-2xl font-black text-violet-600 dark:text-violet-400 font-mono flex items-center gap-1.5">
-                  {currentStreak > 0 && <Flame className="w-5 h-5 text-amber-500" />}
-                  {currentStreak} {currentStreak === 1 ? 'día' : 'días'}
-                </p>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <h2 className="text-lg font-bold text-violet-600 dark:text-violet-400">Tus puntos por grupo</h2>
-
-              {tallies.length === 0 ? (
-                <p className="text-sm text-neutral-500">Todavía no has votado por ningún grupo.</p>
-              ) : (
-                <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
-                  {tallies.map(({ group, count }) => (
-                    <div key={group.id} className="flex items-center gap-3 px-4 py-3 text-sm">
-                      <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center shrink-0">
-                        {group.image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <Mic2 className="w-4 h-4 text-neutral-500 dark:text-neutral-600" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-bold truncate">{group.name}</p>
-                        <p className="text-xs text-violet-400 truncate">{group.fandom_name}</p>
-                      </div>
-                      <span className="font-mono text-amber-600 dark:text-amber-400 shrink-0">
-                        {count} {count === 1 ? 'punto' : 'puntos'}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <p className="text-xs text-neutral-500 uppercase tracking-wide">Racha</p>
+              <p className="text-2xl font-black text-violet-600 dark:text-violet-400 font-mono flex items-center gap-1.5">
+                {currentStreak > 0 && <Flame className="w-5 h-5 text-amber-500" />}
+                {currentStreak} {currentStreak === 1 ? 'día' : 'días'}
+              </p>
             </div>
           </div>
-        )}
+
+          <div className="space-y-3">
+            <h2 className="text-lg font-bold text-violet-600 dark:text-violet-400">Tus puntos por grupo</h2>
+
+            {tallies.length === 0 ? (
+              <p className="text-sm text-neutral-500">Todavía no has votado por ningún grupo.</p>
+            ) : (
+              <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
+                {tallies.map(({ group, count }) => (
+                  <div key={group.id} className="flex items-center gap-3 px-4 py-3 text-sm">
+                    <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center shrink-0">
+                      {group.image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={group.image_url} alt={group.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Mic2 className="w-4 h-4 text-neutral-500 dark:text-neutral-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold truncate">{group.name}</p>
+                      <p className="text-xs text-violet-400 truncate">{group.fandom_name}</p>
+                    </div>
+                    <span className="font-mono text-amber-600 dark:text-amber-400 shrink-0">
+                      {count} {count === 1 ? 'punto' : 'puntos'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 flex items-start gap-3">
+            <input
+              type="checkbox"
+              checked={marketingOptIn}
+              disabled={savingMarketing}
+              onChange={(e) => toggleMarketing(e.target.checked)}
+              className="mt-0.5 shrink-0"
+            />
+            <div>
+              <p className="text-sm font-semibold">Correos de novedades</p>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                Novedades, nuevos rankings y promociones de nuestros socios. Opcional — puedes cambiarlo cuando quieras.
+              </p>
+              {marketingError && <p className="text-xs text-red-500 mt-1">{marketingError}</p>}
+            </div>
+          </div>
+        </div>
       </div>
     </LegalPage>
   );
