@@ -71,7 +71,7 @@ export function LegalPage({
   wide?: boolean;
   children: React.ReactNode;
 }) {
-  const maxW = wide ? 'max-w-4xl' : 'max-w-2xl';
+  const maxW = wide ? 'max-w-4xl xl:max-w-[75.5rem]' : 'max-w-2xl';
   return (
     <main className="min-h-screen bg-white text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
       {/* El header siempre usa su ancho por defecto (el mismo de la portada),
