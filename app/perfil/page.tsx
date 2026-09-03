@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Flame, ImagePlus, Lock, LogOut, Mic2, Pencil, Upload, X } from 'lucide-react';
+import Link from 'next/link';
+import { Flame, ImagePlus, Lock, LogOut, Mic2, Newspaper, Pencil, Upload, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import { LegalPage } from '@/components/LegalPage';
@@ -81,6 +82,7 @@ export default function PerfilPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [now, setNow] = useState(() => Date.now());
   const [currentStreak, setCurrentStreak] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // Solo se usa para el temporizador de "vuelve en Xh Ym Zs" — se actualiza
   // cada segundo mientras la pestaña está abierta en /perfil.
@@ -101,6 +103,20 @@ export default function PerfilPage() {
     });
     return () => subscription.unsubscribe();
   }, []);
+
+  // Solo decide si se muestra el link al panel de admin — el acceso real se
+  // valida server-side en /api/admin/* contra ADMIN_EMAILS, esto nunca es la
+  // única puerta.
+  useEffect(() => {
+    if (!user) {
+      setIsAdmin(false);
+      return;
+    }
+    authFetch('/api/admin/whoami')
+      .then((res) => (res.ok ? res.json() : { isAdmin: false }))
+      .then((data) => setIsAdmin(!!data.isAdmin))
+      .catch(() => setIsAdmin(false));
+  }, [user]);
 
   async function toggleMarketing(next: boolean) {
     setMarketingError('');
@@ -557,6 +573,14 @@ export default function PerfilPage() {
               </button>
             )}
             <p className="text-sm text-neutral-500 truncate mt-0.5">{user.email}</p>
+            {isAdmin && (
+              <Link
+                href="/admin/noticias"
+                className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline mt-1"
+              >
+                <Newspaper className="w-3.5 h-3.5" /> Panel de administración
+              </Link>
+            )}
           </div>
           <button
             onClick={signOut}
