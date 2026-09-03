@@ -10,10 +10,17 @@ export default function BidButton({
   groupId,
   groupName,
   compact,
+  floatingMessage,
 }: {
   groupId: string;
   groupName: string;
   compact?: boolean;
+  // El mensaje de error/éxito flota sobre el layout en vez de reservar
+  // espacio en el flujo normal — para usarlo en filas angostas donde el
+  // texto (a veces largo, como "Ya repartiste tus 5 puntos de hoy...")
+  // rompería la alineación con el resto de la fila al envolver en varias
+  // líneas.
+  floatingMessage?: boolean;
 }) {
   const [showAuth, setShowAuth] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
@@ -80,7 +87,7 @@ export default function BidButton({
           hijo más ancho — con inline-flex, el mensaje largo ensanchaba esta
           caja y el botón (alineado con items-end) se corría a la derecha
           para seguir pegado al nuevo borde. */}
-      <div className={(compact ? 'w-full' : 'flex flex-col items-center') + ' gap-1'}>
+      <div className={(compact ? 'w-full' : 'flex flex-col items-center') + (floatingMessage ? ' relative' : '') + ' gap-1'}>
         <button
           onClick={handleClick}
           disabled={loading || checking}
@@ -98,18 +105,31 @@ export default function BidButton({
             </>
           )}
         </button>
-        {/* Siempre montado (con min-height reservado) para que el mensaje no
-            empuje el resto de la tarjeta al aparecer — antes, al no tener
-            espacio reservado, "aparecía" el párrafo y recorría hacia arriba
-            la biografía del grupo dentro de la tarjeta de altura fija. */}
-        <p
-          className={
-            'text-[11px] min-h-[2.2em] leading-tight text-center ' +
-            (result ? (result === 'ok' ? 'text-green-500' : 'text-red-500') : 'invisible')
-          }
-        >
-          {message || ' '}
-        </p>
+        {floatingMessage ? (
+          // El mensaje flota sobre el layout (no reserva espacio) para que un
+          // texto largo no empuje el resto de una fila angosta al envolver.
+          result && (
+            <p
+              className={
+                'absolute top-full right-0 mt-1 w-40 z-10 text-left text-[11px] leading-tight px-2 py-1 rounded-lg shadow-lg border ' +
+                (result === 'ok'
+                  ? 'text-green-600 dark:text-green-400 bg-white dark:bg-neutral-900 border-green-200 dark:border-green-900'
+                  : 'text-red-600 dark:text-red-400 bg-white dark:bg-neutral-900 border-red-200 dark:border-red-900')
+              }
+            >
+              {message}
+            </p>
+          )
+        ) : (
+          <p
+            className={
+              'text-[11px] min-h-[2.2em] leading-tight text-center ' +
+              (result ? (result === 'ok' ? 'text-green-500' : 'text-red-500') : 'invisible')
+            }
+          >
+            {message || ' '}
+          </p>
+        )}
       </div>
 
       {showAuth && (

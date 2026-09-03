@@ -3,11 +3,11 @@ import { Zap, ShieldCheck, Trophy, Handshake, HelpCircle } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import ActivityFeed from '@/components/ActivityFeed';
 import RankingBoard from '@/components/RankingBoard';
+import RestRankingList from '@/components/RestRankingList';
 import CommunityPointsTotal from '@/components/CommunityPointsTotal';
 import SiteHeader from '@/components/SiteHeader';
 import Hero from '@/components/Hero';
 import SongBattles from '@/components/SongBattles';
-import FandomsRankingPanel from '@/components/FandomsRankingPanel';
 import { FooterLinks } from '@/components/LegalPage';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
@@ -53,17 +53,17 @@ export default async function Home() {
         <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 4)} totalVisits={totalVisits ?? 0} />
 
         {/* Ranking Global */}
-        <RankingBoard
-          initialRankings={rankings ?? []}
-          currentMonthLabel={currentMonthLabel}
-          nextMonthLabel={nextMonthLabel}
-        />
+        <RankingBoard initialRankings={rankings ?? []} />
 
-        {/* Ranking de fandoms (todos los grupos, con scroll) + actividad en vivo */}
+        {/* Grupos del 6 al 17 + actividad en vivo */}
         <div className="grid lg:grid-cols-2 gap-6 items-start">
-          <FandomsRankingPanel initialRankings={rankings ?? []} />
+          <RestRankingList initialRankings={rankings ?? []} />
           <ActivityFeed initialItems={feed ?? []} />
         </div>
+
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
+          Ranking de {currentMonthLabel} — se reinicia el 1 de {nextMonthLabel}
+        </p>
 
         {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
         <SongBattles />

@@ -7,8 +7,8 @@ import RankChange from './RankChange';
 import { useLiveRankings } from '@/lib/useLiveRankings';
 import type { RankingRow } from '@/lib/types';
 
-// Solo el top 5 — el resto de los grupos (con botón de voto propio) vive en
-// FandomsRankingPanel, junto a Actividad en vivo.
+// Los primeros 5 se destacan como tarjetas — el resto (con su propio botón
+// de voto) vive en RestRankingList, junto a Actividad en vivo.
 const TOP_COUNT = 5;
 
 const RING_BY_RANK: Record<number, string> = {
@@ -55,15 +55,7 @@ function RankCard({ rank, group }: { rank: number; group: RankingRow }) {
   );
 }
 
-export default function RankingBoard({
-  initialRankings,
-  currentMonthLabel,
-  nextMonthLabel,
-}: {
-  initialRankings: RankingRow[];
-  currentMonthLabel: string;
-  nextMonthLabel: string;
-}) {
+export default function RankingBoard({ initialRankings }: { initialRankings: RankingRow[] }) {
   const rankings = useLiveRankings(initialRankings);
   const top = rankings.slice(0, TOP_COUNT);
 
@@ -86,10 +78,6 @@ export default function RankingBoard({
           ))}
         </div>
       )}
-
-      <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
-        Ranking de {currentMonthLabel} — se reinicia el 1 de {nextMonthLabel}
-      </p>
     </section>
   );
 }

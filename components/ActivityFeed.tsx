@@ -24,15 +24,6 @@ type FeedItem = {
 // Cuánto se espera sin interacción antes de retomar el auto-scroll solo.
 const RESUME_AFTER_MS = 5000;
 
-// Colores del pill "+N pts" — rotan por fila (no por cantidad) solo para
-// darle variedad visual al feed, como en el mockup.
-const PILL_COLORS = [
-  'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40',
-  'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40',
-  'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40',
-  'text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/40',
-];
-
 // "Actividad en vivo" — antes vivía duplicado entre este componente (fila
 // completa, solo visible en móvil) y DonorSidebar (versión compacta para el
 // sidebar de escritorio). El nuevo diseño solo tiene un panel de actividad
@@ -189,7 +180,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         {items.length === 0 && (
           <p className="text-center text-neutral-600 py-6 text-sm">Sin actividad todavía — ¡sé el primero!</p>
         )}
-        {items.map((item, i) => (
+        {items.map((item) => (
           <div key={item.id} className="px-4 py-3 text-sm flex items-center gap-3">
             <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={28} />
             <div className="flex-1 min-w-0">
@@ -206,9 +197,6 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 italic truncate mt-0.5">"{item.message}"</p>
               )}
             </div>
-            <span className={`shrink-0 text-xs font-bold px-2 py-1 rounded-full ${PILL_COLORS[i % PILL_COLORS.length]}`}>
-              +{item.points} pts
-            </span>
           </div>
         ))}
       </div>
