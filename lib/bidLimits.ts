@@ -8,7 +8,7 @@
 // único que sigue viviendo aquí es el tope diario acumulado por IP.
 //
 // Vive en su propio archivo (sin importar el SDK de Stripe) porque
-// también lo usan componentes de cliente (BidForm, BidButton) — si
+// también lo usan componentes de cliente (BidButton) — si
 // importaran lib/stripe.ts, arrastrarían `new Stripe(...)` al bundle del
 // navegador, donde STRIPE_SECRET_KEY no existe y el SDK truena al cargar.
 export const BID_LIMITS = {

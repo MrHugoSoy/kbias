@@ -1,8 +1,7 @@
 import Link from 'next/link';
-import { Zap, ShieldCheck, Trophy, Handshake, HelpCircle, ArrowRight } from 'lucide-react';
+import { Zap, ShieldCheck, Trophy, Handshake, HelpCircle } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import ActivityFeed from '@/components/ActivityFeed';
-import BidForm from '@/components/BidForm';
 import RankingBoard from '@/components/RankingBoard';
 import CommunityPointsTotal from '@/components/CommunityPointsTotal';
 import SiteHeader from '@/components/SiteHeader';
@@ -22,14 +21,13 @@ export default async function Home() {
   await supabase.rpc('sync_rank_snapshots');
 
   const { data: feed, error: feedError } = await supabase.from('vote_feed').select('*');
-  const { data: groups, error: groupsError } = await supabase.from('groups').select('*').order('name');
   const { data: rankings, error: rankingsError } = await supabase
     .from('group_rankings')
     .select('*')
     .order('total_points', { ascending: false });
 
-  if (feedError || groupsError || rankingsError) {
-    console.error('Error cargando datos de Supabase:', { feedError, groupsError, rankingsError });
+  if (feedError || rankingsError) {
+    console.error('Error cargando datos de Supabase:', { feedError, rankingsError });
   }
 
   // El ranking (group_rankings) cuenta solo los votos del mes calendario
@@ -69,9 +67,6 @@ export default async function Home() {
 
         {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
         <SongBattles />
-
-        {/* Panel de voto — para votar por cualquier grupo, no solo el top 6 */}
-        <BidForm groups={groups ?? []} />
 
         {/* Total de votos */}
         <CommunityPointsTotal initialRankings={rankings ?? []} />
@@ -141,20 +136,6 @@ export default async function Home() {
             <p>Tú decides quién reina en el mundo del K-pop.</p>
           </div>
         </footer>
-
-        {/* CTA final */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-violet-600 to-pink-500 text-white p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div>
-            <h3 className="text-xl font-black">¿Listo para llevar a tu grupo a la cima?</h3>
-            <p className="text-sm text-white/90">Únete a miles de fans y sé parte de la batalla del K-pop.</p>
-          </div>
-          <a
-            href="/#ranking"
-            className="shrink-0 inline-flex items-center gap-1.5 bg-white text-violet-700 font-bold px-5 py-2.5 rounded-lg hover:opacity-90 transition"
-          >
-            Votar ahora <ArrowRight className="w-4 h-4" />
-          </a>
-        </div>
 
         <FooterLinks />
       </div>
