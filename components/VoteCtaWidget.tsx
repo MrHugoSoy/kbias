@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Trophy } from 'lucide-react';
+import { Flame, Star, Trophy, Zap } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import UserAvatar from './UserAvatar';
 import { levelForXp, xpForLevel } from '@/lib/level';
@@ -83,7 +83,7 @@ export default function VoteCtaWidget() {
               <p className="font-bold text-sm truncate">{stats.username ? `@${stats.username}` : 'Tu cuenta'}</p>
               <p className="text-xs text-violet-600 dark:text-violet-400 font-semibold">Nivel {level}</p>
             </div>
-            <p className="text-xs text-neutral-500 shrink-0 font-mono">
+            <p className="text-xs text-neutral-600 dark:text-neutral-400 shrink-0 font-mono">
               {xpIntoLevel}/{xpForNextLevel} XP
             </p>
           </div>
@@ -91,17 +91,20 @@ export default function VoteCtaWidget() {
             <div className="h-full bg-gradient-to-r from-violet-600 to-pink-500 rounded-full" style={{ width: `${progressPct}%` }} />
           </div>
           <div className="grid grid-cols-3 gap-2 pt-1 text-center">
-            <div>
+            <div className="flex flex-col items-center gap-0.5">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
               <p className="font-black text-amber-500">{stats.totalPointsGiven}</p>
-              <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Puntos</p>
+              <p className="text-[10px] text-neutral-600 dark:text-neutral-400 font-semibold uppercase tracking-wide">Puntos</p>
             </div>
-            <div>
+            <div className="flex flex-col items-center gap-0.5">
+              <Zap className="w-4 h-4 text-violet-600 dark:text-violet-400 fill-violet-600 dark:fill-violet-400" />
               <p className="font-black text-violet-600 dark:text-violet-400">{stats.totalVotesCast}</p>
-              <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Votos</p>
+              <p className="text-[10px] text-neutral-600 dark:text-neutral-400 font-semibold uppercase tracking-wide">Votos</p>
             </div>
-            <div>
+            <div className="flex flex-col items-center gap-0.5">
+              <Flame className="w-4 h-4 text-pink-500 fill-pink-500" />
               <p className="font-black text-pink-500">{stats.currentStreak}</p>
-              <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Racha</p>
+              <p className="text-[10px] text-neutral-600 dark:text-neutral-400 font-semibold uppercase tracking-wide">Racha</p>
             </div>
           </div>
           <Link href="/perfil" className="block text-center text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline">
