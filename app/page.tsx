@@ -52,7 +52,7 @@ export default async function Home() {
       <SiteHeader home />
 
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
-        <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 2)} totalVisits={totalVisits ?? 0} />
+        <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 4)} totalVisits={totalVisits ?? 0} />
 
         {/* Ranking Global */}
         <RankingBoard
