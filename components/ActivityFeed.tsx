@@ -24,6 +24,20 @@ type FeedItem = {
 // Cuánto se espera sin interacción antes de retomar el auto-scroll solo.
 const RESUME_AFTER_MS = 5000;
 
+// "hace Xm/Xh/Xd" — también le da a cada fila algo que ancle el lado
+// derecho (antes solo tenía el pill de puntos ahí; sin él, las filas cortas
+// se sentían vacías/desbalanceadas en columnas anchas).
+function timeAgo(iso: string, now: number): string {
+  const diffMs = now - new Date(iso).getTime();
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 1) return 'ahora';
+  if (minutes < 60) return `hace ${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `hace ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `hace ${days}d`;
+}
+
 // "Actividad en vivo" — antes vivía duplicado entre este componente (fila
 // completa, solo visible en móvil) y DonorSidebar (versión compacta para el
 // sidebar de escritorio). El nuevo diseño solo tiene un panel de actividad
@@ -34,6 +48,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
   const [items, setItems] = useState<FeedItem[]>(initialItems);
   const [pending, setPending] = useState<FeedItem[]>([]);
   const [paused, setPaused] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
 
   const pausedRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,6 +58,13 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
   useEffect(() => {
     pausedRef.current = paused;
   }, [paused]);
+
+  // Refresca "hace Xm" cada 30s — no hace falta más seguido para algo que
+  // solo cambia en pasos de minutos.
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
 
   function clearResumeTimer() {
     if (resumeTimerRef.current) {
@@ -162,43 +184,51 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         </button>
       )}
 
-      <div
-        ref={containerRef}
-        onMouseEnter={pause}
-        onMouseLeave={resume}
-        onScroll={handleScroll}
-        className={
-          // La barra queda invisible en reposo y solo aparece al pasar el
-          // mouse — sigue siendo scrolleable con la rueda aunque no se vea.
-          'divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-transparent rounded-xl overflow-hidden max-h-[20rem] overflow-y-auto ' +
-          '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.violet.400/0.5)_transparent] ' +
-          '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
-          '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +
-          '[&:hover::-webkit-scrollbar-thumb]:bg-violet-400/60'
-        }
-      >
-        {items.length === 0 && (
-          <p className="text-center text-neutral-600 py-6 text-sm">Sin actividad todavía — ¡sé el primero!</p>
-        )}
-        {items.map((item) => (
-          <div key={item.id} className="px-4 py-3 text-sm flex items-center gap-3">
-            <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={28} />
-            <div className="flex-1 min-w-0">
-              <p className="truncate flex items-center gap-1 flex-wrap">
-                {item.username ? <strong className="text-violet-600 dark:text-violet-400">@{item.username}</strong> : 'Un fan'}
-                <LevelBadge xp={item.xp} />
-                <Zap className="w-3 h-3 text-violet-400 shrink-0" />
-                <span className="text-neutral-600 dark:text-neutral-400 truncate">
-                  dio {item.points} {item.points === 1 ? 'punto' : 'puntos'} a{' '}
-                  <strong className="uppercase text-neutral-900 dark:text-white">{item.group_name}</strong>
-                </span>
-              </p>
-              {item.message && (
-                <p className="text-xs text-neutral-500 dark:text-neutral-400 italic truncate mt-0.5">"{item.message}"</p>
-              )}
+      {/* El borde redondeado vive en este wrapper (que no scrollea) y el
+          hijo de adentro es el único que scrollea — combinar border-radius
+          + overflow-y-auto en el MISMO elemento no recorta el contenido de
+          forma consistente en todos los navegadores (esquinas cuadradas al
+          hacer scroll). Separar ambas responsabilidades lo vuelve confiable. */}
+      <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-transparent rounded-xl overflow-hidden">
+        <div
+          ref={containerRef}
+          onMouseEnter={pause}
+          onMouseLeave={resume}
+          onScroll={handleScroll}
+          className={
+            // La barra queda invisible en reposo y solo aparece al pasar el
+            // mouse — sigue siendo scrolleable con la rueda aunque no se vea.
+            'divide-y divide-neutral-200 dark:divide-neutral-900 max-h-[20rem] overflow-y-auto ' +
+            '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.violet.400/0.5)_transparent] ' +
+            '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
+            '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +
+            '[&:hover::-webkit-scrollbar-thumb]:bg-violet-400/60'
+          }
+        >
+          {items.length === 0 && (
+            <p className="text-center text-neutral-600 py-6 text-sm">Sin actividad todavía — ¡sé el primero!</p>
+          )}
+          {items.map((item) => (
+            <div key={item.id} className="px-4 py-3 text-sm flex items-center gap-3">
+              <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={28} />
+              <div className="flex-1 min-w-0">
+                <p className="truncate flex items-center gap-1 flex-wrap">
+                  {item.username ? <strong className="text-violet-600 dark:text-violet-400">@{item.username}</strong> : 'Un fan'}
+                  <LevelBadge xp={item.xp} />
+                  <Zap className="w-3 h-3 text-violet-400 shrink-0" />
+                  <span className="text-neutral-600 dark:text-neutral-400 truncate">
+                    dio {item.points} {item.points === 1 ? 'punto' : 'puntos'} a{' '}
+                    <strong className="uppercase text-neutral-900 dark:text-white">{item.group_name}</strong>
+                  </span>
+                </p>
+                {item.message && (
+                  <p className="text-xs text-neutral-500 dark:text-neutral-400 italic truncate mt-0.5">"{item.message}"</p>
+                )}
+              </div>
+              <span className="shrink-0 text-xs text-neutral-400 dark:text-neutral-600">{timeAgo(item.created_at, now)}</span>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );

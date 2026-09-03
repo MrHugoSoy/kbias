@@ -49,7 +49,7 @@ function RankCard({ rank, group }: { rank: number; group: RankingRow }) {
       </p>
       <RankChange current={rank} previous={group.rank_snapshot_value} />
       <div className="pt-1">
-        <BidButton compact groupId={group.group_id} groupName={group.group_name} />
+        <BidButton compact floatingMessage groupId={group.group_id} groupName={group.group_name} />
       </div>
     </div>
   );

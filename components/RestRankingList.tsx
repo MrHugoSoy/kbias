@@ -60,18 +60,26 @@ export default function RestRankingList({ initialRankings }: { initialRankings: 
   if (rest.length === 0) return null;
 
   return (
-    <div
-      className={
-        'divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden max-h-[22rem] overflow-y-auto ' +
-        '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.violet.400/0.5)_transparent] ' +
-        '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
-        '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +
-        '[&:hover::-webkit-scrollbar-thumb]:bg-violet-400/60'
-      }
-    >
-      {rest.map((r, i) => (
-        <RestRow key={r.group_id} rank={i + SKIP_TOP + 1} group={r} maxPoints={maxPoints} />
-      ))}
+    // El borde redondeado vive en este wrapper (que no scrollea) y el hijo
+    // de adentro es el único que scrollea — en algunos navegadores,
+    // combinar border-radius + overflow-y-auto en el MISMO elemento no
+    // recorta el contenido de forma consistente (las esquinas se ven
+    // cuadradas al hacer scroll). Separar ambos responsabilidades lo
+    // vuelve confiable en cualquier navegador.
+    <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
+      <div
+        className={
+          'divide-y divide-neutral-200 dark:divide-neutral-900 max-h-[22rem] overflow-y-auto ' +
+          '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.violet.400/0.5)_transparent] ' +
+          '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
+          '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +
+          '[&:hover::-webkit-scrollbar-thumb]:bg-violet-400/60'
+        }
+      >
+        {rest.map((r, i) => (
+          <RestRow key={r.group_id} rank={i + SKIP_TOP + 1} group={r} maxPoints={maxPoints} />
+        ))}
+      </div>
     </div>
   );
 }
