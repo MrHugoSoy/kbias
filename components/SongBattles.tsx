@@ -75,9 +75,14 @@ export default function SongBattles() {
   const [pendingAfterAuth, setPendingAfterAuth] = useState<(() => void) | null>(null);
 
   async function loadBattles() {
-    const res = await fetch('/api/song-battles');
-    const data = await res.json();
-    setBattles(data.battles ?? []);
+    try {
+      const res = await fetch('/api/song-battles');
+      const data = await res.json();
+      setBattles(data.battles ?? []);
+    } catch {
+      // Sondeo en segundo plano cada 60s — un fallo de red pasajero no debe
+      // tumbar la página, simplemente se reintenta en el siguiente ciclo.
+    }
   }
 
   useEffect(() => {
