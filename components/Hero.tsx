@@ -51,7 +51,7 @@ export default function Hero({ topGroups, totalVisits }: { topGroups: RankingRow
               // sí se vea recta sin distorsión.
               <div
                 key={g.group_id}
-                className="aspect-[4/3] -skew-x-12 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg"
+                className="aspect-[16/9] -skew-x-12 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg"
               >
                 {g.image_url && (
                   <div className="w-[150%] h-full -ml-[25%] skew-x-12">
