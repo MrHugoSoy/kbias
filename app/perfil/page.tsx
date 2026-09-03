@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Flame, ImagePlus, Lock, LogOut, Mic2, Newspaper, Pencil, Upload, X } from 'lucide-react';
+import { Flame, ImagePlus, Lock, LogOut, Mic2, Newspaper, Pencil, Swords, Upload, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import { LegalPage } from '@/components/LegalPage';
@@ -574,12 +574,20 @@ export default function PerfilPage() {
             )}
             <p className="text-sm text-neutral-500 truncate mt-0.5">{user.email}</p>
             {isAdmin && (
-              <Link
-                href="/admin/noticias"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline mt-1"
-              >
-                <Newspaper className="w-3.5 h-3.5" /> Panel de administración
-              </Link>
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
+                <Link
+                  href="/admin/noticias"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline"
+                >
+                  <Newspaper className="w-3.5 h-3.5" /> Noticias
+                </Link>
+                <Link
+                  href="/admin/batallas"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-violet-600 dark:text-violet-400 hover:underline"
+                >
+                  <Swords className="w-3.5 h-3.5" /> Batallas
+                </Link>
+              </div>
             )}
           </div>
           <button
