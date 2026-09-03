@@ -62,7 +62,7 @@ export default async function Home() {
         />
 
         {/* Actividad en vivo + tarjeta de progreso */}
-        <div className="grid lg:grid-cols-[1fr_20rem] gap-6 items-start">
+        <div className="grid lg:grid-cols-2 gap-6 items-start">
           <ActivityFeed initialItems={feed ?? []} />
           <VoteCtaWidget />
         </div>

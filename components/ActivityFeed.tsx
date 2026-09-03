@@ -179,7 +179,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         className={
           // La barra queda invisible en reposo y solo aparece al pasar el
           // mouse — sigue siendo scrolleable con la rueda aunque no se vea.
-          'divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-transparent rounded-xl overflow-hidden max-h-[28rem] overflow-y-auto ' +
+          'divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-transparent rounded-xl overflow-hidden max-h-[20rem] overflow-y-auto ' +
           '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.violet.400/0.5)_transparent] ' +
           '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
           '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +
