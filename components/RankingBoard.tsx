@@ -81,10 +81,6 @@ export default function RankingBoard({
           Ver ranking completo
         </Link>
       </div>
-      <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
-        Ranking de {currentMonthLabel} — se reinicia el 1 de {nextMonthLabel}
-      </p>
-
       {visible.length === 0 ? (
         <p className="text-center text-neutral-500 py-10 text-sm">Todavía no hay grupos registrados.</p>
       ) : (
@@ -94,15 +90,20 @@ export default function RankingBoard({
               <RankCard key={r.group_id} rank={i + 1} group={r} />
             ))}
           </div>
-          {hasMore && (
-            <button
-              onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
-              className="w-full text-sm font-semibold text-violet-600 dark:text-violet-400 hover:underline py-2"
-            >
-              Cargar más
-            </button>
-          )}
         </>
+      )}
+
+      <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
+        Ranking de {currentMonthLabel} — se reinicia el 1 de {nextMonthLabel}
+      </p>
+
+      {hasMore && (
+        <button
+          onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
+          className="w-full text-sm font-semibold text-violet-600 dark:text-violet-400 hover:underline py-2"
+        >
+          Cargar más
+        </button>
       )}
     </section>
   );
