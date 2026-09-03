@@ -33,6 +33,15 @@ create table if not exists groups (
 -- Por si la tabla ya existía antes de agregar estas columnas (idempotente).
 alter table groups add column if not exists bio text;
 alter table groups add column if not exists official_url text;
+-- Campos opcionales para la pestaña "Información" de la página del grupo —
+-- null hasta que se llenen a mano por SQL; la UI solo los muestra si tienen valor.
+alter table groups add column if not exists debut_date date;
+alter table groups add column if not exists country text;
+alter table groups add column if not exists genre text;
+-- Mejor puesto alcanzado (nunca empeora) — se actualiza en
+-- sync_rank_snapshots() de una vez, aprovechando que ya calcula el rank
+-- en vivo de cada grupo ahí mismo.
+alter table groups add column if not exists best_rank integer;
 -- Puesto "congelado" al inicio del día (ver sync_rank_snapshots() más abajo)
 -- — tiene que existir antes de la vista group_rankings, que ya lo expone.
 alter table groups add column if not exists rank_snapshot_date date;
@@ -493,6 +502,11 @@ select
   g.bio,
   g.official_url,
   g.rank_snapshot_value,
+  g.claimed_by_fan,
+  g.debut_date,
+  g.country,
+  g.genre,
+  g.best_rank,
   coalesce(
     sum(v.points) filter (
       where v.created_at >= (date_trunc('month', now() at time zone 'utc') at time zone 'utc')
@@ -501,7 +515,8 @@ select
   ) as total_points
 from groups g
 left join votes v on v.group_id = g.id
-group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url, g.rank_snapshot_value
+group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url, g.rank_snapshot_value,
+  g.claimed_by_fan, g.debut_date, g.country, g.genre, g.best_rank
 order by total_points desc, g.name asc;
 
 -- Puesto "congelado" al inicio del día calendario (UTC) en curso (columnas
@@ -531,7 +546,8 @@ begin
   )
   update groups g
   set rank_snapshot_date = v_today,
-      rank_snapshot_value = r.rnk
+      rank_snapshot_value = r.rnk,
+      best_rank = least(coalesce(g.best_rank, r.rnk), r.rnk)
   from ranked r
   where r.group_id = g.id;
 end;
