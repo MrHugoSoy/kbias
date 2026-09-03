@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
 import { Mic2, Trophy } from 'lucide-react';
 import BidButton from './BidButton';
@@ -8,10 +7,9 @@ import RankChange from './RankChange';
 import { useLiveRankings } from '@/lib/useLiveRankings';
 import type { RankingRow } from '@/lib/types';
 
-// Al principio solo se ven 6 (lo que cabe sin scroll) — "Cargar más" revela
-// el resto de a 6, así cualquier grupo (no solo el top 6) tiene un botón de
-// voto directo en la portada sin tener que buscarlo en un selector aparte.
-const PAGE_SIZE = 6;
+// Solo el top 5 — el resto de los grupos (con botón de voto propio) vive en
+// FandomsRankingPanel, junto a Actividad en vivo.
+const TOP_COUNT = 5;
 
 const RING_BY_RANK: Record<number, string> = {
   1: 'border-amber-400',
@@ -67,9 +65,7 @@ export default function RankingBoard({
   nextMonthLabel: string;
 }) {
   const rankings = useLiveRankings(initialRankings);
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
-  const visible = rankings.slice(0, visibleCount);
-  const hasMore = rankings.length > visibleCount;
+  const top = rankings.slice(0, TOP_COUNT);
 
   return (
     <section id="ranking" className="space-y-4">
@@ -81,30 +77,19 @@ export default function RankingBoard({
           Ver ranking completo
         </Link>
       </div>
-      {visible.length === 0 ? (
+      {top.length === 0 ? (
         <p className="text-center text-neutral-500 py-10 text-sm">Todavía no hay grupos registrados.</p>
       ) : (
-        <>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {visible.map((r, i) => (
-              <RankCard key={r.group_id} rank={i + 1} group={r} />
-            ))}
-          </div>
-        </>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {top.map((r, i) => (
+            <RankCard key={r.group_id} rank={i + 1} group={r} />
+          ))}
+        </div>
       )}
 
       <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
         Ranking de {currentMonthLabel} — se reinicia el 1 de {nextMonthLabel}
       </p>
-
-      {hasMore && (
-        <button
-          onClick={() => setVisibleCount((v) => v + PAGE_SIZE)}
-          className="w-full text-sm font-semibold text-violet-600 dark:text-violet-400 hover:underline py-2"
-        >
-          Cargar más
-        </button>
-      )}
     </section>
   );
 }
