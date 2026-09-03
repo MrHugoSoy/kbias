@@ -87,10 +87,10 @@ export default function VoteCtaWidget() {
               {xpIntoLevel}/{xpForNextLevel} XP
             </p>
           </div>
-          <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+          <div className="h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
             <div className="h-full bg-gradient-to-r from-violet-600 to-pink-500 rounded-full" style={{ width: `${progressPct}%` }} />
           </div>
-          <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+          <div className="grid grid-cols-3 divide-x divide-neutral-200 dark:divide-neutral-800 border-t border-neutral-200 dark:border-neutral-800 pt-3 text-center">
             <div className="flex flex-col items-center gap-0.5">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
               <p className="font-black text-amber-500">{stats.totalPointsGiven}</p>
