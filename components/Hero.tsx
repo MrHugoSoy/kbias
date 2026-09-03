@@ -13,7 +13,7 @@ export default function Hero({ topGroups, totalVisits }: { topGroups: RankingRow
         <p className="inline-flex items-center gap-1.5 text-xs font-bold text-violet-600 dark:text-violet-400 tracking-widest uppercase">
           <Crown className="w-3.5 h-3.5" /> Solo existe un trono
         </p>
-        <h1 className="text-4xl sm:text-5xl font-black tracking-tight leading-[1.05]">
+        <h1 className="text-5xl sm:text-6xl font-black tracking-tight leading-[1.05]">
           LA BATALLA
           <br />
           DEL{' '}
