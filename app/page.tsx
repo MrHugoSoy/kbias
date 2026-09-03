@@ -54,9 +54,6 @@ export default async function Home() {
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
         <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 2)} totalVisits={totalVisits ?? 0} />
 
-        {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
-        <SongBattles />
-
         {/* Ranking Global */}
         <RankingBoard
           initialRankings={rankings ?? []}
@@ -69,6 +66,9 @@ export default async function Home() {
           <ActivityFeed initialItems={feed ?? []} />
           <VoteCtaWidget />
         </div>
+
+        {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
+        <SongBattles />
 
         {/* Panel de voto — para votar por cualquier grupo, no solo el top 6 */}
         <BidForm groups={groups ?? []} />
