@@ -1,16 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { BadgeCheck, ExternalLink, Mic2 } from 'lucide-react';
+import Link from 'next/link';
+import { BadgeCheck, ExternalLink, Mic2, Newspaper } from 'lucide-react';
 import BidButton from './BidButton';
 import CopyLinkButton from './CopyLinkButton';
 import ShareButtons from './ShareButtons';
 import RankChange from './RankChange';
 import Sparkline from './Sparkline';
 import { useLiveRankings } from '@/lib/useLiveRankings';
-import type { RankingRow } from '@/lib/types';
+import type { NewsPost, RankingRow } from '@/lib/types';
 
-type Tab = 'info' | 'stats';
+type Tab = 'info' | 'news' | 'stats';
 
 type StatsExtra = {
   totalVotesAllTime: number;
@@ -47,10 +48,12 @@ export default function GroupDetailCard({
   group,
   initialRankings,
   stats,
+  newsPosts,
 }: {
   group: RankingRow;
   initialRankings: RankingRow[];
   stats: StatsExtra;
+  newsPosts: NewsPost[];
 }) {
   const rankings = useLiveRankings(initialRankings);
   const index = rankings.findIndex((r) => r.group_id === group.group_id);
@@ -112,9 +115,15 @@ export default function GroupDetailCard({
         >
           Información
         </button>
-        <span className="pb-2 shrink-0 text-neutral-400 dark:text-neutral-600 cursor-not-allowed" title="Próximamente">
+        <button
+          onClick={() => setTab('news')}
+          className={
+            'pb-2 shrink-0 ' +
+            (tab === 'news' ? 'border-b-2 border-violet-600 text-violet-600 dark:text-violet-400' : 'text-neutral-500')
+          }
+        >
           Noticias
-        </span>
+        </button>
         <span className="pb-2 shrink-0 text-neutral-400 dark:text-neutral-600 cursor-not-allowed" title="Próximamente">
           Miembros
         </span>
@@ -132,7 +141,30 @@ export default function GroupDetailCard({
         </button>
       </div>
 
-      {tab === 'info' ? (
+      {tab === 'news' ? (
+        newsPosts.length === 0 ? (
+          <div className="text-center py-8 space-y-2">
+            <Newspaper className="w-8 h-8 mx-auto text-neutral-400 dark:text-neutral-600" />
+            <p className="text-sm text-neutral-500">Todavía no hay noticias de {group.group_name}.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {newsPosts.map((post) => (
+              <Link
+                key={post.id}
+                href={`/noticias/${post.id}`}
+                className="block bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 hover:bg-neutral-200 dark:hover:bg-neutral-800 transition"
+              >
+                <p className="font-bold text-sm">{post.title}</p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 mt-0.5">{post.body}</p>
+                <p className="text-[11px] text-neutral-400 dark:text-neutral-600 mt-1">
+                  {new Date(post.published_at).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric', timeZone: 'UTC' })}
+                </p>
+              </Link>
+            ))}
+          </div>
+        )
+      ) : tab === 'info' ? (
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4">
             <p className="text-xs text-neutral-500 uppercase tracking-wide">Posición en ranking</p>

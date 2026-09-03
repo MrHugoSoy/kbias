@@ -18,3 +18,14 @@ export type RankingRow = {
   genre: string | null;
   best_rank: number | null;
 };
+
+// Fila de news_posts, con el grupo asociado ya resuelto (join) cuando
+// aplica — un post general (sin grupo) trae `group` en null.
+export type NewsPost = {
+  id: string;
+  title: string;
+  body: string;
+  cover_url: string | null;
+  published_at: string;
+  group: { name: string; slug: string; image_url: string | null } | null;
+};

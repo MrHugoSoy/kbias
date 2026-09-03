@@ -39,6 +39,9 @@ export default function SiteHeader({ home }: { home?: boolean }) {
           <Link href="/como-funciona" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
             CÓMO FUNCIONA
           </Link>
+          <Link href="/noticias" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
+            NOTICIAS
+          </Link>
           <Link href="/salon-de-la-fama" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
             SALÓN DE LA FAMA
           </Link>

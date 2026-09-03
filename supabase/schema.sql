@@ -313,6 +313,29 @@ drop policy if exists "songs_public_read" on songs;
 create policy "songs_public_read" on songs for select using (true);
 -- Sin policy de insert/update: se cargan a mano con el service role desde el SQL Editor.
 
+-- ------------------------------------------------------------
+-- Noticias — posts cortos, opcionalmente ligados a un grupo (se ven en su
+-- pestaña "Noticias") o generales (group_id null, se ven solo en /noticias).
+-- Igual que songs: sin formulario propio todavía, se cargan a mano desde el
+-- SQL Editor con el service role.
+-- ------------------------------------------------------------
+create table if not exists news_posts (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid references groups(id) on delete cascade,
+  title text not null,
+  body text not null,
+  cover_url text,
+  published_at timestamptz not null default now()
+);
+
+create index if not exists idx_news_posts_group on news_posts (group_id);
+create index if not exists idx_news_posts_published_at on news_posts (published_at desc);
+
+alter table news_posts enable row level security;
+drop policy if exists "news_posts_public_read" on news_posts;
+create policy "news_posts_public_read" on news_posts for select using (true);
+-- Sin policy de insert/update: se cargan a mano con el service role desde el SQL Editor.
+
 -- Duración fija de cada batalla, en horas — 48h por defecto ("24-48h
 -- fijas"). Cambiar esta constante en ensure_active_song_battles() más
 -- abajo si se quiere otra duración.

@@ -5,6 +5,7 @@ import GroupDetailCard from '@/components/GroupDetailCard';
 import GroupComments from '@/components/GroupComments';
 import { siteUrl } from '@/lib/siteUrl';
 import { utcDayStart } from '@/lib/dailyWindow';
+import type { NewsPost } from '@/lib/types';
 
 const SPARKLINE_DAYS = 14;
 
@@ -71,6 +72,12 @@ export default async function GroupDetailPage({ params }: Props) {
     .eq('group_id', group.group_id)
     .order('created_at', { ascending: false });
 
+  const { data: newsRows } = await supabase
+    .from('news_posts')
+    .select('id, title, body, cover_url, published_at, group:groups(name, slug, image_url)')
+    .eq('group_id', group.group_id)
+    .order('published_at', { ascending: false });
+
   // Estadísticas históricas de la pestaña "Estadísticas" — se calculan acá
   // (no en una vista) porque son específicas de este grupo y de este
   // request, sin necesidad de una suscripción en vivo aparte.
@@ -102,6 +109,7 @@ export default async function GroupDetailPage({ params }: Props) {
         group={group}
         initialRankings={list}
         stats={{ totalVotesAllTime, votesToday, dailySeries }}
+        newsPosts={(newsRows ?? []) as unknown as NewsPost[]}
       />
 
       <GroupComments groupId={group.group_id} initialComments={comments ?? []} />
