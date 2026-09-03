@@ -24,6 +24,15 @@ type FeedItem = {
 // Cuánto se espera sin interacción antes de retomar el auto-scroll solo.
 const RESUME_AFTER_MS = 5000;
 
+// Colores del pill "+N pts" — rotan por fila (no por cantidad) solo para
+// darle variedad visual al feed, como en el mockup.
+const PILL_COLORS = [
+  'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40',
+  'text-violet-600 dark:text-violet-400 bg-violet-50 dark:bg-violet-950/40',
+  'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40',
+  'text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/40',
+];
+
 // "Actividad en vivo" — antes vivía duplicado entre este componente (fila
 // completa, solo visible en móvil) y DonorSidebar (versión compacta para el
 // sidebar de escritorio). El nuevo diseño solo tiene un panel de actividad
@@ -148,12 +157,9 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-        <h2 className="font-bold flex items-center gap-1.5">
-          <Zap className="w-4 h-4 text-violet-500" /> Actividad en vivo
-        </h2>
-      </div>
+      <h2 className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5">
+        <Zap className="w-4 h-4 text-violet-500 fill-violet-500" /> Actividad en vivo
+      </h2>
 
       {paused && pending.length > 0 && (
         <button
@@ -183,23 +189,24 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
         {items.length === 0 && (
           <p className="text-center text-neutral-600 py-6 text-sm">Sin actividad todavía — ¡sé el primero!</p>
         )}
-        {items.map((item) => (
+        {items.map((item, i) => (
           <div key={item.id} className="px-4 py-3 text-sm flex items-center gap-3">
             <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={28} />
             <div className="flex-1 min-w-0">
               <p className="truncate flex items-center gap-1 flex-wrap">
-                {item.username ? <strong>@{item.username}</strong> : 'Un fan'}
+                {item.username ? <strong className="text-violet-600 dark:text-violet-400">@{item.username}</strong> : 'Un fan'}
                 <LevelBadge xp={item.xp} />
-                <span className="text-neutral-500 truncate">
+                <Zap className="w-3 h-3 text-violet-400 shrink-0" />
+                <span className="text-neutral-600 dark:text-neutral-400 truncate">
                   dio {item.points} {item.points === 1 ? 'punto' : 'puntos'} a{' '}
-                  <strong className="text-violet-600 dark:text-violet-400">{item.group_name}</strong>
+                  <strong className="uppercase text-neutral-900 dark:text-white">{item.group_name}</strong>
                 </span>
               </p>
               {item.message && (
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 italic truncate mt-0.5">"{item.message}"</p>
               )}
             </div>
-            <span className="shrink-0 text-xs font-bold text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-950/40 px-2 py-1 rounded-full">
+            <span className={`shrink-0 text-xs font-bold px-2 py-1 rounded-full ${PILL_COLORS[i % PILL_COLORS.length]}`}>
               +{item.points} pts
             </span>
           </div>
