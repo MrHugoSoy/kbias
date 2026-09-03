@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 const TITLE_MAX_LENGTH = 140;
 const BODY_MAX_LENGTH = 4000;
 
-// PATCH /api/admin/news/[id] — body: { title, body, coverUrl?, groupId? }
+// PATCH /api/admin/news/[id] — body: { title, body, coverUrl?, category?, groupId? }
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const supabase = getSupabaseServiceClient();
   const adminId = await getVerifiedAdminUserId(req, supabase);
@@ -17,6 +17,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const title = typeof payload?.title === 'string' ? payload.title.trim() : '';
   const body = typeof payload?.body === 'string' ? payload.body.trim() : '';
   const coverUrl = typeof payload?.coverUrl === 'string' && payload.coverUrl.trim() ? payload.coverUrl.trim() : null;
+  const category = typeof payload?.category === 'string' && payload.category.trim() ? payload.category.trim() : null;
   const groupId = typeof payload?.groupId === 'string' && payload.groupId ? payload.groupId : null;
 
   if (!title || title.length > TITLE_MAX_LENGTH) {
@@ -28,7 +29,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 
   const { data, error } = await supabase
     .from('news_posts')
-    .update({ title, body, cover_url: coverUrl, group_id: groupId })
+    .update({ title, body, cover_url: coverUrl, category, group_id: groupId })
     .eq('id', params.id)
     .select()
     .single();

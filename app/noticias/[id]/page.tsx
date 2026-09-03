@@ -20,7 +20,7 @@ export default async function NoticiaPage({ params }: Props) {
   const supabase = getSupabasePublicClient();
   const { data } = await supabase
     .from('news_posts')
-    .select('id, title, body, cover_url, published_at, group:groups(name, slug, image_url)')
+    .select('id, title, body, cover_url, category, published_at, group:groups(name, slug, image_url)')
     .eq('id', params.id)
     .maybeSingle();
 

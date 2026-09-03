@@ -74,7 +74,7 @@ export default async function GroupDetailPage({ params }: Props) {
 
   const { data: newsRows } = await supabase
     .from('news_posts')
-    .select('id, title, body, cover_url, published_at, group:groups(name, slug, image_url)')
+    .select('id, title, body, cover_url, category, published_at, group:groups(name, slug, image_url)')
     .eq('group_id', group.group_id)
     .order('published_at', { ascending: false });
 

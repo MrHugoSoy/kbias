@@ -13,12 +13,13 @@ type Post = {
   title: string;
   body: string;
   cover_url: string | null;
+  category: string | null;
   group_id: string | null;
   published_at: string;
   group: { name: string; slug: string } | null;
 };
 
-const EMPTY_FORM = { id: '', title: '', body: '', coverUrl: '', groupId: '' };
+const EMPTY_FORM = { id: '', title: '', body: '', coverUrl: '', category: '', groupId: '' };
 
 // Panel simple para cargar/editar/borrar noticias sin tocar el SQL Editor a
 // mano — protegido server-side en /api/admin/news (ADMIN_EMAILS), esta
@@ -65,7 +66,7 @@ export default function AdminNoticiasPage() {
       const res = await authFetch(isEdit ? `/api/admin/news/${form.id}` : '/api/admin/news', {
         method: isEdit ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: form.title, body: form.body, coverUrl: form.coverUrl, groupId: form.groupId || null }),
+        body: JSON.stringify({ title: form.title, body: form.body, coverUrl: form.coverUrl, category: form.category, groupId: form.groupId || null }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -86,7 +87,7 @@ export default function AdminNoticiasPage() {
   }
 
   function startEdit(post: Post) {
-    setForm({ id: post.id, title: post.title, body: post.body, coverUrl: post.cover_url ?? '', groupId: post.group_id ?? '' });
+    setForm({ id: post.id, title: post.title, body: post.body, coverUrl: post.cover_url ?? '', category: post.category ?? '', groupId: post.group_id ?? '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -143,6 +144,14 @@ export default function AdminNoticiasPage() {
           value={form.coverUrl}
           onChange={(e) => setForm({ ...form, coverUrl: e.target.value })}
           className="w-full bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 text-sm"
+        />
+        <input
+          type="text"
+          placeholder="Categoría para la tarjeta (opcional, ej. K-POP, RANKING, BATALLAS)"
+          value={form.category}
+          onChange={(e) => setForm({ ...form, category: e.target.value })}
+          className="w-full bg-neutral-100 dark:bg-neutral-900 rounded-lg px-3 py-2 text-sm"
+          maxLength={30}
         />
         <select
           value={form.groupId}

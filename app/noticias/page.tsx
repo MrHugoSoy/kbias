@@ -15,7 +15,7 @@ export default async function NoticiasPage() {
   const supabase = getSupabasePublicClient();
   const { data } = await supabase
     .from('news_posts')
-    .select('id, title, body, cover_url, published_at, group:groups(name, slug, image_url)')
+    .select('id, title, body, cover_url, category, published_at, group:groups(name, slug, image_url)')
     .order('published_at', { ascending: false });
 
   const posts = (data ?? []) as unknown as NewsPost[];

@@ -325,8 +325,13 @@ create table if not exists news_posts (
   title text not null,
   body text not null,
   cover_url text,
+  category text,  -- etiqueta libre para la tarjeta ("K-POP", "RANKING", "BATALLAS"...) — opcional
   published_at timestamptz not null default now()
 );
+
+-- Por si news_posts ya existía sin esta columna (create table if not exists
+-- no la agrega a una tabla existente).
+alter table news_posts add column if not exists category text;
 
 create index if not exists idx_news_posts_group on news_posts (group_id);
 create index if not exists idx_news_posts_published_at on news_posts (published_at desc);

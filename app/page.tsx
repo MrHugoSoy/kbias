@@ -8,7 +8,9 @@ import CommunityPointsTotal from '@/components/CommunityPointsTotal';
 import SiteHeader from '@/components/SiteHeader';
 import Hero from '@/components/Hero';
 import SongBattles from '@/components/SongBattles';
+import LatestNews from '@/components/LatestNews';
 import { FooterLinks } from '@/components/LegalPage';
+import type { NewsPost } from '@/lib/types';
 
 export const revalidate = 0; // siempre datos frescos, el ranking cambia en cualquier momento
 
@@ -25,6 +27,11 @@ export default async function Home() {
     .from('group_rankings')
     .select('*')
     .order('total_points', { ascending: false });
+  const { data: newsRows } = await supabase
+    .from('news_posts')
+    .select('id, title, body, cover_url, category, published_at, group:groups(name, slug, image_url)')
+    .order('published_at', { ascending: false })
+    .limit(3);
 
   if (feedError || rankingsError) {
     console.error('Error cargando datos de Supabase:', { feedError, rankingsError });
@@ -67,6 +74,9 @@ export default async function Home() {
 
         {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
         <SongBattles />
+
+        {/* Últimas noticias — solo se muestra si hay alguna publicada */}
+        <LatestNews posts={(newsRows ?? []) as unknown as NewsPost[]} />
 
         {/* Total de votos */}
         <CommunityPointsTotal initialRankings={rankings ?? []} />

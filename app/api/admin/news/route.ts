@@ -16,14 +16,14 @@ export async function GET(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('news_posts')
-    .select('id, title, body, cover_url, group_id, published_at, group:groups(name, slug)')
+    .select('id, title, body, cover_url, category, group_id, published_at, group:groups(name, slug)')
     .order('published_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ posts: data ?? [] });
 }
 
-// POST /api/admin/news — body: { title, body, coverUrl?, groupId? }
+// POST /api/admin/news — body: { title, body, coverUrl?, category?, groupId? }
 export async function POST(req: NextRequest) {
   const supabase = getSupabaseServiceClient();
   const adminId = await getVerifiedAdminUserId(req, supabase);
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
   const title = typeof payload?.title === 'string' ? payload.title.trim() : '';
   const body = typeof payload?.body === 'string' ? payload.body.trim() : '';
   const coverUrl = typeof payload?.coverUrl === 'string' && payload.coverUrl.trim() ? payload.coverUrl.trim() : null;
+  const category = typeof payload?.category === 'string' && payload.category.trim() ? payload.category.trim() : null;
   const groupId = typeof payload?.groupId === 'string' && payload.groupId ? payload.groupId : null;
 
   if (!title || title.length > TITLE_MAX_LENGTH) {
@@ -44,7 +45,7 @@ export async function POST(req: NextRequest) {
 
   const { data, error } = await supabase
     .from('news_posts')
-    .insert({ title, body, cover_url: coverUrl, group_id: groupId })
+    .insert({ title, body, cover_url: coverUrl, category, group_id: groupId })
     .select()
     .single();
 

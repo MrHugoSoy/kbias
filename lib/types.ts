@@ -26,6 +26,7 @@ export type NewsPost = {
   title: string;
   body: string;
   cover_url: string | null;
+  category: string | null;
   published_at: string;
   group: { name: string; slug: string; image_url: string | null } | null;
 };
