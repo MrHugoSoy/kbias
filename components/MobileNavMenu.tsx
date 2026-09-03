@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Trophy, Zap, Award, HelpCircle, User, Newspaper } from 'lucide-react';
+import { Menu, X, Home, Trophy, Swords, Zap, Award, HelpCircle, User, Newspaper } from 'lucide-react';
 
 // Nav de escritorio vive oculta en celular (md:hidden en el <nav> del
 // header) — este botón le da a los mismos links (INICIO/RANKING/CÓMO
@@ -31,6 +31,9 @@ export default function MobileNavMenu() {
             <a href="/#ranking" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Trophy className="w-4 h-4" /> RANKING
             </a>
+            <Link href="/batallas" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Swords className="w-4 h-4" /> BATALLAS
+            </Link>
             <Link href="/como-funciona" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Zap className="w-4 h-4" /> CÓMO FUNCIONA
             </Link>

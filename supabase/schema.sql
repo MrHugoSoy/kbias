@@ -249,12 +249,14 @@ begin
 
   perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
 
-  -- El presupuesto de 5 puntos diarios es compartido entre votos de grupo
-  -- y votos de batallas de canciones (song_votes, ver más abajo) — una
-  -- sola economía de puntos en todo el sitio.
+  -- El presupuesto de 5 puntos diarios es compartido entre votos de grupo,
+  -- votos de batallas de canciones (song_votes) y votos de batallas de
+  -- grupos (group_battle_votes, ver más abajo) — una sola economía de
+  -- puntos en todo el sitio.
   select
     coalesce((select sum(v.points) from votes v where v.user_id = p_user_id and v.created_at >= v_day_start), 0) +
-    coalesce((select sum(sv.points) from song_votes sv where sv.user_id = p_user_id and sv.created_at >= v_day_start), 0)
+    coalesce((select sum(sv.points) from song_votes sv where sv.user_id = p_user_id and sv.created_at >= v_day_start), 0) +
+    coalesce((select sum(gv.points) from group_battle_votes gv where gv.user_id = p_user_id and gv.created_at >= v_day_start), 0)
   into v_used_today;
 
   if v_used_today + p_points > 5 then
@@ -460,7 +462,8 @@ begin
 
   select
     coalesce((select sum(v.points) from votes v where v.user_id = p_user_id and v.created_at >= v_day_start), 0) +
-    coalesce((select sum(sv.points) from song_votes sv where sv.user_id = p_user_id and sv.created_at >= v_day_start), 0)
+    coalesce((select sum(sv.points) from song_votes sv where sv.user_id = p_user_id and sv.created_at >= v_day_start), 0) +
+    coalesce((select sum(gv.points) from group_battle_votes gv where gv.user_id = p_user_id and gv.created_at >= v_day_start), 0)
   into v_used_today;
 
   if v_used_today + p_points > 5 then
@@ -511,6 +514,205 @@ join songs sb on sb.id = b.song_b_id
 join groups gb on gb.id = sb.group_id
 where b.ends_at > now()
 order by b.ends_at asc;
+
+-- ------------------------------------------------------------
+-- Batallas de grupos: como las batallas de canciones, pero el grupo
+-- completo contra otro grupo completo (página /batallas). A diferencia de
+-- song_battles, aquí sí importan tres estados (próxima/en curso/finalizada)
+-- porque la página los muestra en secciones separadas.
+-- ------------------------------------------------------------
+create table if not exists group_battles (
+  id uuid primary key default gen_random_uuid(),
+  group_a_id uuid not null references groups(id) on delete cascade,
+  group_b_id uuid not null references groups(id) on delete cascade,
+  starts_at timestamptz not null default now(),
+  ends_at timestamptz not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_group_battles_starts_at on group_battles (starts_at);
+create index if not exists idx_group_battles_ends_at on group_battles (ends_at desc);
+
+alter table group_battles enable row level security;
+drop policy if exists "group_battles_public_read" on group_battles;
+create policy "group_battles_public_read" on group_battles for select using (true);
+
+create table if not exists group_battle_votes (
+  id uuid primary key default gen_random_uuid(),
+  battle_id uuid not null references group_battles(id) on delete cascade,
+  group_id uuid not null references groups(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  points integer not null default 1 check (points between 1 and 5),
+  message text,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_group_battle_votes_battle on group_battle_votes (battle_id);
+create index if not exists idx_group_battle_votes_user_created on group_battle_votes (user_id, created_at desc);
+
+alter table group_battle_votes enable row level security;
+drop policy if exists "group_battle_votes_public_read" on group_battle_votes;
+create policy "group_battle_votes_public_read" on group_battle_votes for select using (true);
+-- Sin policy de insert: todo pasa por /api/group-battle-vote (cast_group_battle_vote).
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'group_battle_votes'
+  ) then
+    alter publication supabase_realtime add table group_battle_votes;
+  end if;
+end $$;
+
+-- Arma una tanda nueva de batallas de grupo cuando no queda ninguna vigente
+-- NI programada (ends_at > now() ya cubre "en curso" y "próxima" a la vez,
+-- porque ends_at siempre es posterior a starts_at). Empareja grupos al azar
+-- de dos en dos: los primeros v_active_count pares arrancan ya mismo
+-- (quedan "en curso"), el resto se programa escalonado en los días
+-- siguientes (quedan "próximas") — así la página de /batallas nunca se ve
+-- vacía ni muestra solo un tipo de tarjeta.
+create or replace function ensure_active_group_battles()
+returns void
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_battle_hours constant integer := 120; -- 5 días de duración por batalla
+  v_active_count constant integer := 4;   -- cuántos pares arrancan de inmediato
+  v_stagger_days constant integer[] := array[2,4,6,8,10,12,14,16];
+begin
+  if exists (select 1 from group_battles where ends_at > now()) then
+    return;
+  end if;
+
+  with available as (
+    select id
+    from groups
+    order by random()
+  ),
+  numbered as (
+    select id, row_number() over () as rn
+    from available
+  ),
+  paired as (
+    select
+      a.id as group_a_id,
+      b.id as group_b_id,
+      row_number() over (order by a.rn) as pair_rn
+    from numbered a
+    join numbered b on b.rn = a.rn + 1
+    where a.rn % 2 = 1
+  )
+  insert into group_battles (group_a_id, group_b_id, starts_at, ends_at)
+  select
+    group_a_id,
+    group_b_id,
+    case
+      when pair_rn <= v_active_count then now()
+      else now() + (v_stagger_days[least(pair_rn - v_active_count, array_length(v_stagger_days, 1))] || ' days')::interval
+    end as starts_at,
+    case
+      when pair_rn <= v_active_count then now() + (v_battle_hours || ' hours')::interval
+      else now()
+        + (v_stagger_days[least(pair_rn - v_active_count, array_length(v_stagger_days, 1))] || ' days')::interval
+        + (v_battle_hours || ' hours')::interval
+    end as ends_at
+  from paired;
+end;
+$$;
+
+grant execute on function ensure_active_group_battles() to anon, authenticated;
+
+-- Igual que cast_song_vote() pero para una batalla de grupos completos —
+-- mismo presupuesto de 5 puntos diarios (ahora compartido entre votes +
+-- song_votes + group_battle_votes) y misma XP otorgada vía grant_vote_xp().
+-- Además exige que la batalla ya haya empezado (starts_at <= now()), no
+-- solo que no haya terminado, porque las "próximas" no deben aceptar votos.
+create or replace function cast_group_battle_vote(p_user_id uuid, p_battle_id uuid, p_group_id uuid, p_points integer, p_message text default null)
+returns table (group_battle_vote_id uuid, group_battle_vote_created_at timestamptz)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_used_today integer;
+  v_day_start timestamptz := date_trunc('day', now() at time zone 'utc') at time zone 'utc';
+  v_battle group_battles%rowtype;
+begin
+  if p_points is null or p_points < 1 or p_points > 5 then
+    raise exception 'invalid_points';
+  end if;
+
+  perform pg_advisory_xact_lock(hashtextextended(p_user_id::text, 0));
+
+  select * into v_battle from group_battles where id = p_battle_id;
+  if v_battle.id is null or v_battle.starts_at > now() or v_battle.ends_at <= now() then
+    raise exception 'battle_not_active';
+  end if;
+  if p_group_id != v_battle.group_a_id and p_group_id != v_battle.group_b_id then
+    raise exception 'invalid_group';
+  end if;
+
+  select
+    coalesce((select sum(v.points) from votes v where v.user_id = p_user_id and v.created_at >= v_day_start), 0) +
+    coalesce((select sum(sv.points) from song_votes sv where sv.user_id = p_user_id and sv.created_at >= v_day_start), 0) +
+    coalesce((select sum(gv.points) from group_battle_votes gv where gv.user_id = p_user_id and gv.created_at >= v_day_start), 0)
+  into v_used_today;
+
+  if v_used_today + p_points > 5 then
+    raise exception 'daily_budget_exceeded';
+  end if;
+
+  perform grant_vote_xp(p_user_id, p_points);
+
+  return query
+  insert into group_battle_votes (battle_id, group_id, user_id, points, message)
+  values (p_battle_id, p_group_id, p_user_id, p_points, p_message)
+  returning group_battle_votes.id, group_battle_votes.created_at;
+end;
+$$;
+
+revoke all on function cast_group_battle_vote(uuid, uuid, uuid, integer, text) from public;
+grant execute on function cast_group_battle_vote(uuid, uuid, uuid, integer, text) to service_role;
+
+-- Vista: group_battle_feed — batallas de grupo con ambos lados y sus
+-- puntos ya armados, más un campo `status` calculado para no repetir la
+-- lógica de fechas en cada página que la use.
+drop view if exists group_battle_feed;
+create view group_battle_feed as
+select
+  b.id as battle_id,
+  b.starts_at,
+  b.ends_at,
+  case
+    when b.starts_at > now() then 'upcoming'
+    when b.ends_at <= now() then 'finished'
+    else 'active'
+  end as status,
+  ga.id as group_a_id,
+  ga.name as group_a_name,
+  ga.slug as group_a_slug,
+  ga.image_url as group_a_image,
+  ga.agency as group_a_agency,
+  gb.id as group_b_id,
+  gb.name as group_b_name,
+  gb.slug as group_b_slug,
+  gb.image_url as group_b_image,
+  gb.agency as group_b_agency,
+  coalesce((select sum(gv.points) from group_battle_votes gv where gv.battle_id = b.id and gv.group_id = b.group_a_id), 0) as group_a_points,
+  coalesce((select sum(gv.points) from group_battle_votes gv where gv.battle_id = b.id and gv.group_id = b.group_b_id), 0) as group_b_points
+from group_battles b
+join groups ga on ga.id = b.group_a_id
+join groups gb on gb.id = b.group_b_id
+order by
+  case
+    when b.starts_at <= now() and b.ends_at > now() then 0
+    when b.starts_at > now() then 1
+    else 2
+  end,
+  b.ends_at asc;
 
 -- ------------------------------------------------------------
 -- Vista: group_rankings — cada grupo con el total de votos del MES

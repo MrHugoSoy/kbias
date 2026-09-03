@@ -123,29 +123,33 @@ export default async function Home() {
           </div>
         </section>
 
-        {/* Footer de confianza */}
-        <footer className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6 border-t border-neutral-200 dark:border-neutral-900">
-          <div>
-            <ShieldCheck className="w-6 h-6 mx-auto mb-1 text-violet-500" />
-            <p className="font-semibold text-neutral-700 dark:text-neutral-300">100% GRATIS</p>
-            <p>Votar no cuesta nada. Solo necesitas una cuenta.</p>
-          </div>
-          <div>
-            <Zap className="w-6 h-6 mx-auto mb-1 text-violet-500" />
-            <p className="font-semibold text-neutral-700 dark:text-neutral-300">RANKING MENSUAL</p>
-            <p>El #1 se mantiene hasta que otro grupo acumule más puntos ese mes.</p>
-          </div>
-          <div>
-            <Trophy className="w-6 h-6 mx-auto mb-1 text-violet-500" />
-            <p className="font-semibold text-neutral-700 dark:text-neutral-300">UN SOLO TRONO</p>
-            <p>No hay categorías. Solo uno puede reinar.</p>
-          </div>
-          <div>
-            <Handshake className="w-6 h-6 mx-auto mb-1 text-violet-500" />
-            <p className="font-semibold text-neutral-700 dark:text-neutral-300">EL PODER ES DE LOS FANS</p>
-            <p>Tú decides quién reina en el mundo del K-pop.</p>
-          </div>
-        </footer>
+        {/* Footer de confianza — el borde superior llega de lado a lado de
+            la pantalla, igual que el header; el contenido se mantiene en la
+            misma columna que el resto del sitio. */}
+        <div className="relative left-1/2 -translate-x-1/2 w-screen border-t border-neutral-200 dark:border-neutral-900">
+          <footer className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center text-xs text-neutral-500 pt-6">
+            <div>
+              <ShieldCheck className="w-6 h-6 mx-auto mb-1 text-violet-500" />
+              <p className="font-semibold text-neutral-700 dark:text-neutral-300">100% GRATIS</p>
+              <p>Votar no cuesta nada. Solo necesitas una cuenta.</p>
+            </div>
+            <div>
+              <Zap className="w-6 h-6 mx-auto mb-1 text-violet-500" />
+              <p className="font-semibold text-neutral-700 dark:text-neutral-300">RANKING MENSUAL</p>
+              <p>El #1 se mantiene hasta que otro grupo acumule más puntos ese mes.</p>
+            </div>
+            <div>
+              <Trophy className="w-6 h-6 mx-auto mb-1 text-violet-500" />
+              <p className="font-semibold text-neutral-700 dark:text-neutral-300">UN SOLO TRONO</p>
+              <p>No hay categorías. Solo uno puede reinar.</p>
+            </div>
+            <div>
+              <Handshake className="w-6 h-6 mx-auto mb-1 text-violet-500" />
+              <p className="font-semibold text-neutral-700 dark:text-neutral-300">EL PODER ES DE LOS FANS</p>
+              <p>Tú decides quién reina en el mundo del K-pop.</p>
+            </div>
+          </footer>
+        </div>
 
         <FooterLinks />
       </div>
