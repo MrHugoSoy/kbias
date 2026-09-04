@@ -4,13 +4,11 @@ import Link from 'next/link';
 import {
   BadgeCheck,
   Calendar,
-  Disc3,
   ExternalLink,
   Globe,
   Info,
   Mic2,
   Newspaper,
-  MapPin,
   Percent,
   Swords,
   Trophy,
@@ -36,6 +34,16 @@ type StatsExtra = {
 function Tag({ children }: { children: React.ReactNode }) {
   return (
     <span className="inline-flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900 rounded-full px-2.5 py-1 text-xs font-medium text-neutral-600 dark:text-neutral-300">
+      {children}
+    </span>
+  );
+}
+
+// Igual que Tag, pero para encima de la foto de portada — un fondo oscuro
+// semitransparente en vez del gris claro, que se perdería sobre la imagen.
+function BannerTag({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="inline-flex items-center gap-1 bg-black/40 backdrop-blur-sm rounded-full px-2.5 py-1 text-xs font-medium text-white">
       {children}
     </span>
   );
@@ -234,55 +242,74 @@ export default function GroupDetailCard({
 
   return (
     <div className="space-y-5">
-      {/* Encabezado — avatar circular, sin foto de portada */}
-      <div className="flex flex-col sm:flex-row gap-4 sm:items-start">
-        <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white dark:border-neutral-950 shadow-lg overflow-hidden bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center shrink-0 mx-auto sm:mx-0">
-          {group.image_url ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={group.image_url} alt={group.group_name} className="w-full h-full object-cover" />
-          ) : (
-            <Mic2 className="w-10 h-10 text-neutral-400 dark:text-neutral-600" />
-          )}
-        </div>
-        <div className="flex-1 min-w-0 text-center sm:text-left space-y-2">
-          {group.official_url && (
-            <a
-              href={group.official_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-neutral-500 hover:text-violet-500 dark:hover:text-violet-400 inline-flex items-center gap-1"
-            >
-              <Globe className="w-3 h-3" /> Sitio oficial <ExternalLink className="w-3 h-3" />
-            </a>
-          )}
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+      {/* Portada — la misma foto del grupo de fondo (no hay un campo de
+          banner aparte), con un degradado oscuro a la izquierda para que el
+          nombre y los tags se puedan leer encima. */}
+      <div className="relative rounded-2xl overflow-hidden bg-neutral-950 min-h-[15rem] sm:min-h-[16rem]">
+        {group.image_url && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={group.image_url} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover object-[80%_15%]" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/85 sm:via-neutral-950/60 to-neutral-950/20 sm:to-transparent" />
+
+        <div className="relative h-full p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5">
+          <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full ring-4 ring-violet-500 border-4 border-neutral-950 overflow-hidden bg-neutral-900 flex items-center justify-center shrink-0 mx-auto sm:mx-0">
+            {group.image_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={group.image_url} alt={group.group_name} className="w-full h-full object-cover" />
+            ) : (
+              <Mic2 className="w-10 h-10 text-neutral-500" />
+            )}
             {group.claimed_by_fan && (
-              <Tag>
-                <BadgeCheck className="w-3 h-3 text-violet-500" /> Verificado
-              </Tag>
-            )}
-            {group.fandom_name && <Tag>♥ {group.fandom_name}</Tag>}
-            {group.genre && (
-              <Tag>
-                <Disc3 className="w-3 h-3" /> {group.genre}
-              </Tag>
-            )}
-            {group.debut_date && (
-              <Tag>
-                <Calendar className="w-3 h-3" /> Debut {new Date(group.debut_date).getUTCFullYear()}
-              </Tag>
-            )}
-            {group.country && (
-              <Tag>
-                <MapPin className="w-3 h-3" /> {group.country}
-              </Tag>
+              <span className="absolute bottom-0 right-0 w-7 h-7 rounded-full bg-gradient-to-r from-violet-600 to-pink-500 border-2 border-neutral-950 flex items-center justify-center">
+                <BadgeCheck className="w-4 h-4 text-white" />
+              </span>
             )}
           </div>
-          <div className="flex items-center justify-center sm:justify-start gap-3 pt-1">
+
+          <div className="flex-1 min-w-0 text-center sm:text-left space-y-1.5">
+            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{group.group_name}</h1>
+            {group.agency && <p className="text-sm text-white/70">{group.agency}</p>}
+            <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+              {nextBattle?.status === 'active' && (
+                <BannerTag>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" /> En batalla
+                </BannerTag>
+              )}
+              {group.group_type && <BannerTag>{group.group_type}</BannerTag>}
+              {group.debut_date && (
+                <BannerTag>
+                  <Calendar className="w-3 h-3" /> Debut {new Date(group.debut_date).getUTCFullYear()}
+                </BannerTag>
+              )}
+            </div>
+            {group.bio && <p className="text-sm text-white/80 max-w-lg line-clamp-2 mx-auto sm:mx-0">{group.bio}</p>}
+          </div>
+
+          <div className="shrink-0 mx-auto sm:mx-0">
             <BidButton groupId={group.group_id} groupName={group.group_name} />
-            <CopyLinkButton slug={group.slug} />
-            <ShareButtons slug={group.slug} groupName={group.group_name} />
           </div>
+        </div>
+      </div>
+
+      {/* Fila secundaria — solo acciones (el resto de los datos del grupo
+          vive una sola vez, en "Sobre el grupo" más abajo). */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        {group.official_url ? (
+          <a
+            href={group.official_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-neutral-500 hover:text-violet-500 dark:hover:text-violet-400 inline-flex items-center gap-1"
+          >
+            <Globe className="w-3 h-3" /> Sitio oficial <ExternalLink className="w-3 h-3" />
+          </a>
+        ) : (
+          <span />
+        )}
+        <div className="flex items-center gap-3 shrink-0">
+          <CopyLinkButton slug={group.slug} />
+          <ShareButtons slug={group.slug} groupName={group.group_name} />
         </div>
       </div>
 
@@ -304,9 +331,7 @@ export default function GroupDetailCard({
             <h2 className="text-lg font-bold flex items-center gap-2">
               <Info className="w-5 h-5 text-violet-500" /> Sobre {group.group_name}
             </h2>
-            {group.bio && <p className="text-sm text-neutral-600 dark:text-neutral-400">{group.bio}</p>}
             <div className="grid sm:grid-cols-2 gap-3">
-              <InfoField label="Posición en ranking" value={`#${rank}`} />
               {group.debut_date && (
                 <InfoField
                   label="Debut"
@@ -360,37 +385,16 @@ export default function GroupDetailCard({
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Trophy className="w-4 h-4 text-violet-500" /> Estadísticas del grupo
             </h3>
+            {/* Puntos/ranking/batallas ganadas/% victorias ya están arriba,
+                en las tarjetas resumen — aquí solo lo que no se repite. */}
             <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-neutral-500">Puntos este mes</span>
-                <span className="font-bold">{live.total_points.toLocaleString('es-MX')}</span>
-              </div>
               <div className="flex items-center justify-between">
                 <span className="text-neutral-500">Votos totales</span>
                 <span className="font-bold">{stats.totalVotesAllTime.toLocaleString('es-MX')}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-neutral-500">Batallas ganadas</span>
-                <span className="font-bold">{won}</span>
-              </div>
-              <div className="flex items-center justify-between">
                 <span className="text-neutral-500">Batallas perdidas</span>
                 <span className="font-bold">{lost}</span>
-              </div>
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="text-neutral-500">% de victorias</span>
-                  <span className="font-bold">{winPct !== null ? `${winPct}%` : '—'}</span>
-                </div>
-                {winPct !== null && (
-                  <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-violet-600 to-pink-500" style={{ width: `${winPct}%` }} />
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-neutral-500">Ranking actual</span>
-                <span className="font-bold">#{rank}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-neutral-500">Mejor posición</span>

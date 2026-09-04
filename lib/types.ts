@@ -16,6 +16,8 @@ export type RankingRow = {
   debut_date: string | null;
   country: string | null;
   genre: string | null;
+  agency: string | null;
+  group_type: string | null;
   best_rank: number | null;
 };
 

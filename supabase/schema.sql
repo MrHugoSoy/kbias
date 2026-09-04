@@ -38,6 +38,9 @@ alter table groups add column if not exists official_url text;
 alter table groups add column if not exists debut_date date;
 alter table groups add column if not exists country text;
 alter table groups add column if not exists genre text;
+-- "Girl Group" / "Boy Group" / "Mixed Group" — etiqueta libre para el
+-- banner del perfil, igual de opcional que las de arriba.
+alter table groups add column if not exists group_type text;
 -- Mejor puesto alcanzado (nunca empeora) — se actualiza en
 -- sync_rank_snapshots() de una vez, aprovechando que ya calcula el rank
 -- en vivo de cada grupo ahí mismo.
@@ -759,6 +762,8 @@ select
   g.debut_date,
   g.country,
   g.genre,
+  g.agency,
+  g.group_type,
   g.best_rank,
   coalesce(
     sum(v.points) filter (
@@ -769,7 +774,7 @@ select
 from groups g
 left join votes v on v.group_id = g.id
 group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url, g.rank_snapshot_value,
-  g.claimed_by_fan, g.debut_date, g.country, g.genre, g.best_rank
+  g.claimed_by_fan, g.debut_date, g.country, g.genre, g.agency, g.group_type, g.best_rank
 order by total_points desc, g.name asc;
 
 -- Puesto "congelado" al inicio del día calendario (UTC) en curso (columnas
