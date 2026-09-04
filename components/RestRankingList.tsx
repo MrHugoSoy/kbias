@@ -6,10 +6,9 @@ import BidButton from './BidButton';
 import { useLiveRankings } from '@/lib/useLiveRankings';
 import type { RankingRow } from '@/lib/types';
 
-// Debe coincidir con RANK_OFFSET + CARD_COUNT de RankingBoard — ahí se ven
-// los puestos 5-9 como tarjetas (el 1-4 ya está en el Hero), esta lista
-// arranca justo después para no repetir a nadie.
-const SKIP_TOP = 9;
+// Debe coincidir con TOP_COUNT de RankingBoard — ahí se ven los primeros 5
+// como tarjetas, esta lista arranca justo después para no repetirlos.
+const SKIP_TOP = 5;
 
 function RestRow({ rank, group, maxPoints }: { rank: number; group: RankingRow; maxPoints: number }) {
   const barPct = maxPoints > 0 ? Math.max(4, Math.round((group.total_points / maxPoints) * 100)) : 4;
@@ -50,9 +49,9 @@ function RestRow({ rank, group, maxPoints }: { rank: number; group: RankingRow; 
   );
 }
 
-// Lista con scroll del resto de los grupos (a partir del puesto 10) — vive
+// Lista con scroll del resto de los grupos (a partir del puesto 6) — vive
 // junto a Actividad en vivo para que cualquier grupo tenga voto directo en
-// la portada sin repetir a los que ya se ven en el Hero y en RankingBoard.
+// la portada sin repetir al top 5 que ya se ve en RankingBoard.
 export default function RestRankingList({ initialRankings }: { initialRankings: RankingRow[] }) {
   const rankings = useLiveRankings(initialRankings);
   const rest = rankings.slice(SKIP_TOP);
