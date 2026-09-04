@@ -11,8 +11,8 @@ import LogoKW from './icons/LogoKW';
 // llegaba desde un link compartido se quedaba sin menú ni accesos rápidos
 // a notificaciones/perfil/tema. Los anclas usan ruta absoluta ("/#ranking")
 // para que funcionen igual ya sea que estés en la portada o llegando desde
-// otra página.
-export default function SiteHeader({ home }: { home?: boolean }) {
+// otra página. El logo ya lleva a "/", así que no hay un link "INICIO" aparte.
+export default function SiteHeader() {
   return (
     // El borde (y el fondo, si el header alguna vez lo lleva) llega de lado
     // a lado de la pantalla — solo el contenido de adentro se mantiene en
@@ -28,20 +28,14 @@ export default function SiteHeader({ home }: { home?: boolean }) {
         </Link>
         <div className="flex items-center gap-4">
           <nav className="hidden md:flex gap-6 text-sm font-medium text-neutral-500 dark:text-neutral-400">
-            {home ? (
-              <a href="#" className="text-violet-600 dark:text-violet-400 border-b-2 border-violet-600 dark:border-violet-400 pb-1">
-                INICIO
-              </a>
-            ) : (
-              <Link href="/" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
-                INICIO
-              </Link>
-            )}
             <a href="/#ranking" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
               RANKING
             </a>
             <Link href="/batallas" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
               BATALLAS
+            </Link>
+            <Link href="/grupos" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
+              GRUPOS
             </Link>
             <Link href="/como-funciona" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
               CÓMO FUNCIONA

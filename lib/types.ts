@@ -19,6 +19,24 @@ export type RankingRow = {
   best_rank: number | null;
 };
 
+// Un grupo con sus datos de perfil ya combinados con su puesto/puntos del
+// ranking en curso y si está metido en una batalla (activa o próxima) —
+// para /grupos, que necesita las tres cosas a la vez en cada tarjeta.
+export type GroupWithStats = {
+  id: string;
+  slug: string;
+  name: string;
+  fandom_name: string | null;
+  image_url: string | null;
+  agency: string | null;
+  genre: string | null;
+  bio: string | null;
+  official_url: string | null;
+  total_points: number;
+  rank: number;
+  battle_status: 'battle' | 'upcoming' | 'none';
+};
+
 // Fila de la vista group_battle_feed — una batalla grupo-vs-grupo con
 // ambos lados y sus puntos ya armados, para /batallas. `status` viene
 // calculado desde la base de datos (upcoming/active/finished) para no

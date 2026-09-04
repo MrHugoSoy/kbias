@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Home, Trophy, Swords, Zap, Award, HelpCircle, User, Newspaper } from 'lucide-react';
+import { Menu, X, Trophy, Swords, Users, Zap, Award, HelpCircle, User, Newspaper } from 'lucide-react';
 
 // Nav de escritorio vive oculta en celular (md:hidden en el <nav> del
-// header) — este botón le da a los mismos links (INICIO/RANKING/CÓMO
-// FUNCIONA/SALÓN DE LA FAMA/FAQ) una forma de abrirse en pantallas chicas.
+// header) — este botón le da a los mismos links (RANKING/BATALLAS/CÓMO
+// FUNCIONA/NOTICIAS/SALÓN DE LA FAMA/FAQ) una forma de abrirse en pantallas
+// chicas. El logo del header ya lleva a "/", así que no hay un link INICIO.
 export default function MobileNavMenu() {
   const [open, setOpen] = useState(false);
 
@@ -25,14 +26,14 @@ export default function MobileNavMenu() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <nav className="absolute right-0 top-12 z-50 w-48 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-xl shadow-xl overflow-hidden flex flex-col text-sm">
-            <Link href="/" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 text-pink-500 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              <Home className="w-4 h-4" /> INICIO
-            </Link>
             <a href="/#ranking" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Trophy className="w-4 h-4" /> RANKING
             </a>
             <Link href="/batallas" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Swords className="w-4 h-4" /> BATALLAS
+            </Link>
+            <Link href="/grupos" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
+              <Users className="w-4 h-4" /> GRUPOS
             </Link>
             <Link href="/como-funciona" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Zap className="w-4 h-4" /> CÓMO FUNCIONA
