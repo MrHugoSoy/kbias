@@ -19,6 +19,33 @@ export type RankingRow = {
   best_rank: number | null;
 };
 
+// Fila de group_members — un integrante de un grupo, para la pestaña
+// "Miembros" de su perfil.
+export type GroupMember = {
+  id: string;
+  name: string;
+  role: string | null;
+  image_url: string | null;
+  social_url: string | null;
+};
+
+// Una batalla de group_battle_feed ya "orientada" desde el punto de vista
+// de un grupo específico — el lado propio y el del rival separados, para no
+// repetir el `group_a_id === groupId ? ... : ...` en cada componente que
+// use la lista de batallas de un grupo (perfil de grupo).
+export type GroupBattleForGroup = {
+  battle_id: string;
+  status: GroupBattleStatus;
+  starts_at: string;
+  ends_at: string;
+  my_points: number;
+  opponent_id: string;
+  opponent_name: string;
+  opponent_slug: string;
+  opponent_image: string | null;
+  opponent_points: number;
+};
+
 // Un grupo con sus datos de perfil ya combinados con su puesto/puntos del
 // ranking en curso y si está metido en una batalla (activa o próxima) —
 // para /grupos, que necesita las tres cosas a la vez en cada tarjeta.

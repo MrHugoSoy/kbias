@@ -2,10 +2,10 @@ import { notFound } from 'next/navigation';
 import { getSupabasePublicClient } from '@/lib/supabase';
 import { LegalPage } from '@/components/LegalPage';
 import GroupDetailCard from '@/components/GroupDetailCard';
-import GroupComments from '@/components/GroupComments';
+import type { Comment } from '@/components/GroupComments';
 import { siteUrl } from '@/lib/siteUrl';
 import { utcDayStart } from '@/lib/dailyWindow';
-import type { NewsPost } from '@/lib/types';
+import type { NewsPost, GroupMember, GroupBattleForGroup, GroupBattleStatus } from '@/lib/types';
 
 const SPARKLINE_DAYS = 14;
 
@@ -78,6 +78,36 @@ export default async function GroupDetailPage({ params }: Props) {
     .eq('group_id', group.group_id)
     .order('published_at', { ascending: false });
 
+  const { data: memberRows } = await supabase
+    .from('group_members')
+    .select('id, name, role, image_url, social_url')
+    .eq('group_id', group.group_id)
+    .order('sort_order', { ascending: true });
+
+  // Batallas donde este grupo es cualquiera de los dos lados — se "orienta"
+  // acá (lado propio vs. lado rival) para que el componente no tenga que
+  // repetir el `group_a_id === id ? ... : ...` en cada tarjeta.
+  const { data: battleRows } = await supabase
+    .from('group_battle_feed')
+    .select('*')
+    .or(`group_a_id.eq.${group.group_id},group_b_id.eq.${group.group_id}`);
+
+  const battles: GroupBattleForGroup[] = (battleRows ?? []).map((b) => {
+    const isSideA = b.group_a_id === group.group_id;
+    return {
+      battle_id: b.battle_id,
+      status: b.status as GroupBattleStatus,
+      starts_at: b.starts_at,
+      ends_at: b.ends_at,
+      my_points: isSideA ? b.group_a_points : b.group_b_points,
+      opponent_id: isSideA ? b.group_b_id : b.group_a_id,
+      opponent_name: isSideA ? b.group_b_name : b.group_a_name,
+      opponent_slug: isSideA ? b.group_b_slug : b.group_a_slug,
+      opponent_image: isSideA ? b.group_b_image : b.group_a_image,
+      opponent_points: isSideA ? b.group_b_points : b.group_a_points,
+    };
+  });
+
   // Estadísticas históricas de la pestaña "Estadísticas" — se calculan acá
   // (no en una vista) porque son específicas de este grupo y de este
   // request, sin necesidad de una suscripción en vivo aparte.
@@ -104,15 +134,17 @@ export default async function GroupDetailPage({ params }: Props) {
     <LegalPage
       title={group.group_name}
       subtitle={group.fandom_name ? `♥ ${group.fandom_name} ♥` : `Puesto #${rank} de ${list.length}`}
+      wide
     >
       <GroupDetailCard
         group={group}
         initialRankings={list}
         stats={{ totalVotesAllTime, votesToday, dailySeries }}
         newsPosts={(newsRows ?? []) as unknown as NewsPost[]}
+        members={(memberRows ?? []) as GroupMember[]}
+        battles={battles}
+        comments={(comments ?? []) as Comment[]}
       />
-
-      <GroupComments groupId={group.group_id} initialComments={comments ?? []} />
     </LegalPage>
   );
 }

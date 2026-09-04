@@ -313,6 +313,29 @@ create index if not exists idx_songs_group on songs (group_id);
 alter table songs enable row level security;
 drop policy if exists "songs_public_read" on songs;
 create policy "songs_public_read" on songs for select using (true);
+
+-- ------------------------------------------------------------
+-- Integrantes de un grupo — para la pestaña "Miembros" de su perfil. Igual
+-- que songs: sin formulario propio todavía, se cargan a mano con el service
+-- role desde el SQL Editor. sort_order controla el orden de la grilla
+-- (normalmente el orden "oficial" del grupo, no alfabético).
+-- ------------------------------------------------------------
+create table if not exists group_members (
+  id uuid primary key default gen_random_uuid(),
+  group_id uuid not null references groups(id) on delete cascade,
+  name text not null,
+  role text,
+  image_url text,
+  social_url text,
+  sort_order integer not null default 0,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_group_members_group on group_members (group_id, sort_order);
+
+alter table group_members enable row level security;
+drop policy if exists "group_members_public_read" on group_members;
+create policy "group_members_public_read" on group_members for select using (true);
 -- Sin policy de insert/update: se cargan a mano con el service role desde el SQL Editor.
 
 -- ------------------------------------------------------------

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Crown, Flame, Mic2, Share2, Swords, Clock, Hourglass, CheckCircle2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
+import { useCountdown } from '@/lib/useCountdown';
 import AuthModal from './AuthModal';
 import VoteMessageModal from './VoteMessageModal';
 import type { GroupBattle } from '@/lib/types';
@@ -37,21 +38,6 @@ function timeLeftShort(iso: string): string {
   if (days > 0) return `${days}d ${hours}h`;
   const minutes = Math.floor((ms % 3_600_000) / 60_000);
   return `${hours}h ${minutes}m`;
-}
-
-// HH:MM:SS en vivo para la batalla destacada — se recalcula cada segundo
-// contra `ends_at`, así el número nunca se queda pegado.
-function useCountdown(endsAt: string) {
-  const [now, setNow] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  const ms = Math.max(0, new Date(endsAt).getTime() - now);
-  const hours = Math.floor(ms / 3_600_000);
-  const minutes = Math.floor((ms % 3_600_000) / 60_000);
-  const seconds = Math.floor((ms % 60_000) / 1000);
-  return { hours, minutes, seconds, ended: ms <= 0 };
 }
 
 function pct(a: number, b: number) {

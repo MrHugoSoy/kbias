@@ -10,7 +10,7 @@ import AuthModal from './AuthModal';
 
 const COMMENT_MAX_LENGTH = 500;
 
-type Comment = {
+export type Comment = {
   id: string;
   group_id: string;
   body: string | null;
