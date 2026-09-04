@@ -66,7 +66,7 @@ export default function RestRankingList({ initialRankings }: { initialRankings: 
     // recorta el contenido de forma consistente (las esquinas se ven
     // cuadradas al hacer scroll). Separar ambos responsabilidades lo
     // vuelve confiable en cualquier navegador.
-    <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
+    <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-xl overflow-hidden">
       <div
         className={
           'divide-y divide-neutral-200 dark:divide-neutral-900 max-h-[22rem] overflow-y-auto ' +

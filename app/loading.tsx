@@ -54,7 +54,7 @@ export default function Loading() {
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
             {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="rounded-2xl border border-neutral-200 dark:border-neutral-900 p-4 space-y-2">
+              <div key={i} className="rounded-2xl shadow-sm dark:ring-1 dark:ring-white/10 p-4 space-y-2">
                 <div className="w-16 h-16 mx-auto rounded-full bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
                 <div className="h-3.5 w-16 mx-auto rounded bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
                 <div className="h-3 w-12 mx-auto rounded bg-neutral-100 dark:bg-neutral-900 animate-pulse" />
@@ -68,7 +68,7 @@ export default function Loading() {
         {/* Grupos 6-17 + actividad en vivo, lado a lado */}
         <div className="grid lg:grid-cols-2 gap-6 items-start">
           {[0, 1].map((col) => (
-            <div key={col} className="rounded-xl border border-neutral-200 dark:border-neutral-900 divide-y divide-neutral-200 dark:divide-neutral-900 overflow-hidden">
+            <div key={col} className="rounded-xl shadow-sm dark:ring-1 dark:ring-white/10 divide-y divide-neutral-200 dark:divide-neutral-900 overflow-hidden">
               {[0, 1, 2, 3, 4].map((i) => (
                 <div key={i} className="px-4 py-3 flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-900 animate-pulse shrink-0" />

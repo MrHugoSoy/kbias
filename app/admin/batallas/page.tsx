@@ -180,7 +180,7 @@ export default function AdminBatallasPage() {
         {battles.length === 0 ? (
           <p className="text-sm text-neutral-500">Todavía no hay batallas.</p>
         ) : (
-          <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
+          <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-xl overflow-hidden">
             {battles.map((b) => (
               <div key={b.battle_id} className="flex items-center gap-3 px-4 py-3 text-sm">
                 <div className="flex-1 min-w-0">

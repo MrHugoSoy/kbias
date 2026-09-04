@@ -41,7 +41,7 @@ function PodiumCard({ rank, group }: { rank: number; group: RankingRow }) {
   return (
     <div
       className={
-        'bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl text-center space-y-2 ' +
+        'bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl text-center space-y-2 ' +
         (isFirst ? 'p-6 sm:-mt-4' : 'p-4')
       }
     >
@@ -125,7 +125,7 @@ export default function LiveStatsSection({
           )}
 
           {rest.length > 0 && (
-            <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
+            <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-xl overflow-hidden">
               {rest.map((r, i) => {
                 const rank = i + 4;
                 return (

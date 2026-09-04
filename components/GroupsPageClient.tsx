@@ -64,7 +64,7 @@ function GroupImage({ image, name }: { image: string | null; name: string }) {
 function GroupCard({ group }: { group: GroupWithStats }) {
   const badge = BADGE_BY_RANK[group.rank] ?? 'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-black';
   return (
-    <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl overflow-hidden flex flex-col">
+    <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl overflow-hidden flex flex-col">
       <div className="relative aspect-[4/3]">
         <GroupImage image={group.image_url} name={group.name} />
         <span className={`absolute top-2 left-2 w-7 h-7 rounded-full text-xs font-black flex items-center justify-center shadow ${badge}`}>
@@ -98,7 +98,7 @@ function GroupCard({ group }: { group: GroupWithStats }) {
 function GroupRow({ group }: { group: GroupWithStats }) {
   const badge = BADGE_BY_RANK[group.rank] ?? 'bg-neutral-800 dark:bg-neutral-200 text-white dark:text-black';
   return (
-    <div className="flex items-center gap-3 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl p-3">
+    <div className="flex items-center gap-3 bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-xl p-3">
       <span className={`w-7 h-7 shrink-0 rounded-full text-xs font-black flex items-center justify-center ${badge}`}>{group.rank}</span>
       <div className="w-12 h-12 shrink-0 rounded-lg overflow-hidden">
         <GroupImage image={group.image_url} name={group.name} />
@@ -182,7 +182,7 @@ export default function GroupsPageClient({ groups }: { groups: GroupWithStats[] 
   return (
     <div className="space-y-6">
       {/* Toolbar */}
-      <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-3 flex flex-wrap items-center gap-3">
+      <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-3 flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[10rem]">
           <Search className="w-4 h-4 text-neutral-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -288,7 +288,7 @@ export default function GroupsPageClient({ groups }: { groups: GroupWithStats[] 
 
         {/* Sidebar */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-4 space-y-3">
+          <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-4 space-y-3">
             <h3 className="font-bold flex items-center gap-2 text-sm">
               <Trophy className="w-4 h-4 text-amber-500" /> Top ranking
             </h3>
@@ -312,7 +312,7 @@ export default function GroupsPageClient({ groups }: { groups: GroupWithStats[] 
           </div>
 
           {genres.length > 0 && (
-            <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-4 space-y-2">
+            <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-4 space-y-2">
               <h3 className="font-bold flex items-center gap-2 text-sm">
                 <Disc3 className="w-4 h-4 text-violet-500" /> Filtrar por género
               </h3>
@@ -334,7 +334,7 @@ export default function GroupsPageClient({ groups }: { groups: GroupWithStats[] 
             </div>
           )}
 
-          <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-4 space-y-2">
+          <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-4 space-y-2">
             <h3 className="font-bold flex items-center gap-2 text-sm">
               <Flag className="w-4 h-4 text-pink-500" /> Estado
             </h3>
@@ -373,7 +373,7 @@ export default function GroupsPageClient({ groups }: { groups: GroupWithStats[] 
 
       {/* Grupo destacado */}
       {featured && (
-        <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 items-start">
+        <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-4 sm:p-6 flex flex-col sm:flex-row gap-4 items-start">
           <div className="w-full sm:w-48 aspect-video sm:aspect-square rounded-xl overflow-hidden shrink-0">
             <GroupImage image={featured.image_url} name={featured.name} />
           </div>

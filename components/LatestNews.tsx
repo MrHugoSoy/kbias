@@ -57,7 +57,7 @@ function StandardCard({ post }: { post: NewsPost }) {
   return (
     <Link
       href={`/noticias/${post.id}`}
-      className="block bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl overflow-hidden hover:border-violet-300 dark:hover:border-violet-800 transition"
+      className="block bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl overflow-hidden hover:border-violet-300 dark:hover:border-violet-800 transition"
     >
       <div className="relative h-32 bg-neutral-100 dark:bg-neutral-900">
         {post.cover_url && (

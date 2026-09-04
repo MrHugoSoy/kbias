@@ -149,7 +149,7 @@ export default function SongBattles() {
           const pctA = total > 0 ? Math.round((b.song_a_points / total) * 100) : 50;
           const pctB = 100 - pctA;
           return (
-            <div key={b.battle_id} className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-4 space-y-3">
+            <div key={b.battle_id} className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-4 space-y-3">
               <span className="inline-flex items-center gap-1 text-[10px] font-bold text-white bg-pink-500 px-2 py-0.5 rounded-full">
                 EN VIVO
               </span>

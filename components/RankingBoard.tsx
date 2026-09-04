@@ -27,7 +27,7 @@ function RankCard({ rank, group }: { rank: number; group: RankingRow }) {
   const badge = BADGE_BY_RANK[rank] ?? 'bg-gradient-to-r from-violet-600 to-pink-500 text-white';
 
   return (
-    <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-4 text-center space-y-2 hover:shadow-md dark:hover:border-neutral-700 transition">
+    <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-4 text-center space-y-2 hover:shadow-md dark:hover:border-neutral-700 transition">
       <div className="relative w-16 h-16 mx-auto">
         <div className={`w-16 h-16 rounded-full border-2 ${ring} bg-neutral-100 dark:bg-neutral-900 overflow-hidden flex items-center justify-center`}>
           {group.image_url ? (

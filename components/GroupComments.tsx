@@ -628,7 +628,7 @@ export default function GroupComments({ groupId, initialComments }: { groupId: s
         </div>
       )}
 
-      <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
+      <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-xl overflow-hidden">
         {topLevel.length === 0 && (
           <p className="text-center text-neutral-500 py-6 text-sm">Sin comentarios todavía — ¡sé el primero!</p>
         )}

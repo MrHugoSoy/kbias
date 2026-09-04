@@ -140,7 +140,7 @@ export default function BattlesPageClient() {
   return (
     <div className="space-y-8">
       {/* Pestañas */}
-      <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-1.5 flex flex-wrap gap-1 text-sm font-bold">
+      <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-1.5 flex flex-wrap gap-1 text-sm font-bold">
         {([
           ['todas', 'Todas', Swords],
           ['active', 'En curso', Flame],
@@ -256,7 +256,7 @@ function FeaturedBattle({
   const pad = (n: number) => String(Math.max(0, n)).padStart(2, '0');
 
   return (
-    <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-5 sm:p-6 grid md:grid-cols-[1fr_auto_1fr] items-center gap-6">
+    <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-5 sm:p-6 grid md:grid-cols-[1fr_auto_1fr] items-center gap-6">
       {/* Lado A */}
       <div className="space-y-2">
         <div className="relative aspect-[4/3] rounded-2xl overflow-hidden">
@@ -353,7 +353,7 @@ function CompactBattleCard({ battle, onVote }: { battle: GroupBattle; onVote: (b
   const totalVotes = battle.group_a_points + battle.group_b_points;
 
   return (
-    <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl overflow-hidden">
+    <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl overflow-hidden">
       <div className="relative grid grid-cols-2">
         <button onClick={() => onVote(battle.battle_id, battle.group_a_id, `${battle.group_a_name} vs ${battle.group_b_name}`)} className="aspect-square">
           <GroupThumb image={battle.group_a_image} name={battle.group_a_name} />
@@ -390,7 +390,7 @@ function CompactBattleCard({ battle, onVote }: { battle: GroupBattle; onVote: (b
 
 function UpcomingBattleCard({ battle }: { battle: GroupBattle }) {
   return (
-    <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl overflow-hidden opacity-90">
+    <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl overflow-hidden opacity-90">
       <div className="relative grid grid-cols-2">
         <span className="absolute top-2 left-2 z-10 text-[9px] font-bold text-white bg-violet-600 px-2 py-0.5 rounded-full">
           PRÓXIMAMENTE
@@ -423,7 +423,7 @@ function FinishedBattleCard({ battle }: { battle: GroupBattle }) {
   const winnerName = pctA === pctB ? null : pctA > pctB ? battle.group_a_name : battle.group_b_name;
 
   return (
-    <div className="bg-neutral-50 dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl overflow-hidden grayscale-[30%]">
+    <div className="bg-neutral-50 dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl overflow-hidden grayscale-[30%]">
       <div className="relative grid grid-cols-2">
         <div className="aspect-square">
           <GroupThumb image={battle.group_a_image} name={battle.group_a_name} />

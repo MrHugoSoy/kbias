@@ -685,7 +685,7 @@ export default function PerfilPage() {
             {tallies.length === 0 ? (
               <p className="text-sm text-neutral-500">Todavía no has votado por ningún grupo.</p>
             ) : (
-              <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-xl overflow-hidden">
+              <div className="divide-y divide-neutral-200 dark:divide-neutral-900 bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-xl overflow-hidden">
                 {tallies.map(({ group, count }) => (
                   <div key={group.id} className="flex items-center gap-3 px-4 py-3 text-sm">
                     <div className="w-8 h-8 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center shrink-0">

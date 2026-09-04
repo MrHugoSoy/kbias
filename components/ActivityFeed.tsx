@@ -189,7 +189,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
           + overflow-y-auto en el MISMO elemento no recorta el contenido de
           forma consistente en todos los navegadores (esquinas cuadradas al
           hacer scroll). Separar ambas responsabilidades lo vuelve confiable. */}
-      <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-transparent rounded-xl overflow-hidden">
+      <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-xl overflow-hidden">
         <div
           ref={containerRef}
           onMouseEnter={pause}
