@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Flame, ImagePlus, Lock, LogOut, Mic2, Newspaper, Pencil, Swords, Upload, X } from 'lucide-react';
+import { Calendar, Flame, ImagePlus, Lock, LogOut, Mic2, Newspaper, Pencil, Swords, Upload, X } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import { LegalPage } from '@/components/LegalPage';
@@ -573,6 +573,16 @@ export default function PerfilPage() {
               </button>
             )}
             <p className="text-sm text-neutral-500 truncate mt-0.5">{user.email}</p>
+            <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+              {tallies[0] && (
+                <span className="inline-flex items-center gap-1 bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400 text-xs font-semibold px-2.5 py-1 rounded-full">
+                  ♥ {tallies[0].group.fandom_name ?? tallies[0].group.name}
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 bg-neutral-100 dark:bg-neutral-900 text-neutral-500 text-xs font-medium px-2.5 py-1 rounded-full">
+                <Calendar className="w-3 h-3" /> Desde {new Date(user.created_at).getFullYear()}
+              </span>
+            </div>
             {isAdmin && (
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1">
                 <Link
@@ -596,6 +606,30 @@ export default function PerfilPage() {
           >
             <LogOut className="w-3.5 h-3.5" /> Cerrar sesión
           </button>
+        </div>
+
+        <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-bold text-violet-600 dark:text-violet-400">Nivel {level}</p>
+            <p className="text-xs text-neutral-500">
+              {xp} XP · faltan {xpForNextLevel - xpIntoLevel} para el nivel {level + 1}
+            </p>
+          </div>
+          <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-violet-600 to-pink-500 rounded-full transition-all" style={{ width: `${levelProgressPct}%` }} />
+          </div>
+        </div>
+
+        <div className="grid sm:grid-cols-3 gap-3">
+          <StatBlock label="Puntos dados" value={totalPointsGiven.toLocaleString('es-MX')} data={dailySeries} />
+          <StatBlock label="Puntos hoy" value={pointsUsedToday.toLocaleString('es-MX')} />
+          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
+            <p className="text-xs text-neutral-500 uppercase tracking-wide">Racha</p>
+            <p className="text-2xl font-black text-violet-600 dark:text-violet-400 font-mono flex items-center gap-1.5">
+              {currentStreak > 0 && <Flame className="w-5 h-5 text-amber-500" />}
+              {currentStreak} {currentStreak === 1 ? 'día' : 'días'}
+            </p>
+          </div>
         </div>
 
         {showAvatarPicker && (
@@ -653,30 +687,6 @@ export default function PerfilPage() {
                 <strong className="font-mono" suppressHydrationWarning>{resetCountdown}</strong>.
               </p>
             )}
-          </div>
-
-          <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-bold text-violet-600 dark:text-violet-400">Nivel {level}</p>
-              <p className="text-xs text-neutral-500">
-                {xp} XP · faltan {xpForNextLevel - xpIntoLevel} para el nivel {level + 1}
-              </p>
-            </div>
-            <div className="h-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden">
-              <div className="h-full bg-gradient-to-r from-violet-600 to-pink-500 rounded-full transition-all" style={{ width: `${levelProgressPct}%` }} />
-            </div>
-          </div>
-
-          <div className="grid sm:grid-cols-3 gap-3">
-            <StatBlock label="Puntos dados" value={totalPointsGiven.toLocaleString('es-MX')} data={dailySeries} />
-            <StatBlock label="Puntos hoy" value={pointsUsedToday.toLocaleString('es-MX')} />
-            <div className="bg-neutral-100 dark:bg-neutral-900 rounded-xl p-4 space-y-2">
-              <p className="text-xs text-neutral-500 uppercase tracking-wide">Racha</p>
-              <p className="text-2xl font-black text-violet-600 dark:text-violet-400 font-mono flex items-center gap-1.5">
-                {currentStreak > 0 && <Flame className="w-5 h-5 text-amber-500" />}
-                {currentStreak} {currentStreak === 1 ? 'día' : 'días'}
-              </p>
-            </div>
           </div>
 
           <div className="space-y-3">
