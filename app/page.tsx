@@ -52,7 +52,7 @@ export default async function Home() {
       : await supabase.from('site_stats').select('total_visits').eq('id', 1).maybeSingle().then((r) => ({ data: r.data?.total_visits ?? 0 }));
 
   return (
-    <main className="min-h-screen bg-white text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
+    <main className="min-h-screen bg-[#f5f8fc] text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
       <SiteHeader />
 
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
