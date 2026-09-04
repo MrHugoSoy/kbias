@@ -305,12 +305,9 @@ function FeaturedBattle({
           <span>Min</span>
           <span>Seg</span>
         </div>
-        <button
-          onClick={() => onVote(battle.battle_id, battle.group_a_id, `${battle.group_a_name} vs ${battle.group_b_name}`)}
-          className="mt-1 bg-gradient-to-r from-violet-600 to-pink-500 hover:opacity-90 text-white text-sm font-bold px-5 py-2 rounded-lg transition"
-        >
-          ¡Votar ahora!
-        </button>
+        <p className="text-[11px] text-neutral-400 text-center max-w-[10rem]">
+          Elige un lado para votar ↔
+        </p>
         <button onClick={onShare} className="flex items-center gap-1 text-xs text-neutral-500 hover:text-violet-500 transition">
           <Share2 className="w-3.5 h-3.5" /> {shared ? '¡Copiado!' : 'Compartir'}
         </button>
