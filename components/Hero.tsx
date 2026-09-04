@@ -2,6 +2,16 @@ import { Crown, Heart, Sparkles } from 'lucide-react';
 import HeroStats from './HeroStats';
 import type { RankingRow } from '@/lib/types';
 
+// Coronas en vez de números — más llamativo, y sigue el mismo motivo de
+// "trono/corona" que ya usa el resto de la página. Mismos colores de
+// medalla que el Ranking Global para que el puesto se reconozca igual.
+const CROWN_BY_RANK: Record<number, string> = {
+  1: 'bg-gradient-to-br from-amber-300 to-amber-500 text-black shadow-amber-400/60',
+  2: 'bg-gradient-to-br from-neutral-200 to-neutral-400 text-black shadow-neutral-400/50',
+  3: 'bg-gradient-to-br from-orange-300 to-orange-500 text-black shadow-orange-400/50',
+  4: 'bg-gradient-to-br from-violet-600 to-pink-500 text-white shadow-pink-500/50',
+};
+
 // Portada nueva estilo "batalla" — usa datos reales (los grupos con más
 // puntos este mes) para el collage 2x2 en vez de una imagen decorativa fija,
 // así nunca queda desactualizado ni depende de un asset que haya que subir
@@ -44,14 +54,15 @@ export default function Hero({ topGroups, totalVisits }: { topGroups: RankingRow
             <Heart className="w-5 h-5 text-pink-500 fill-pink-500" />
           </span>
           <div className="grid grid-cols-2 gap-4 p-2">
-            {topGroups.slice(0, 4).map((g) => (
+            {topGroups.slice(0, 4).map((g, i) => (
               // El corte en diagonal es un truco clásico de CSS: se skewea el
               // marco (así el recorte queda en paralelogramo) y la imagen de
               // adentro se skewea al revés y se agranda, para que la foto en
-              // sí se vea recta sin distorsión.
+              // sí se vea recta sin distorsión. La medallita del puesto lleva
+              // el mismo contra-skew para no salir deformada.
               <div
                 key={g.group_id}
-                className="aspect-[16/9] -skew-x-12 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg"
+                className="relative aspect-[16/9] -skew-x-12 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-lg"
               >
                 {g.image_url && (
                   <div className="w-[150%] h-full -ml-[25%] skew-x-12">
@@ -59,6 +70,11 @@ export default function Hero({ topGroups, totalVisits }: { topGroups: RankingRow
                     <img src={g.image_url} alt={g.group_name} className="w-full h-full object-cover" />
                   </div>
                 )}
+                <span
+                  className={`absolute top-2 left-2 skew-x-12 w-9 h-9 rounded-full flex items-center justify-center shadow-lg z-10 ring-2 ring-white/80 dark:ring-neutral-950/80 ${CROWN_BY_RANK[i + 1] ?? 'bg-neutral-800 text-white'}`}
+                >
+                  <Crown className={i === 0 ? 'w-5 h-5 fill-current' : 'w-4 h-4 fill-current'} />
+                </span>
               </div>
             ))}
           </div>
