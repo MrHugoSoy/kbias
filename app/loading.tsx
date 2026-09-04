@@ -8,7 +8,7 @@ import LogoKW from '@/components/icons/LogoKW';
 // llegar los datos reales.
 export default function Loading() {
   return (
-    <main className="min-h-screen bg-[#f5f8fc] text-neutral-900 dark:bg-[#0a0a0c] dark:text-white">
+    <main className="min-h-screen bg-[#eef2fb] text-neutral-900 dark:bg-[#0a0a0c] dark:text-white">
       <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
         <div className="flex items-center gap-2">
           <LogoKW className="w-10 h-10 text-pink-500" />

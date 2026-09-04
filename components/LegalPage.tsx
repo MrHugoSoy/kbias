@@ -81,7 +81,7 @@ export function LegalPage({
 }) {
   const maxW = wide ? 'max-w-4xl xl:max-w-[75.5rem]' : 'max-w-2xl';
   return (
-    <main className="min-h-screen bg-[#f5f8fc] text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
+    <main className="min-h-screen bg-[#eef2fb] text-neutral-900 dark:bg-[#0a0a0c] dark:text-white transition-colors">
       {/* El header siempre usa su ancho por defecto (el mismo de la portada),
           sin importar qué tan angosta sea la columna de contenido de esta
           página — con max-w-2xl (Reglas, Perfil, etc.) el menú completo no
