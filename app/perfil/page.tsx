@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import { LegalPage } from '@/components/LegalPage';
 import AuthModal from '@/components/AuthModal';
+import AvatarCropModal from '@/components/AvatarCropModal';
 import PixelAvatar, { SPECIES } from '@/components/PixelAvatar';
 import LevelBadge from '@/components/LevelBadge';
 import Sparkline from '@/components/Sparkline';
@@ -76,6 +77,7 @@ export default function PerfilPage() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [avatarError, setAvatarError] = useState('');
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [savingMarketing, setSavingMarketing] = useState(false);
   const [marketingError, setMarketingError] = useState('');
@@ -255,10 +257,10 @@ export default function PerfilPage() {
     supabase.auth.updateUser({ data: { avatar_species: key, avatar_url: null } });
   }
 
-  async function handlePhotoUpload(e: React.ChangeEvent<HTMLInputElement>) {
+  function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     e.target.value = '';
-    if (!file || !user) return;
+    if (!file) return;
     setAvatarError('');
 
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
@@ -270,13 +272,22 @@ export default function PerfilPage() {
       return;
     }
 
+    // No se sube todavía — primero se recorta/encuadra en el modal, así
+    // fotos con relleno o marca de agua (comunes en avatares hechos con IA)
+    // no terminan viéndose chicas o cortadas dentro del círculo del sitio.
+    setCropFile(file);
+  }
+
+  async function uploadCroppedPhoto(blob: Blob) {
+    if (!user) return;
+    setCropFile(null);
     setUploadingPhoto(true);
+    setAvatarError('');
     try {
-      const ext = file.name.split('.').pop() ?? 'jpg';
       // Nombre único por subida (no fijo) para evitar que el cache del CDN
       // siga sirviendo la foto vieja bajo la misma URL.
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, file);
+      const path = `${user.id}/${Date.now()}.jpg`;
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(path, blob, { contentType: 'image/jpeg' });
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
@@ -662,7 +673,7 @@ export default function PerfilPage() {
                 ref={fileInputRef}
                 type="file"
                 accept=".jpg,.jpeg,.png,.webp"
-                onChange={handlePhotoUpload}
+                onChange={handlePhotoSelect}
                 className="hidden"
               />
             </div>
@@ -737,6 +748,10 @@ export default function PerfilPage() {
           </div>
         </div>
       </div>
+
+      {cropFile && (
+        <AvatarCropModal file={cropFile} onCancel={() => setCropFile(null)} onCropped={uploadCroppedPhoto} />
+      )}
     </LegalPage>
   );
 }
