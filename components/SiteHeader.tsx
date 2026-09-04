@@ -43,9 +43,9 @@ export default function SiteHeader() {
             <Link href="/salon-de-la-fama" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
               SALÓN DE LA FAMA
             </Link>
-            <a href="/#faq" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
+            <Link href="/como-funciona#faq" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
               FAQ
-            </a>
+            </Link>
             <Link href="/perfil" title="Mi perfil" className="flex items-center">
               <ProfileAvatarIcon size={26} />
             </Link>

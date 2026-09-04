@@ -54,7 +54,7 @@ export default function ReglasPage() {
 
       <p className="text-xs text-neutral-500 dark:text-neutral-600 pt-4">
         ¿Tienes dudas? Revisa el{' '}
-        <Link href="/#faq" className="underline hover:text-pink-500 dark:hover:text-pink-400">
+        <Link href="/como-funciona#faq" className="underline hover:text-pink-500 dark:hover:text-pink-400">
           FAQ
         </Link>{' '}
         o escríbenos a{' '}
