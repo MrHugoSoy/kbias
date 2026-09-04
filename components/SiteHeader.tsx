@@ -37,9 +37,6 @@ export default function SiteHeader() {
             <Link href="/grupos" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
               GRUPOS
             </Link>
-            <Link href="/como-funciona" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
-              CÓMO FUNCIONA
-            </Link>
             <Link href="/noticias" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
               NOTICIAS
             </Link>

@@ -36,6 +36,10 @@ export function FooterLinks() {
           Sobre nosotros
         </Link>
         <span className="mx-2">·</span>
+        <Link href="/como-funciona" className="hover:text-pink-400">
+          Cómo funciona
+        </Link>
+        <span className="mx-2">·</span>
         <Link href="/reglas" className="hover:text-pink-400">
           Reglas
         </Link>

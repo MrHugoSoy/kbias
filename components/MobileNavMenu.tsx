@@ -2,12 +2,13 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Menu, X, Trophy, Swords, Users, Zap, Award, HelpCircle, User, Newspaper } from 'lucide-react';
+import { Menu, X, Trophy, Swords, Users, Award, HelpCircle, User, Newspaper } from 'lucide-react';
 
 // Nav de escritorio vive oculta en celular (md:hidden en el <nav> del
-// header) — este botón le da a los mismos links (RANKING/BATALLAS/CÓMO
-// FUNCIONA/NOTICIAS/SALÓN DE LA FAMA/FAQ) una forma de abrirse en pantallas
-// chicas. El logo del header ya lleva a "/", así que no hay un link INICIO.
+// header) — este botón le da a los mismos links (RANKING/BATALLAS/GRUPOS/
+// NOTICIAS/SALÓN DE LA FAMA/FAQ) una forma de abrirse en pantallas chicas.
+// El logo del header ya lleva a "/", así que no hay un link INICIO — y
+// "CÓMO FUNCIONA" vive en el footer, no en este menú.
 export default function MobileNavMenu() {
   const [open, setOpen] = useState(false);
 
@@ -34,9 +35,6 @@ export default function MobileNavMenu() {
             </Link>
             <Link href="/grupos" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Users className="w-4 h-4" /> GRUPOS
-            </Link>
-            <Link href="/como-funciona" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
-              <Zap className="w-4 h-4" /> CÓMO FUNCIONA
             </Link>
             <Link href="/noticias" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Newspaper className="w-4 h-4" /> NOTICIAS
