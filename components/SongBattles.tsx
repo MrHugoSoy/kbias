@@ -71,6 +71,7 @@ export default function SongBattles() {
   const [showAuth, setShowAuth] = useState(false);
   const [voteTarget, setVoteTarget] = useState<{ battleId: string; songId: string; label: string } | null>(null);
   const [pointsRemaining, setPointsRemaining] = useState(0);
+  const [voteError, setVoteError] = useState('');
   const [loading, setLoading] = useState(false);
   const [pendingAfterAuth, setPendingAfterAuth] = useState<(() => void) | null>(null);
 
@@ -112,6 +113,7 @@ export default function SongBattles() {
       return;
     }
     const data2 = await res.json();
+    setVoteError('');
     setPointsRemaining(data2.pointsRemaining ?? 0);
     setVoteTarget({ battleId, songId, label });
   }
@@ -119,16 +121,22 @@ export default function SongBattles() {
   async function confirmVote(message: string, points: number) {
     if (!voteTarget) return;
     setLoading(true);
+    setVoteError('');
     try {
       const res = await authFetch('/api/song-vote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ battleId: voteTarget.battleId, songId: voteTarget.songId, points, message: message || undefined }),
       });
+      const data = await res.json();
       if (res.ok) {
         setVoteTarget(null);
         loadBattles();
+      } else {
+        setVoteError(data.error || 'Algo salió mal, intenta de nuevo');
       }
+    } catch {
+      setVoteError('Error de conexión, intenta de nuevo');
     } finally {
       setLoading(false);
     }
@@ -200,6 +208,7 @@ export default function SongBattles() {
           groupName={voteTarget.label}
           pointsRemaining={pointsRemaining}
           loading={loading}
+          error={voteError}
           onClose={() => setVoteTarget(null)}
           onConfirm={confirmVote}
         />

@@ -8,12 +8,14 @@ export default function VoteMessageModal({
   groupName,
   pointsRemaining,
   loading,
+  error,
   onClose,
   onConfirm,
 }: {
   groupName: string;
   pointsRemaining: number;
   loading: boolean;
+  error?: string;
   onClose: () => void;
   onConfirm: (message: string, points: number) => void;
 }) {
@@ -57,16 +59,17 @@ export default function VoteMessageModal({
             {message.length}/{MESSAGE_MAX_LENGTH}
           </p>
         </div>
+        {error && <p className="text-red-600 dark:text-red-400 text-sm">{error}</p>}
         <div className="flex gap-2">
           <button onClick={onClose} className="flex-1 py-2 rounded-lg bg-neutral-200 dark:bg-neutral-700">
             Cancelar
           </button>
           <button
             onClick={() => onConfirm(message.trim(), points)}
-            disabled={loading}
+            disabled={loading || pointsRemaining < 1}
             className="flex-1 py-2 rounded-lg bg-gradient-to-r from-violet-600 to-pink-500 hover:opacity-90 text-white font-bold disabled:opacity-50"
           >
-            {loading ? 'Enviando...' : `Dar ${points} ${points === 1 ? 'punto' : 'puntos'}`}
+            {loading ? 'Enviando...' : pointsRemaining < 1 ? 'Sin puntos hoy' : `Dar ${points} ${points === 1 ? 'punto' : 'puntos'}`}
           </button>
         </div>
       </div>

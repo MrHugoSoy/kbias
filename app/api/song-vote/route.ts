@@ -53,12 +53,15 @@ export async function POST(req: NextRequest) {
     }
 
     const dayStart = utcDayStart().toISOString();
-    const [{ data: groupVotes }, { data: songVotes }] = await Promise.all([
+    const [{ data: groupVotes }, { data: songVotes }, { data: battleVotes }] = await Promise.all([
       supabase.from('votes').select('points').eq('user_id', userId).gte('created_at', dayStart),
       supabase.from('song_votes').select('points').eq('user_id', userId).gte('created_at', dayStart),
+      supabase.from('group_battle_votes').select('points').eq('user_id', userId).gte('created_at', dayStart),
     ]);
     const used =
-      (groupVotes ?? []).reduce((sum, r) => sum + r.points, 0) + (songVotes ?? []).reduce((sum, r) => sum + r.points, 0);
+      (groupVotes ?? []).reduce((sum, r) => sum + r.points, 0) +
+      (songVotes ?? []).reduce((sum, r) => sum + r.points, 0) +
+      (battleVotes ?? []).reduce((sum, r) => sum + r.points, 0);
     if (used + pointsToGive > DAILY_POINT_BUDGET) {
       const remaining = Math.max(0, DAILY_POINT_BUDGET - used);
       return NextResponse.json(

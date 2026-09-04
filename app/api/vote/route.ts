@@ -14,13 +14,23 @@ function utcDayReset(): Date {
   return new Date(start.getTime() + 24 * 60 * 60 * 1000);
 }
 
+// Suma puntos de las TRES tablas de votos (grupo, canción, batalla de
+// grupo) — comparten el mismo presupuesto diario de 5 puntos. Antes solo
+// sumaba `votes`, así que si alguien ya había votado en Batallas o en una
+// Batalla de Canciones, esta ruta seguía mostrando "5 puntos" disponibles
+// aunque el envío real se rechazara por presupuesto agotado.
 async function pointsUsedToday(supabase: ReturnType<typeof getSupabaseServiceClient>, userId: string) {
-  const { data } = await supabase
-    .from('votes')
-    .select('points')
-    .eq('user_id', userId)
-    .gte('created_at', utcDayStart().toISOString());
-  return (data ?? []).reduce((sum, row) => sum + row.points, 0);
+  const dayStart = utcDayStart().toISOString();
+  const [{ data: groupVotes }, { data: songVotes }, { data: battleVotes }] = await Promise.all([
+    supabase.from('votes').select('points').eq('user_id', userId).gte('created_at', dayStart),
+    supabase.from('song_votes').select('points').eq('user_id', userId).gte('created_at', dayStart),
+    supabase.from('group_battle_votes').select('points').eq('user_id', userId).gte('created_at', dayStart),
+  ]);
+  return (
+    (groupVotes ?? []).reduce((sum, r) => sum + r.points, 0) +
+    (songVotes ?? []).reduce((sum, r) => sum + r.points, 0) +
+    (battleVotes ?? []).reduce((sum, r) => sum + r.points, 0)
+  );
 }
 
 // GET /api/vote — cuántos de los 5 puntos diarios ya se repartieron hoy

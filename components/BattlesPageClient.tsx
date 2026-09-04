@@ -52,6 +52,7 @@ export default function BattlesPageClient() {
   const [showAuth, setShowAuth] = useState(false);
   const [voteTarget, setVoteTarget] = useState<{ battleId: string; groupId: string; label: string } | null>(null);
   const [pointsRemaining, setPointsRemaining] = useState(0);
+  const [voteError, setVoteError] = useState('');
   const [loading, setLoading] = useState(false);
   const [pendingAfterAuth, setPendingAfterAuth] = useState<(() => void) | null>(null);
   const [shared, setShared] = useState(false);
@@ -91,6 +92,7 @@ export default function BattlesPageClient() {
       return;
     }
     const data2 = await res.json();
+    setVoteError('');
     setPointsRemaining(data2.pointsRemaining ?? 0);
     setVoteTarget({ battleId, groupId, label });
   }
@@ -98,16 +100,22 @@ export default function BattlesPageClient() {
   async function confirmVote(message: string, points: number) {
     if (!voteTarget) return;
     setLoading(true);
+    setVoteError('');
     try {
       const res = await authFetch('/api/group-battle-vote', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ battleId: voteTarget.battleId, groupId: voteTarget.groupId, points, message: message || undefined }),
       });
+      const data = await res.json();
       if (res.ok) {
         setVoteTarget(null);
         loadBattles();
+      } else {
+        setVoteError(data.error || 'Algo salió mal, intenta de nuevo');
       }
+    } catch {
+      setVoteError('Error de conexión, intenta de nuevo');
     } finally {
       setLoading(false);
     }
@@ -232,6 +240,7 @@ export default function BattlesPageClient() {
           groupName={voteTarget.label}
           pointsRemaining={pointsRemaining}
           loading={loading}
+          error={voteError}
           onClose={() => setVoteTarget(null)}
           onConfirm={confirmVote}
         />
