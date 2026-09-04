@@ -40,6 +40,10 @@ export function FooterLinks() {
           Cómo funciona
         </Link>
         <span className="mx-2">·</span>
+        <Link href="/como-funciona#faq" className="hover:text-pink-400">
+          FAQ
+        </Link>
+        <span className="mx-2">·</span>
         <Link href="/reglas" className="hover:text-pink-400">
           Reglas
         </Link>
