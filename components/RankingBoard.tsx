@@ -7,9 +7,12 @@ import RankChange from './RankChange';
 import { useLiveRankings } from '@/lib/useLiveRankings';
 import type { RankingRow } from '@/lib/types';
 
-// Los primeros 5 se destacan como tarjetas — el resto (con su propio botón
-// de voto) vive en RestRankingList, junto a Actividad en vivo.
-const TOP_COUNT = 5;
+// Los puestos 1-4 ya se ven arriba en el Hero (con foto y corona), así que
+// esta sección arranca en el 5 para no repetirlos — estas 5 tarjetas (5-9)
+// son las siguientes más destacadas; el resto vive en RestRankingList,
+// junto a Actividad en vivo.
+const RANK_OFFSET = 4;
+const CARD_COUNT = 5;
 
 const RING_BY_RANK: Record<number, string> = {
   1: 'border-amber-400',
@@ -57,7 +60,9 @@ function RankCard({ rank, group }: { rank: number; group: RankingRow }) {
 
 export default function RankingBoard({ initialRankings }: { initialRankings: RankingRow[] }) {
   const rankings = useLiveRankings(initialRankings);
-  const top = rankings.slice(0, TOP_COUNT);
+  const top = rankings.slice(RANK_OFFSET, RANK_OFFSET + CARD_COUNT);
+
+  if (top.length === 0) return null;
 
   return (
     <section id="ranking" className="space-y-4">
@@ -69,15 +74,11 @@ export default function RankingBoard({ initialRankings }: { initialRankings: Ran
           Ver ranking completo
         </Link>
       </div>
-      {top.length === 0 ? (
-        <p className="text-center text-neutral-500 py-10 text-sm">Todavía no hay grupos registrados.</p>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-          {top.map((r, i) => (
-            <RankCard key={r.group_id} rank={i + 1} group={r} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        {top.map((r, i) => (
+          <RankCard key={r.group_id} rank={i + RANK_OFFSET + 1} group={r} />
+        ))}
+      </div>
     </section>
   );
 }
