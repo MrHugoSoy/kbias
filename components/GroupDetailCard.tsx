@@ -243,14 +243,12 @@ export default function GroupDetailCard({
   return (
     <div className="space-y-5">
       {/* Portada — la misma foto del grupo de fondo (no hay un campo de
-          banner aparte), con un degradado oscuro a la izquierda para que el
-          nombre y los tags se puedan leer encima. */}
+          banner aparte). */}
       <div className="relative rounded-2xl overflow-hidden bg-neutral-950 min-h-[15rem] sm:min-h-[16rem]">
         {group.image_url && (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={group.image_url} alt="" aria-hidden className="absolute inset-0 w-full h-full object-cover object-[80%_15%]" />
         )}
-        <div className="absolute inset-0 bg-gradient-to-r from-neutral-950 via-neutral-950/85 sm:via-neutral-950/60 to-neutral-950/20 sm:to-transparent" />
 
         <div className="relative h-full p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center gap-5">
           <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full ring-4 ring-violet-500 border-4 border-neutral-950 overflow-hidden bg-neutral-900 flex items-center justify-center shrink-0 mx-auto sm:mx-0">
@@ -268,8 +266,9 @@ export default function GroupDetailCard({
           </div>
 
           <div className="flex-1 min-w-0 text-center sm:text-left space-y-1.5">
-            <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">{group.group_name}</h1>
-            {group.agency && <p className="text-sm text-white/70">{group.agency}</p>}
+            {/* El nombre ya es el <h1> de la página (ver LegalPage) — no
+                repetirlo aquí, solo la agencia y los tags. */}
+            {group.agency && <p className="text-sm font-semibold text-white">{group.agency}</p>}
             <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
               {nextBattle?.status === 'active' && (
                 <BannerTag>
@@ -381,7 +380,7 @@ export default function GroupDetailCard({
 
         {/* Barra lateral */}
         <div className="space-y-4">
-          <div className="bg-white dark:bg-neutral-950 border border-neutral-200 dark:border-neutral-900 rounded-2xl p-4 space-y-3">
+          <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-4 space-y-3">
             <h3 className="font-bold text-sm flex items-center gap-2">
               <Trophy className="w-4 h-4 text-violet-500" /> Estadísticas del grupo
             </h3>
