@@ -66,8 +66,22 @@ export default function BidButton({
     setChecking(true);
     try {
       const res = await authFetch('/api/vote');
+      if (!res.ok) {
+        // Un 401 significa que la sesión guardada ya no es válida (p. ej. se
+        // cerró desde otro dispositivo) — no que ya gastó sus puntos, así
+        // que hay que pedirle iniciar sesión de nuevo en vez de mostrar un
+        // mensaje de "ya no te quedan puntos" que sería falso.
+        if (res.status === 401) {
+          setShowAuth(true);
+          return;
+        }
+        setResult('error');
+        setMessage('No pudimos verificar tus puntos. Intenta de nuevo.');
+        setTimeout(() => setResult(null), 4000);
+        return;
+      }
       const data2 = await res.json();
-      const remaining = res.ok ? data2.pointsRemaining ?? 0 : 0;
+      const remaining = data2.pointsRemaining ?? 0;
       if (remaining <= 0) {
         setResult('error');
         setMessage('Ya repartiste tus 5 puntos de hoy. Vuelve mañana.');
@@ -76,6 +90,10 @@ export default function BidButton({
       }
       setPointsRemaining(remaining);
       setShowMessageModal(true);
+    } catch {
+      setResult('error');
+      setMessage('Error de conexión, intenta de nuevo');
+      setTimeout(() => setResult(null), 4000);
     } finally {
       setChecking(false);
     }

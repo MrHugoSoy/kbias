@@ -101,8 +101,18 @@ export default function SongBattles() {
       return;
     }
     const res = await authFetch('/api/vote');
+    if (!res.ok) {
+      // Un 401 significa que la sesión guardada ya no es válida — no que ya
+      // gastó sus puntos, así que hay que pedirle iniciar sesión de nuevo en
+      // vez de abrir el modal con "0 puntos" (lo haría ver sin puntos falsamente).
+      if (res.status === 401) {
+        setPendingAfterAuth(() => () => handleVoteClick(battleId, songId, label));
+        setShowAuth(true);
+      }
+      return;
+    }
     const data2 = await res.json();
-    setPointsRemaining(res.ok ? data2.pointsRemaining ?? 0 : 0);
+    setPointsRemaining(data2.pointsRemaining ?? 0);
     setVoteTarget({ battleId, songId, label });
   }
 
