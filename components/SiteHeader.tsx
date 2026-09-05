@@ -43,6 +43,15 @@ export default function SiteHeader() {
             <Link href="/salon-de-la-fama" className="hover:text-violet-600 dark:hover:text-violet-400 transition">
               SALÓN DE LA FAMA
             </Link>
+            <span
+              title="Próximamente"
+              className="flex items-center gap-1.5 cursor-default text-neutral-400 dark:text-neutral-600"
+            >
+              COMUNIDAD
+              <span className="text-[9px] font-bold bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 px-1.5 py-0.5 rounded-full">
+                PRONTO
+              </span>
+            </span>
             <Link href="/perfil" title="Mi perfil" className="flex items-center">
               <ProfileAvatarIcon size={26} />
             </Link>
