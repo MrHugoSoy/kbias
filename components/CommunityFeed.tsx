@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Heart, MessageCircle, Trash2 } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, UserPlus, UserCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
 import UserAvatar from './UserAvatar';
@@ -128,14 +128,18 @@ function PostItem({
   post,
   userId,
   liked,
+  following,
   onToggleLike,
+  onToggleFollow,
   onDelete,
   onRequestAuth,
 }: {
   post: CommunityPost;
   userId: string | null;
   liked: boolean;
+  following: boolean;
   onToggleLike: (postId: string) => void;
+  onToggleFollow: (targetUserId: string) => void;
   onDelete: (postId: string) => void;
   onRequestAuth: (afterAuth: () => void) => void;
 }) {
@@ -150,6 +154,14 @@ function PostItem({
     onToggleLike(post.id);
   }
 
+  function handleFollowClick() {
+    if (!userId) {
+      onRequestAuth(() => onToggleFollow(post.user_id));
+      return;
+    }
+    onToggleFollow(post.user_id);
+  }
+
   return (
     <div className="p-4">
       <div className="flex gap-3">
@@ -161,6 +173,27 @@ function PostItem({
             <span className="text-[10px] text-neutral-500" suppressHydrationWarning>
               {timeAgo(post.created_at)}
             </span>
+            {!isOwner && (
+              <button
+                onClick={handleFollowClick}
+                className={
+                  'ml-auto text-[11px] font-bold flex items-center gap-1 px-2 py-1 rounded-full transition shrink-0 ' +
+                  (following
+                    ? 'text-neutral-500 bg-neutral-100 dark:bg-neutral-900 hover:text-red-500'
+                    : 'text-white bg-gradient-to-r from-violet-600 to-pink-500 hover:opacity-90')
+                }
+              >
+                {following ? (
+                  <>
+                    <UserCheck className="w-3 h-3" /> Siguiendo
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-3 h-3" /> Seguir
+                  </>
+                )}
+              </button>
+            )}
           </div>
           <p className="text-sm text-neutral-700 dark:text-neutral-300 mt-1 text-pretty break-words whitespace-pre-wrap">
             {post.body}
@@ -203,6 +236,7 @@ export default function CommunityFeed() {
   const [posts, setPosts] = useState<CommunityPost[] | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [likedIds, setLikedIds] = useState<Set<string>>(new Set());
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [showAuth, setShowAuth] = useState(false);
   const [pendingAfterAuth, setPendingAfterAuth] = useState<(() => void) | null>(null);
   const [composerBody, setComposerBody] = useState('');
@@ -239,6 +273,21 @@ export default function CommunityFeed() {
     authFetch('/api/community/posts/likes')
       .then((res) => res.json())
       .then((data) => setLikedIds(new Set<string>(data.likedPostIds ?? [])));
+  }, [userId]);
+
+  // A quién sigue el usuario actual — lectura pública (user_follows tiene
+  // policy de select true), así que se consulta directo con el cliente
+  // anon en vez de pasar por un endpoint dedicado.
+  useEffect(() => {
+    if (!userId) {
+      setFollowingIds(new Set());
+      return;
+    }
+    supabase
+      .from('user_follows')
+      .select('followee_id')
+      .eq('follower_id', userId)
+      .then(({ data }) => setFollowingIds(new Set<string>((data ?? []).map((row) => row.followee_id))));
   }, [userId]);
 
   async function submitPost() {
@@ -316,6 +365,32 @@ export default function CommunityFeed() {
     setPosts((prev) => (prev ?? []).map((p) => (p.id === postId ? { ...p, like_count: p.like_count - delta } : p)));
   }
 
+  async function toggleFollow(targetUserId: string) {
+    const wasFollowing = followingIds.has(targetUserId);
+
+    setFollowingIds((prev) => {
+      const next = new Set(prev);
+      wasFollowing ? next.delete(targetUserId) : next.add(targetUserId);
+      return next;
+    });
+
+    try {
+      const res = await authFetch('/api/community/follows', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: targetUserId }),
+      });
+      if (res.ok) return;
+    } catch {
+      // sigue al revert de abajo
+    }
+    setFollowingIds((prev) => {
+      const next = new Set(prev);
+      wasFollowing ? next.add(targetUserId) : next.delete(targetUserId);
+      return next;
+    });
+  }
+
   async function deletePost(postId: string) {
     if (!confirm('¿Eliminar esta publicación?')) return;
     const prevPosts = posts;
@@ -371,7 +446,9 @@ export default function CommunityFeed() {
             post={post}
             userId={userId}
             liked={likedIds.has(post.id)}
+            following={followingIds.has(post.user_id)}
             onToggleLike={toggleLike}
+            onToggleFollow={toggleFollow}
             onDelete={deletePost}
             onRequestAuth={requestAuth}
           />

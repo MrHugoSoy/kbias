@@ -1316,3 +1316,39 @@ select
 from community_posts cp
 left join profiles p on p.id = cp.user_id
 order by cp.created_at desc;
+
+-- ------------------------------------------------------------
+-- Seguir usuarios: quién sigue a quién dentro de la Comunidad. Direccional
+-- (A puede seguir a B sin que B siga de vuelta), no una amistad mutua. La
+-- tabla es de lectura pública (como likes/comentarios) — "a quién sigue
+-- esta cuenta" no es información sensible, solo su escritura pasa por el
+-- API con el token real de sesión.
+-- ------------------------------------------------------------
+create table if not exists user_follows (
+  id uuid primary key default gen_random_uuid(),
+  follower_id uuid not null references auth.users(id) on delete cascade,
+  followee_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique (follower_id, followee_id),
+  check (follower_id != followee_id)
+);
+
+create index if not exists idx_user_follows_follower on user_follows (follower_id);
+create index if not exists idx_user_follows_followee on user_follows (followee_id);
+
+alter table user_follows enable row level security;
+drop policy if exists "user_follows_public_read" on user_follows;
+create policy "user_follows_public_read" on user_follows for select using (true);
+-- Sin policy de insert/delete para anon/authenticated: todo pasa por
+-- /api/community/follows, que verifica el token real de sesión y escribe
+-- con el service role.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'user_follows'
+  ) then
+    alter publication supabase_realtime add table user_follows;
+  end if;
+end $$;

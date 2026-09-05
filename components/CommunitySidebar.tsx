@@ -16,6 +16,8 @@ type Me = {
   avatarSpecies: string | null;
   xp: number;
   postCount: number;
+  followerCount: number;
+  followingCount: number;
 };
 
 const NAV_ITEMS = [
@@ -37,10 +39,13 @@ export default function CommunitySidebar() {
         if (!cancelled) setMe(null);
         return;
       }
-      const [{ data: profile }, { count }] = await Promise.all([
-        supabase.from('profiles').select('username, avatar_url, avatar_species, xp').eq('id', userId).maybeSingle(),
-        supabase.from('community_posts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-      ]);
+      const [{ data: profile }, { count: postCount }, { count: followerCount }, { count: followingCount }] =
+        await Promise.all([
+          supabase.from('profiles').select('username, avatar_url, avatar_species, xp').eq('id', userId).maybeSingle(),
+          supabase.from('community_posts').select('id', { count: 'exact', head: true }).eq('user_id', userId),
+          supabase.from('user_follows').select('id', { count: 'exact', head: true }).eq('followee_id', userId),
+          supabase.from('user_follows').select('id', { count: 'exact', head: true }).eq('follower_id', userId),
+        ]);
       if (cancelled) return;
       setMe({
         id: userId,
@@ -49,7 +54,9 @@ export default function CommunitySidebar() {
         avatarUrl: profile?.avatar_url ?? null,
         avatarSpecies: profile?.avatar_species ?? null,
         xp: profile?.xp ?? 0,
-        postCount: count ?? 0,
+        postCount: postCount ?? 0,
+        followerCount: followerCount ?? 0,
+        followingCount: followingCount ?? 0,
       });
     }
 
@@ -94,10 +101,18 @@ export default function CommunitySidebar() {
                 {memberSinceYear && <p className="text-xs text-neutral-500">Desde {memberSinceYear}</p>}
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <div className="bg-neutral-100 dark:bg-neutral-900 rounded-lg p-2 text-center">
                 <p className="text-sm font-black">{me.postCount.toLocaleString('es-MX')}</p>
-                <p className="text-[10px] text-neutral-500 uppercase tracking-wide">Publicaciones</p>
+                <p className="text-[9px] text-neutral-500 uppercase tracking-wide">Posts</p>
+              </div>
+              <div className="bg-neutral-100 dark:bg-neutral-900 rounded-lg p-2 text-center">
+                <p className="text-sm font-black">{me.followerCount.toLocaleString('es-MX')}</p>
+                <p className="text-[9px] text-neutral-500 uppercase tracking-wide">Seguidores</p>
+              </div>
+              <div className="bg-neutral-100 dark:bg-neutral-900 rounded-lg p-2 text-center">
+                <p className="text-sm font-black">{me.followingCount.toLocaleString('es-MX')}</p>
+                <p className="text-[9px] text-neutral-500 uppercase tracking-wide">Siguiendo</p>
               </div>
             </div>
             <div className="space-y-1.5">
