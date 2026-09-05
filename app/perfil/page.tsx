@@ -478,8 +478,8 @@ export default function PerfilPage() {
   return (
     <LegalPage title="Mi perfil" subtitle={`Miembro desde ${memberSince}.`} wide>
       <div className="space-y-4">
-        <div className="relative rounded-2xl overflow-hidden">
-          <div className="h-36 sm:h-52 bg-neutral-100 dark:bg-neutral-900">
+        <div className="relative">
+          <div className="h-36 sm:h-52 rounded-2xl overflow-hidden bg-neutral-100 dark:bg-neutral-900">
             {bannerUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={bannerUrl} alt="Banner de tu perfil" className="w-full h-full object-cover" />
