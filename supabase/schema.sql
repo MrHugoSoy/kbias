@@ -1208,3 +1208,111 @@ begin
     alter publication supabase_realtime add table bids;
   end if;
 end $$;
+
+-- ------------------------------------------------------------
+-- Comunidad: primera versión del feed (página /comunidad) — publicaciones
+-- de cualquier usuario logueado, con like y comentarios planos (sin hilos
+-- por ahora). Vive separado de group_comments (que exige haber votado por
+-- ESE grupo hoy) porque este feed es general, no por grupo.
+-- ------------------------------------------------------------
+create table if not exists community_posts (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  body text not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_community_posts_created on community_posts (created_at desc);
+
+alter table community_posts enable row level security;
+drop policy if exists "community_posts_public_read" on community_posts;
+create policy "community_posts_public_read" on community_posts for select using (true);
+-- Sin policy de insert/delete para anon/authenticated: todo pasa por
+-- /api/community/posts, que verifica el token real de sesión y escribe
+-- con el service role — mismo patrón que group_comments.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'community_posts'
+  ) then
+    alter publication supabase_realtime add table community_posts;
+  end if;
+end $$;
+
+-- Un like por cuenta por publicación — el unique constraint es lo que hace
+-- el toggle seguro contra doble clic / dos pestañas, no solo el chequeo del API.
+create table if not exists community_post_likes (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references community_posts(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique (post_id, user_id)
+);
+
+create index if not exists idx_community_post_likes_post on community_post_likes (post_id);
+
+alter table community_post_likes enable row level security;
+-- Sin policy de select/insert/delete para anon/authenticated: todo pasa
+-- por /api/community/posts/likes, que verifica el token real de sesión y
+-- escribe con el service role.
+
+-- Necesario para que un DELETE traiga el post_id en el payload de Realtime
+-- (por default solo manda la primary key) — así el like en vivo de otros
+-- usuarios se puede restar del contador sin otra consulta.
+alter table community_post_likes replica identity full;
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'community_post_likes'
+  ) then
+    alter publication supabase_realtime add table community_post_likes;
+  end if;
+end $$;
+
+create table if not exists community_post_comments (
+  id uuid primary key default gen_random_uuid(),
+  post_id uuid not null references community_posts(id) on delete cascade,
+  user_id uuid not null references auth.users(id) on delete cascade,
+  body text not null,
+  created_at timestamptz default now()
+);
+
+create index if not exists idx_community_post_comments_post on community_post_comments (post_id, created_at asc);
+
+alter table community_post_comments enable row level security;
+drop policy if exists "community_post_comments_public_read" on community_post_comments;
+create policy "community_post_comments_public_read" on community_post_comments for select using (true);
+-- Sin policy de insert/delete: todo pasa por /api/community/posts/comments.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'community_post_comments'
+  ) then
+    alter publication supabase_realtime add table community_post_comments;
+  end if;
+end $$;
+
+-- Vista: community_feed — publicaciones con username/avatar del autor y
+-- los contadores de like/comentario ya armados (igual que group_comments_feed).
+drop view if exists community_feed;
+create view community_feed as
+select
+  cp.id,
+  cp.body,
+  cp.created_at,
+  cp.user_id,
+  p.username,
+  p.avatar_species,
+  p.avatar_url,
+  coalesce(p.xp, 0) as xp,
+  (select count(*) from community_post_likes cl where cl.post_id = cp.id)::int as like_count,
+  (select count(*) from community_post_comments cc where cc.post_id = cp.id)::int as comment_count
+from community_posts cp
+left join profiles p on p.id = cp.user_id
+order by cp.created_at desc;

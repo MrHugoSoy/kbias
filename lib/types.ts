@@ -91,6 +91,34 @@ export type GroupBattle = {
   group_b_points: number;
 };
 
+// Fila de la vista community_feed — una publicación del feed de Comunidad
+// con el autor y los contadores de like/comentario ya armados.
+export type CommunityPost = {
+  id: string;
+  body: string;
+  created_at: string;
+  user_id: string;
+  username: string | null;
+  avatar_species: string | null;
+  avatar_url: string | null;
+  xp: number;
+  like_count: number;
+  comment_count: number;
+};
+
+// Un comentario plano de una publicación del feed (sin hilos en v1).
+export type CommunityComment = {
+  id: string;
+  post_id: string;
+  body: string;
+  created_at: string;
+  user_id: string;
+  username: string | null;
+  avatar_species: string | null;
+  avatar_url: string | null;
+  xp: number;
+};
+
 // Fila de news_posts, con el grupo asociado ya resuelto (join) cuando
 // aplica — un post general (sin grupo) trae `group` en null.
 export type NewsPost = {
