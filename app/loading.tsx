@@ -11,7 +11,7 @@ export default function Loading() {
     <main className="min-h-screen bg-[#eef2fb] text-neutral-900 dark:bg-[#0a0a0c] dark:text-white">
       <header className="flex items-center justify-between px-6 py-4 border-b border-neutral-200 dark:border-neutral-900 max-w-4xl xl:max-w-[75.5rem] mx-auto">
         <div className="flex items-center gap-2">
-          <LogoKW className="w-10 h-10 text-pink-500" />
+          <LogoKW className="w-9 h-9 text-violet-600 dark:text-violet-400" />
           <div className="space-y-1.5">
             <div className="h-4 w-28 rounded bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
             <div className="h-2.5 w-36 rounded bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
