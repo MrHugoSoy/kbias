@@ -16,6 +16,7 @@ import {
   Vote,
 } from 'lucide-react';
 import BidButton from './BidButton';
+import GroupFollowButton from './GroupFollowButton';
 import CopyLinkButton from './CopyLinkButton';
 import ShareButtons from './ShareButtons';
 import RankChange from './RankChange';
@@ -283,6 +284,9 @@ export default function GroupDetailCard({
               )}
             </div>
             {group.bio && <p className="text-sm text-white/80 max-w-lg line-clamp-2 mx-auto sm:mx-0">{group.bio}</p>}
+            <div className="flex justify-center sm:justify-start">
+              <GroupFollowButton groupId={group.group_id} />
+            </div>
           </div>
 
           <div className="shrink-0 mx-auto sm:mx-0">

@@ -1352,3 +1352,37 @@ begin
     alter publication supabase_realtime add table user_follows;
   end if;
 end $$;
+
+-- ------------------------------------------------------------
+-- Seguir grupos: igual que user_follows pero de una cuenta hacia un grupo
+-- de K-pop, para mostrar un contador real de seguidores en su página
+-- (antes GroupDetailCard evitaba a propósito cualquier número de
+-- "seguidores" porque esta tabla no existía).
+-- ------------------------------------------------------------
+create table if not exists group_follows (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  group_id uuid not null references groups(id) on delete cascade,
+  created_at timestamptz default now(),
+  unique (user_id, group_id)
+);
+
+create index if not exists idx_group_follows_group on group_follows (group_id);
+create index if not exists idx_group_follows_user on group_follows (user_id);
+
+alter table group_follows enable row level security;
+drop policy if exists "group_follows_public_read" on group_follows;
+create policy "group_follows_public_read" on group_follows for select using (true);
+-- Sin policy de insert/delete para anon/authenticated: todo pasa por
+-- /api/community/group-follows, que verifica el token real de sesión y
+-- escribe con el service role.
+
+do $$
+begin
+  if not exists (
+    select 1 from pg_publication_tables
+    where pubname = 'supabase_realtime' and tablename = 'group_follows'
+  ) then
+    alter publication supabase_realtime add table group_follows;
+  end if;
+end $$;
