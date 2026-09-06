@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, Mail } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import TikTokIcon from '@/components/icons/TikTokIcon';
 import InstagramIcon from '@/components/icons/InstagramIcon';
 import SiteHeader from '@/components/SiteHeader';
@@ -90,13 +90,7 @@ export function LegalPage({
 
       <div className={`${maxW} mx-auto px-4 py-10 space-y-8`}>
         <div>
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 text-sm text-neutral-500 dark:text-neutral-400 hover:text-pink-500 dark:hover:text-pink-400"
-          >
-            <ArrowLeft className="w-4 h-4" /> Volver al inicio
-          </Link>
-          <h1 className="text-3xl font-black tracking-tight mt-3">{title}</h1>
+          <h1 className="text-3xl font-black tracking-tight">{title}</h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">{subtitle}</p>
         </div>
 
