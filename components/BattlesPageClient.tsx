@@ -367,7 +367,7 @@ function CompactBattleCard({ battle, onVote }: { battle: GroupBattle; onVote: (b
         <button onClick={() => onVote(battle.battle_id, battle.group_b_id, `${battle.group_b_name} vs ${battle.group_a_name}`)} className="aspect-square">
           <GroupThumb image={battle.group_b_image} name={battle.group_b_name} />
         </button>
-        <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-neutral-900 dark:bg-white border-2 border-white dark:border-neutral-950 flex items-center justify-center text-[10px] font-black text-white dark:text-neutral-900 shadow-lg">
+        <span className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-neutral-900 dark:bg-white border-2 border-white dark:border-neutral-950 flex items-center justify-center text-[10px] font-black text-white dark:text-neutral-900 shadow-lg">
           VS
         </span>
       </div>
