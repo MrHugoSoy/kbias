@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabase';
 import { getVerifiedUserId } from '@/lib/authServer';
+import { isRateLimited } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
+
+const MAX_LIKES_PER_WINDOW = 60;
+const RATE_WINDOW_MINUTES = 10;
 
 // GET /api/community/posts/likes — ids de las publicaciones del feed a las
 // que el usuario autenticado ya les dio like (el feed es general, así que
@@ -55,6 +59,11 @@ export async function POST(req: NextRequest) {
       const { error } = await supabase.from('community_post_likes').delete().eq('id', existing.id);
       if (error) return NextResponse.json({ error: 'Algo salió mal, intenta de nuevo' }, { status: 500 });
     } else {
+      if (
+        await isRateLimited(supabase, 'community_post_likes', 'user_id', userId, MAX_LIKES_PER_WINDOW, RATE_WINDOW_MINUTES)
+      ) {
+        return NextResponse.json({ error: 'Vas muy rápido. Espera unos minutos.' }, { status: 429 });
+      }
       const { error } = await supabase.from('community_post_likes').insert({ post_id: postId, user_id: userId });
       // 23505 = ya existía (doble clic/dos pestañas ganándole la carrera al chequeo de arriba) — no es un error real.
       if (error && error.code !== '23505') {

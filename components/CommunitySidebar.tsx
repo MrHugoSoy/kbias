@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Home, User as UserIcon, Trophy, Settings } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { levelForXp, xpForLevel } from '@/lib/level';
+import { onFollowsChanged } from '@/lib/followEvents';
 import UserAvatar from './UserAvatar';
 import AuthModal from './AuthModal';
 
@@ -30,11 +31,16 @@ const NAV_ITEMS = [
 export default function CommunitySidebar() {
   const [me, setMe] = useState<Me | null | undefined>(undefined);
   const [showAuth, setShowAuth] = useState(false);
+  // Guarda quién es el usuario actual para que el listener de
+  // "follows-changed" pueda volver a cargar sus contadores sin depender de
+  // un nuevo evento de auth (que no se dispara al dar/quitar un follow).
+  const sessionRef = useRef<{ userId?: string; createdAt?: string }>({});
 
   useEffect(() => {
     let cancelled = false;
 
     async function loadMe(userId: string | undefined, createdAt: string | undefined) {
+      sessionRef.current = { userId, createdAt };
       if (!userId || !createdAt) {
         if (!cancelled) setMe(null);
         return;
@@ -64,10 +70,12 @@ export default function CommunitySidebar() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => loadMe(session?.user?.id, session?.user?.created_at));
+    const unsubscribeFollows = onFollowsChanged(() => loadMe(sessionRef.current.userId, sessionRef.current.createdAt));
 
     return () => {
       cancelled = true;
       subscription.unsubscribe();
+      unsubscribeFollows();
     };
   }, []);
 

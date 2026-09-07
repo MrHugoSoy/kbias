@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabase';
 import { getVerifiedUserId } from '@/lib/authServer';
 import { isOffensive } from '@/lib/moderation';
+import { isRateLimited } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 const COMMENT_MAX_LENGTH = 300;
+const MAX_COMMENTS_PER_WINDOW = 20;
+const RATE_WINDOW_MINUTES = 10;
 
 // GET /api/community/posts/comments?postId=xxx — público, comentarios de
 // esa publicación (planos, sin hilos por ahora).
@@ -85,6 +88,12 @@ export async function POST(req: NextRequest) {
     const { data: post } = await supabase.from('community_posts').select('id').eq('id', postId).maybeSingle();
     if (!post) {
       return NextResponse.json({ error: 'Publicación no encontrada' }, { status: 404 });
+    }
+
+    if (
+      await isRateLimited(supabase, 'community_post_comments', 'user_id', userId, MAX_COMMENTS_PER_WINDOW, RATE_WINDOW_MINUTES)
+    ) {
+      return NextResponse.json({ error: 'Vas muy rápido. Espera unos minutos antes de comentar de nuevo.' }, { status: 429 });
     }
 
     const { data: inserted, error } = await supabase

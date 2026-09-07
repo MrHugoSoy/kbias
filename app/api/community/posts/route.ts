@@ -2,10 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseServiceClient } from '@/lib/supabase';
 import { getVerifiedUserId } from '@/lib/authServer';
 import { isOffensive } from '@/lib/moderation';
+import { isRateLimited } from '@/lib/rateLimit';
 
 export const dynamic = 'force-dynamic';
 
 const POST_MAX_LENGTH = 280;
+const MAX_POSTS_PER_WINDOW = 10;
+const RATE_WINDOW_MINUTES = 10;
 
 // GET /api/community/posts — público, últimas publicaciones del feed con
 // autor y contadores ya armados (community_feed en supabase/schema.sql).
@@ -42,6 +45,10 @@ export async function POST(req: NextRequest) {
     }
     if (isOffensive(trimmed)) {
       return NextResponse.json({ error: 'Esa publicación no está permitida. Intenta con otra.' }, { status: 400 });
+    }
+
+    if (await isRateLimited(supabase, 'community_posts', 'user_id', userId, MAX_POSTS_PER_WINDOW, RATE_WINDOW_MINUTES)) {
+      return NextResponse.json({ error: 'Vas muy rápido. Espera unos minutos antes de publicar de nuevo.' }, { status: 429 });
     }
 
     const { data: inserted, error } = await supabase

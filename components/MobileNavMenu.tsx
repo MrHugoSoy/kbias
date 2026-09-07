@@ -42,12 +42,9 @@ export default function MobileNavMenu() {
             <Link href="/salon-de-la-fama" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <Award className="w-4 h-4" /> SALÓN DE LA FAMA
             </Link>
-            <span className="flex items-center gap-2 px-4 py-3 text-neutral-400 dark:text-neutral-600 cursor-default">
+            <Link href="/comunidad" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <MessagesSquare className="w-4 h-4" /> COMUNIDAD
-              <span className="text-[9px] font-bold bg-neutral-200 dark:bg-neutral-800 text-neutral-500 dark:text-neutral-400 px-1.5 py-0.5 rounded-full">
-                PRONTO
-              </span>
-            </span>
+            </Link>
             <Link href="/perfil" onClick={() => setOpen(false)} className="flex items-center gap-2 px-4 py-3 hover:bg-neutral-100 dark:hover:bg-neutral-800">
               <User className="w-4 h-4" /> MI PERFIL
             </Link>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { authFetch } from '@/lib/authFetch';
+import { notifyFollowsChanged } from '@/lib/followEvents';
 import AuthModal from './AuthModal';
 
 // Botón para seguir/dejar de seguir un grupo desde su página. El contador
@@ -65,6 +66,7 @@ export default function GroupFollowButton({ groupId }: { groupId: string }) {
       const data = await res.json();
       if (res.ok) {
         setFollowerCount(data.followerCount);
+        notifyFollowsChanged();
         return;
       }
     } catch {
