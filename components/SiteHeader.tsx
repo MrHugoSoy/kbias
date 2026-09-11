@@ -4,6 +4,7 @@ import ThemeToggle from './ThemeToggle';
 import MobileNavMenu from './MobileNavMenu';
 import ProfileAvatarIcon from './ProfileAvatarIcon';
 import HeaderAuthButton from './HeaderAuthButton';
+import HeaderSearch from './HeaderSearch';
 import LogoKW from './icons/LogoKW';
 
 // Header compartido entre la portada y las páginas secundarias (via
@@ -50,6 +51,7 @@ export default function SiteHeader() {
               <ProfileAvatarIcon size={26} />
             </Link>
           </nav>
+          <HeaderSearch />
           <HeaderAuthButton />
           <NotificationBell />
           <ThemeToggle />

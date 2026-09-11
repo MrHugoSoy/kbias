@@ -770,7 +770,20 @@ select
       where v.created_at >= (date_trunc('month', now() at time zone 'utc') at time zone 'utc')
     ),
     0
-  ) as total_points
+  ) as total_points,
+  -- Votos de las últimas 24h (no solo del mes en curso) — para la columna
+  -- "Votos (24h)" del ranking completo, igual de real que total_points.
+  coalesce(
+    sum(v.points) filter (where v.created_at >= now() - interval '24 hours'),
+    0
+  ) as votes_24h,
+  -- Puntos ganados en los últimos 7 días — base real de "Tendencias
+  -- semanales" (quién está subiendo más rápido esta semana), sin inventar
+  -- un historial de posiciones que no llevamos.
+  coalesce(
+    sum(v.points) filter (where v.created_at >= now() - interval '7 days'),
+    0
+  ) as votes_7d
 from groups g
 left join votes v on v.group_id = g.id
 group by g.id, g.name, g.fandom_name, g.image_url, g.slug, g.bio, g.official_url, g.rank_snapshot_value,

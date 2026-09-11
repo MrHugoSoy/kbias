@@ -1,10 +1,29 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUp, Zap } from 'lucide-react';
+import { ArrowUp, Zap, Heart } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import UserAvatar from './UserAvatar';
 import LevelBadge from './LevelBadge';
+
+// Colores de pastilla para el nombre del grupo — no hay un color de marca
+// guardado por grupo, así que se deriva del nombre (mismo hash simple que
+// PixelAvatar) para que cada grupo tenga siempre el mismo color sin
+// necesidad de una columna nueva en la base.
+const GROUP_PILL_COLORS = [
+  'bg-pink-100 text-pink-700 dark:bg-pink-950/50 dark:text-pink-300',
+  'bg-violet-100 text-violet-700 dark:bg-violet-950/50 dark:text-violet-300',
+  'bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:text-amber-300',
+  'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300',
+  'bg-sky-100 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300',
+  'bg-rose-100 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300',
+];
+
+function groupPillColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) >>> 0;
+  return GROUP_PILL_COLORS[hash % GROUP_PILL_COLORS.length];
+}
 
 type FeedItem = {
   id: string;
@@ -171,7 +190,10 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
   return (
     <section className="space-y-3">
       <h2 className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5">
-        <Zap className="w-4 h-4 text-violet-500 fill-violet-500" /> Actividad en vivo
+        <Zap className="w-4 h-4 text-violet-500 fill-violet-500" /> Votos en tiempo real
+        <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-emerald-500 normal-case tracking-normal">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> En vivo
+        </span>
       </h2>
 
       {paused && pending.length > 0 && (
@@ -198,7 +220,9 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
           className={
             // La barra queda invisible en reposo y solo aparece al pasar el
             // mouse — sigue siendo scrolleable con la rueda aunque no se vea.
-            'divide-y divide-neutral-200 dark:divide-neutral-900 max-h-[20rem] overflow-y-auto ' +
+            // Altura fija (no max-h) para quedar pareja con RankingTable en
+            // la portada, sin importar cuántos votos haya cargados.
+            'divide-y divide-neutral-200 dark:divide-neutral-900 h-[44rem] overflow-y-auto ' +
             '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.violet.400/0.5)_transparent] ' +
             '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
             '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +
@@ -212,19 +236,19 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             <div key={item.id} className="px-4 py-3 text-sm flex items-center gap-3">
               <UserAvatar avatarUrl={item.avatar_url} seed={item.user_id} species={item.avatar_species} size={28} />
               <div className="flex-1 min-w-0">
-                <p className="truncate flex items-center gap-1 flex-wrap">
+                <p className="truncate flex items-center gap-1">
                   {item.username ? <strong className="text-violet-600 dark:text-violet-400">@{item.username}</strong> : 'Un fan'}
                   <LevelBadge xp={item.xp} />
-                  <Zap className="w-3 h-3 text-violet-400 shrink-0" />
-                  <span className="text-neutral-600 dark:text-neutral-400 truncate">
-                    dio {item.points} {item.points === 1 ? 'punto' : 'puntos'} a{' '}
-                    <strong className="uppercase text-neutral-900 dark:text-white">{item.group_name}</strong>
-                  </span>
                 </p>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">acaba de votar por</p>
                 {item.message && (
                   <p className="text-xs text-neutral-500 dark:text-neutral-400 italic truncate mt-0.5">"{item.message}"</p>
                 )}
               </div>
+              <span className={'shrink-0 text-[11px] font-bold px-2 py-1 rounded-full ' + groupPillColor(item.group_name)}>
+                {item.group_name} <span className="opacity-70">+{item.points}</span>
+              </span>
+              <Heart className="w-4 h-4 text-pink-500 fill-current shrink-0" />
               <span className="shrink-0 text-xs text-neutral-400 dark:text-neutral-600">{timeAgo(item.created_at, now)}</span>
             </div>
           ))}

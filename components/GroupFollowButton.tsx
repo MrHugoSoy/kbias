@@ -11,7 +11,7 @@ import AuthModal from './AuthModal';
 // de seguidores y el estado "¿ya lo sigo?" se leen directo con el cliente
 // anon (group_follows tiene policy de select pública) — solo escribir pasa
 // por /api/community/group-follows, que verifica el token real de sesión.
-export default function GroupFollowButton({ groupId }: { groupId: string }) {
+export default function GroupFollowButton({ groupId, iconOnly }: { groupId: string; iconOnly?: boolean }) {
   const [userId, setUserId] = useState<string | null>(null);
   const [following, setFollowing] = useState(false);
   const [followerCount, setFollowerCount] = useState<number | null>(null);
@@ -76,6 +76,28 @@ export default function GroupFollowButton({ groupId }: { groupId: string }) {
     }
     setFollowing(wasFollowing);
     setFollowerCount((c) => Math.max(0, (c ?? 0) + (wasFollowing ? 1 : -1)));
+  }
+
+  if (iconOnly) {
+    return (
+      <>
+        <button
+          onClick={toggle}
+          disabled={loading}
+          title={following ? 'Dejar de seguir' : 'Seguir'}
+          aria-label={following ? 'Dejar de seguir' : 'Seguir'}
+          className={
+            'w-8 h-8 shrink-0 rounded-full flex items-center justify-center transition disabled:opacity-50 ' +
+            (following
+              ? 'text-pink-500 bg-pink-50 dark:bg-pink-950/40 hover:bg-pink-100 dark:hover:bg-pink-950/60'
+              : 'text-neutral-400 bg-neutral-100 dark:bg-neutral-900 hover:text-pink-500')
+          }
+        >
+          <Heart className={'w-4 h-4' + (following ? ' fill-current' : '')} />
+        </button>
+        {showAuth && <AuthModal onClose={() => setShowAuth(false)} onAuthed={() => setShowAuth(false)} />}
+      </>
+    );
   }
 
   return (

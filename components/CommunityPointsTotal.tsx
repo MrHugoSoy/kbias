@@ -1,20 +1,21 @@
 'use client';
 
-import { useLiveRankings } from '@/lib/useLiveRankings';
-import type { RankingRow } from '@/lib/types';
+import { Heart } from 'lucide-react';
+import { useLiveTotalPoints } from '@/lib/useLiveTotalPoints';
 
-// Suma del mes en curso de todos los grupos — vive aparte de RankingBoard
-// (que muestra el podio) porque el panel de voto se intercala entre ambos
-// en la portada; cada uno mantiene su propia suscripción a `votes`.
-export default function CommunityPointsTotal({ initialRankings }: { initialRankings: RankingRow[] }) {
-  const rankings = useLiveRankings(initialRankings);
-  const total = rankings.reduce((sum, r) => sum + r.total_points, 0);
+// "Total de votos hoy" — puntos repartidos en TODOS los grupos desde la
+// medianoche UTC, no el total del mes (ese ya vive en RankingTable). Usa el
+// mismo hook que Estadísticas/Salón de la Fama para sumar en vivo cada voto
+// nuevo, solo que sembrado con el total de hoy en vez del histórico.
+export default function CommunityPointsTotal({ initialTodayVotes }: { initialTodayVotes: number }) {
+  const total = useLiveTotalPoints(initialTodayVotes);
 
   return (
-    <div className="text-center py-2">
-      <p className="text-sm text-neutral-500 dark:text-neutral-400">Esta comunidad ha lanzado</p>
-      <p className="text-4xl sm:text-5xl font-black text-amber-400 font-mono drop-shadow-[0_0_20px_rgba(251,191,36,0.3)]">
-        {total.toLocaleString('es-MX')} puntos
+    <div className="bg-white dark:bg-neutral-950 shadow-sm dark:ring-1 dark:ring-white/10 rounded-2xl p-4 text-center space-y-1">
+      <p className="text-xs font-bold uppercase tracking-wide text-neutral-500">Total de votos hoy</p>
+      <p className="flex items-center justify-center gap-1.5 text-3xl font-black text-pink-500 font-mono">
+        <Heart className="w-6 h-6 fill-current" />
+        {total.toLocaleString('es-MX')}
       </p>
     </div>
   );

@@ -1,8 +1,11 @@
 import { Zap, ShieldCheck, Trophy, Handshake } from 'lucide-react';
 import { getSupabasePublicClient } from '@/lib/supabase';
+import { utcDayStart } from '@/lib/dailyWindow';
 import ActivityFeed from '@/components/ActivityFeed';
-import RankingBoard from '@/components/RankingBoard';
-import RestRankingList from '@/components/RestRankingList';
+import RankingTable from '@/components/RankingTable';
+import FeaturedGroups from '@/components/FeaturedGroups';
+import WeeklyTrends from '@/components/WeeklyTrends';
+import JoinCommunityBanner from '@/components/JoinCommunityBanner';
 import CommunityPointsTotal from '@/components/CommunityPointsTotal';
 import SiteHeader from '@/components/SiteHeader';
 import Hero from '@/components/Hero';
@@ -31,6 +34,11 @@ export default async function Home() {
     .select('id, title, body, cover_url, category, published_at, group:groups(name, slug, image_url)')
     .order('published_at', { ascending: false })
     .limit(3);
+  // Puntos repartidos hoy (día calendario UTC) en TODOS los grupos — para
+  // "Total de votos hoy" en la barra lateral, distinto del total del mes
+  // que ya muestra el ranking.
+  const { data: todayVoteRows } = await supabase.from('votes').select('points').gte('created_at', utcDayStart().toISOString());
+  const todayVotes = (todayVoteRows ?? []).reduce((sum, r) => sum + r.points, 0);
 
   if (feedError || rankingsError) {
     console.error('Error cargando datos de Supabase:', { feedError, rankingsError });
@@ -58,27 +66,33 @@ export default async function Home() {
       <div className="max-w-4xl xl:max-w-[75.5rem] mx-auto px-4 py-8 space-y-10">
         <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 4)} totalVisits={totalVisits ?? 0} />
 
-        {/* Ranking Global */}
-        <RankingBoard initialRankings={rankings ?? []} />
-
-        {/* Grupos del 6 al 17 + actividad en vivo */}
-        <div className="grid lg:grid-cols-2 gap-6 items-start">
-          <RestRankingList initialRankings={rankings ?? []} />
-          <ActivityFeed initialItems={feed ?? []} />
+        {/* Ranking Global: tabla + barra lateral de actividad en vivo */}
+        <div className="grid lg:grid-cols-[1fr_20rem] gap-6 items-start">
+          <RankingTable initialRankings={rankings ?? []} />
+          <div className="space-y-6">
+            <ActivityFeed initialItems={feed ?? []} />
+            <CommunityPointsTotal initialTodayVotes={todayVotes} />
+          </div>
         </div>
 
         <p className="text-xs text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
           Ranking de {currentMonthLabel} — se reinicia el 1 de {nextMonthLabel}
         </p>
 
+        {/* Grupos destacados + tendencias semanales + banner de invitación */}
+        <div className="grid lg:grid-cols-4 gap-6 items-start">
+          <div className="lg:col-span-2">
+            <FeaturedGroups initialRankings={rankings ?? []} />
+          </div>
+          <WeeklyTrends initialRankings={rankings ?? []} />
+          <JoinCommunityBanner />
+        </div>
+
         {/* Batallas de canciones — solo se muestra si hay canciones cargadas */}
         <SongBattles />
 
         {/* Últimas noticias — solo se muestra si hay alguna publicada */}
         <LatestNews posts={(newsRows ?? []) as unknown as NewsPost[]} />
-
-        {/* Total de votos */}
-        <CommunityPointsTotal initialRankings={rankings ?? []} />
 
         {/* Footer de confianza — el borde superior llega de lado a lado de
             la pantalla, igual que el header; el contenido se mantiene en la

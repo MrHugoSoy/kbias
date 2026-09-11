@@ -64,6 +64,11 @@ function PodiumCard({ rank, group }: { rank: number; group: RankingRow }) {
       <p className="font-mono text-sm text-neutral-500">
         {group.total_points.toLocaleString('es-MX')} {group.total_points === 1 ? 'punto' : 'puntos'}
       </p>
+      {group.votes_24h > 0 && (
+        <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+          +{group.votes_24h.toLocaleString('es-MX')} en 24h
+        </p>
+      )}
     </div>
   );
 }
@@ -145,6 +150,9 @@ export default function LiveStatsSection({
                     </div>
                     <span className="font-mono text-amber-600 dark:text-amber-400 shrink-0">
                       {r.total_points.toLocaleString('es-MX')} puntos
+                    </span>
+                    <span className="hidden sm:block font-mono text-[11px] text-neutral-500 shrink-0 w-20 text-right" title="Votos en las últimas 24 horas">
+                      +{r.votes_24h.toLocaleString('es-MX')} / 24h
                     </span>
                     <div className="w-16 shrink-0 text-right">
                       <RankChange current={rank} previous={r.rank_snapshot_value} />

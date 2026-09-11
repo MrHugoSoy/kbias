@@ -11,6 +11,8 @@ export type RankingRow = {
   bio: string | null;
   official_url: string | null;
   total_points: number;
+  votes_24h: number;
+  votes_7d: number;
   rank_snapshot_value: number | null;
   claimed_by_fan: boolean | null;
   debut_date: string | null;
