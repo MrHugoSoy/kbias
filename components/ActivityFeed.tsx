@@ -220,9 +220,10 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
           className={
             // La barra queda invisible en reposo y solo aparece al pasar el
             // mouse — sigue siendo scrolleable con la rueda aunque no se vea.
-            // Altura fija (no max-h) para quedar pareja con RankingTable en
-            // la portada, sin importar cuántos votos haya cargados.
-            'divide-y divide-neutral-200 dark:divide-neutral-900 h-[44rem] overflow-y-auto ' +
+            // Altura fija (no max-h), recortada para que este panel + el
+            // gap + la tarjeta de "Total de votos hoy" debajo terminen a la
+            // misma altura que RankingTable en la portada.
+            'divide-y divide-neutral-200 dark:divide-neutral-900 h-[37.75rem] overflow-y-auto ' +
             '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.violet.400/0.5)_transparent] ' +
             '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
             '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +

@@ -67,7 +67,7 @@ export default async function Home() {
         <Hero topGroups={(rankings ?? []).filter((r) => r.total_points > 0).slice(0, 4)} totalVisits={totalVisits ?? 0} />
 
         {/* Ranking Global: tabla + barra lateral de actividad en vivo */}
-        <div className="grid lg:grid-cols-[1fr_20rem] gap-6 items-start">
+        <div className="grid lg:grid-cols-2 gap-6 items-start">
           <RankingTable initialRankings={rankings ?? []} />
           <div className="space-y-6">
             <ActivityFeed initialItems={feed ?? []} />

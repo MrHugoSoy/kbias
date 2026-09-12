@@ -29,10 +29,10 @@ function RankBadge({ rank }: { rank: number }) {
 function RankingRowItem({ rank, group }: { rank: number; group: RankingRow }) {
   return (
     <tr className="border-b border-neutral-100 dark:border-neutral-900 last:border-0">
-      <td className="py-3 pl-4 pr-2 w-10">
+      <td className="py-3 pl-3 pr-1.5 w-8">
         <RankBadge rank={rank} />
       </td>
-      <td className="py-3 px-2 min-w-0">
+      <td className="py-3 px-1.5 min-w-0">
         <Link href={`/grupo/${group.slug}`} className="flex items-center gap-2.5 min-w-0 group">
           <div className="w-9 h-9 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden flex items-center justify-center shrink-0">
             {group.image_url ? (
@@ -50,16 +50,16 @@ function RankingRowItem({ rank, group }: { rank: number; group: RankingRow }) {
           </div>
         </Link>
       </td>
-      <td className="py-3 px-2 text-right font-mono text-sm text-amber-600 dark:text-amber-400 whitespace-nowrap">
+      <td className="py-3 px-1.5 text-right font-mono text-sm text-amber-600 dark:text-amber-400 whitespace-nowrap">
         {group.total_points.toLocaleString('es-MX')}
       </td>
-      <td className="py-3 px-2 text-right">
+      <td className="py-3 px-1.5 text-right">
         <RankChange current={rank} previous={group.rank_snapshot_value} />
       </td>
-      <td className="hidden sm:table-cell py-3 px-2 text-right font-mono text-xs text-neutral-500 whitespace-nowrap">
+      <td className="hidden xl:table-cell py-3 px-1.5 text-right font-mono text-xs text-neutral-500 whitespace-nowrap">
         {group.votes_24h > 0 ? `+${group.votes_24h.toLocaleString('es-MX')}` : '—'}
       </td>
-      <td className="py-3 pl-2 pr-4">
+      <td className="py-3 pl-1.5 pr-3">
         <div className="flex items-center justify-end gap-2">
           <BidButton compact floatingMessage groupId={group.group_id} groupName={group.group_name} />
           <GroupFollowButton groupId={group.group_id} iconOnly />
@@ -109,12 +109,12 @@ export default function RankingTable({ initialRankings }: { initialRankings: Ran
             <table className="w-full text-left border-collapse">
               <thead className="sticky top-0 z-10 bg-white dark:bg-neutral-950">
                 <tr className="text-[10px] uppercase tracking-wide text-neutral-500 border-b border-neutral-200 dark:border-neutral-900">
-                  <th className="py-2 pl-4 pr-2 font-semibold">#</th>
-                  <th className="py-2 px-2 font-semibold">Grupo</th>
-                  <th className="py-2 px-2 font-semibold text-right">Puntos</th>
-                  <th className="py-2 px-2 font-semibold text-right">Cambio</th>
-                  <th className="hidden sm:table-cell py-2 px-2 font-semibold text-right">Votos (24h)</th>
-                  <th className="py-2 pl-2 pr-4 font-semibold text-right">Acción</th>
+                  <th className="py-2 pl-3 pr-1.5 font-semibold">#</th>
+                  <th className="py-2 px-1.5 font-semibold">Grupo</th>
+                  <th className="py-2 px-1.5 font-semibold text-right">Puntos</th>
+                  <th className="py-2 px-1.5 font-semibold text-right">Cambio</th>
+                  <th className="hidden xl:table-cell py-2 px-1.5 font-semibold text-right">Votos (24h)</th>
+                  <th className="py-2 pl-1.5 pr-3 font-semibold text-right">Acción</th>
                 </tr>
               </thead>
               <tbody>
