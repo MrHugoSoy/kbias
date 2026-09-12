@@ -188,13 +188,15 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
   }, []);
 
   return (
-    <section className="space-y-3">
-      <h2 className="font-extrabold text-sm uppercase tracking-wide flex items-center gap-1.5">
-        <Zap className="w-4 h-4 text-violet-500 fill-violet-500" /> Votos en tiempo real
-        <span className="ml-auto inline-flex items-center gap-1 text-[10px] font-bold text-emerald-500 normal-case tracking-normal">
+    <section className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-bold flex items-center gap-2">
+          <Zap className="w-5 h-5 text-violet-500 fill-violet-500" /> Votos en tiempo real
+        </h2>
+        <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-500">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> En vivo
         </span>
-      </h2>
+      </div>
 
       {paused && pending.length > 0 && (
         <button
@@ -223,7 +225,7 @@ export default function ActivityFeed({ initialItems }: { initialItems: FeedItem[
             // Altura fija (no max-h), recortada para que este panel + el
             // gap + la tarjeta de "Total de votos hoy" debajo terminen a la
             // misma altura que RankingTable en la portada.
-            'divide-y divide-neutral-200 dark:divide-neutral-900 h-[37.75rem] overflow-y-auto ' +
+            'divide-y divide-neutral-200 dark:divide-neutral-900 h-[37rem] overflow-y-auto ' +
             '[scrollbar-width:thin] [scrollbar-color:transparent_transparent] hover:[scrollbar-color:theme(colors.violet.400/0.5)_transparent] ' +
             '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent ' +
             '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent ' +
