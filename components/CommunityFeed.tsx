@@ -43,6 +43,45 @@ export default function CommunityFeed() {
     loadPosts();
   }, []);
 
+  // Publicaciones de otros fans en vivo, sin recargar — igual que
+  // "Actividad en vivo" del ranking. El evento de Realtime solo trae la fila
+  // cruda de community_posts (sin username/avatar/xp), así que se completa
+  // con una consulta a `profiles` antes de meterla al feed.
+  useEffect(() => {
+    const channel = supabase
+      .channel('community-posts-feed')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'community_posts' },
+        async (payload) => {
+          const row = payload.new as { id: string; body: string; created_at: string; user_id: string };
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('username, avatar_species, avatar_url, xp')
+            .eq('id', row.user_id)
+            .maybeSingle();
+          const newPost: CommunityPost = {
+            id: row.id,
+            body: row.body,
+            created_at: row.created_at,
+            user_id: row.user_id,
+            username: profile?.username ?? null,
+            avatar_species: profile?.avatar_species ?? null,
+            avatar_url: profile?.avatar_url ?? null,
+            xp: profile?.xp ?? 0,
+            like_count: 0,
+            comment_count: 0,
+          };
+          setPosts((prev) => (prev?.some((p) => p.id === newPost.id) ? prev : [newPost, ...(prev ?? [])]));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   useEffect(() => {
     if (!userId) {
       setLikedIds(new Set());
